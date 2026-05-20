@@ -1,0 +1,185 @@
+PS J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress> mvn -pl app/meshingress-server dependency:tree | findstr meshingress-tool-api     
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/C:/Program%20Files/Apache/apache-maven-3.9.8/lib/jansi-2.4.1.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/C:/Program%20Files/Apache/apache-maven-3.9.8/lib/guava-33.2.1-jre.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] +- dev.mrk.meshingress:meshingress-tool-api:jar:0.0.1-SNAPSHOT:compile
+PS J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress> dir /b lib\meshingress-tool-api\target\classes\dev\mrk\meshingress\api
+Get-ChildItem: Cannot find path 'J:\b' because it does not exist.
+PS J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress> mvn -pl app/meshingress-server -am -Dtest=dev.mrk.meshingress.mcp.McpControllerTests#adminCanCheckRegisterUpdateAndDisableTool test     
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/C:/Program%20Files/Apache/apache-maven-3.9.8/lib/jansi-2.4.1.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/C:/Program%20Files/Apache/apache-maven-3.9.8/lib/guava-33.2.1-jre.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] meshingress                                                        [pom]
+[INFO] meshingress-tool-api                                               [jar]
+[INFO] helloworld                                                         [jar]
+[INFO] meshingress-server                                                 [jar]
+[INFO] 
+[INFO] ------------------< dev.mrk.meshingress:meshingress >-------------------
+[INFO] Building meshingress 0.0.1-SNAPSHOT                                [1/4]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for meshingress 0.0.1-SNAPSHOT:
+[INFO] 
+[INFO] meshingress ........................................ FAILURE [  0.002 s]
+[INFO] meshingress-tool-api ............................... SKIPPED
+[INFO] helloworld ......................................... SKIPPED
+[INFO] meshingress-server ................................. SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.354 s
+[INFO] Finished at: 2026-05-18T11:05:43-04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Unknown lifecycle phase ".mrk.meshingress.mcp.McpControllerTests#adminCanCheckRegisterUpdateAndDisableTool". You must specify a valid lifecycle phase or a goal in the format <plugin-prefix>:<goal> or <plugin-group-id>:<plugin-artifact-id>[:<plugin-version>]:<goal>. Available lifecycle phases are: pre-clean, clean, post-clean, validate, initialize, generate-sources, process-sources, generate-resources, process-resources, compile, process-classes, generate-test-sources, process-test-sources, generate-test-resources, process-test-resources, test-compile, process-test-classes, test, prepare-package, package, pre-integration-test, integration-test, post-integration-test, verify, install, deploy, pre-site, site, post-site, site-deploy. -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/LifecyclePhaseNotFoundException
+PS J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress> mvn -pl app/meshingress-server -am -DskipTests clean package                                                                       
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/C:/Program%20Files/Apache/apache-maven-3.9.8/lib/jansi-2.4.1.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/C:/Program%20Files/Apache/apache-maven-3.9.8/lib/guava-33.2.1-jre.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] meshingress                                                        [pom]
+[INFO] meshingress-tool-api                                               [jar]
+[INFO] helloworld                                                         [jar]
+[INFO] meshingress-server                                                 [jar]
+[INFO] 
+[INFO] ------------------< dev.mrk.meshingress:meshingress >-------------------
+[INFO] Building meshingress 0.0.1-SNAPSHOT                                [1/4]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ meshingress ---
+[INFO] 
+[INFO] --------------< dev.mrk.meshingress:meshingress-tool-api >--------------
+[INFO] Building meshingress-tool-api 0.0.1-SNAPSHOT                       [2/4]
+[INFO]   from lib\meshingress-tool-api\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ meshingress-tool-api ---
+[INFO] Deleting J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\lib\meshingress-tool-api\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ meshingress-tool-api ---
+[INFO] skip non existing resourceDirectory J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\lib\meshingress-tool-api\src\main\resources
+[INFO] skip non existing resourceDirectory J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\lib\meshingress-tool-api\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ meshingress-tool-api ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 6 source files with javac [debug parameters release 25] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ meshingress-tool-api ---
+[INFO] skip non existing resourceDirectory J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\lib\meshingress-tool-api\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ meshingress-tool-api ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ meshingress-tool-api ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ meshingress-tool-api ---
+[INFO] Building jar: J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\lib\meshingress-tool-api\target\meshingress-tool-api-0.0.1-SNAPSHOT.jar
+[INFO] 
+[INFO] --------------------< dev.mrk.toolspace:helloworld >--------------------
+[INFO] Building helloworld 0.0.1-SNAPSHOT                                 [3/4]
+[INFO]   from toolspace\helloworld\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ helloworld ---
+[INFO] Deleting J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\toolspace\helloworld\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ helloworld ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ helloworld ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 2 source files with javac [debug parameters release 25] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ helloworld ---
+[INFO] skip non existing resourceDirectory J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\toolspace\helloworld\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ helloworld ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ helloworld ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ helloworld ---
+[INFO] Building jar: J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\toolspace\helloworld\target\helloworld-0.0.1-SNAPSHOT.jar
+[INFO] 
+[INFO] ---------------< dev.mrk.meshingress:meshingress-server >---------------
+[INFO] Building meshingress-server 0.0.1-SNAPSHOT                         [4/4]
+[INFO]   from app\meshingress-server\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ meshingress-server ---
+[INFO] Deleting J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\app\meshingress-server\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ meshingress-server ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ meshingress-server ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 16 source files with javac [debug parameters release 25] to target\classes
+[INFO] /J:/Users/jbeas/Repositories/Dev.java-2026/artifacts/meshingress/app/meshingress-server/src/main/java/dev/mrk/meshingress/mcp/McpDispatcher.java: Some input files use or override a deprecated API.
+[INFO] /J:/Users/jbeas/Repositories/Dev.java-2026/artifacts/meshingress/app/meshingress-server/src/main/java/dev/mrk/meshingress/mcp/McpDispatcher.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ meshingress-server ---
+[INFO] skip non existing resourceDirectory J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\app\meshingress-server\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ meshingress-server ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug parameters release 25] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.5:test (default-test) @ meshingress-server ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ meshingress-server ---
+[INFO] Building jar: J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\app\meshingress-server\target\meshingress.jar
+[INFO] 
+[INFO] --- spring-boot:4.0.6:repackage (repackage) @ meshingress-server ---
+[INFO] Replacing main artifact J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\app\meshingress-server\target\meshingress.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to J:\Users\jbeas\Repositories\Dev.java-2026\artifacts\meshingress\app\meshingress-server\target\meshingress.jar.original
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for meshingress 0.0.1-SNAPSHOT:
+[INFO] 
+[INFO] meshingress ........................................ SUCCESS [  0.134 s]
+[INFO] meshingress-tool-api ............................... SUCCESS [  3.465 s]
+[INFO] helloworld ......................................... SUCCESS [  0.768 s]
+[INFO] meshingress-server ................................. SUCCESS [  3.611 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  8.358 s
+[INFO] Finished at: 2026-05-18T11:06:23-04:00
+[INFO] ------------------------------------------------------------------------

@@ -1,0 +1,3 @@
+# Summary
+
+The MCP JSON-RPC dispatch surface is now split by responsibility under `dev.mrk.meshingress.controller`. The main dispatcher validates JSON-RPC envelopes and delegates to internal, tools, and roles method-family controllers. Registry control methods now use `roles/tools/*` instead of `admin/tools/*`, with `X-Mcp-Role: admin` supported and the old admin header retained as compatibility input. The tool API factory bug exposed during verification was fixed, and the documented Java 22 build configuration was restored. Verification passed with `./mvnw.cmd -pl app/meshingress-server -am test`.

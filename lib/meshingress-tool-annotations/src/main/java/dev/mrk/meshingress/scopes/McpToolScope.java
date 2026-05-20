@@ -1,0 +1,30 @@
+package dev.mrk.meshingress.scopes;
+
+public enum McpToolScope {
+    LOCAL_READ,
+    LOCAL_WRITE,
+
+    FILES_READ,
+    FILES_WRITE,
+    FILES_DELETE,
+
+    NETWORK_ACCESS,
+
+    DATABASE_READ,
+    DATABASE_WRITE,
+    DATABASE_DELETE,
+
+    SHELL_EXECUTE,
+
+    EMAIL_SEND,
+
+    USER_READ,
+    USER_WRITE,
+    USER_DELETE,
+
+    CONFIG_READ,
+    CONFIG_WRITE,
+
+    EXTERNAL_API_READ,
+    EXTERNAL_API_WRITE
+}

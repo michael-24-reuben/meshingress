@@ -1,0 +1,50 @@
+{
+  "id": "2026-05-19-mcp-websocket-auth",
+  "title": "MCP WebSocket Authentication Middleware",
+  "status": "resolved",
+  "createdAt": "2026-05-19T00:00:00-04:00",
+  "activatedAt": "2026-05-19T22:47:45-04:00",
+  "resolvedAt": "2026-05-19T22:54:08-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-05-19T22:54:08-04:00",
+  "tags": [
+    "security",
+    "mcp",
+    "websocket",
+    "authentication",
+    "middleware",
+    "spring-boot",
+    "resolved",
+    "dispatcher",
+    "json-rpc",
+    "mcp-call-context",
+    "reviewed"
+  ],
+  "related": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User requested a pending architect entry for adding MCP over WebSocket with authentication verification using access tokens, secret keys, and auth tokens. The existing MCP service logic must be preserved and the earlier sample McpService implementation must be excluded."
+  },
+  "events": [
+    {
+      "at": "2026-05-19T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created pending architecture entry for MCP WebSocket auth middleware."
+    },
+    {
+      "at": "2026-05-19T00:00:00-04:00",
+      "type": "UPDATED",
+      "note": "Incorporated issue review: WebSocket must be thin transport/auth layer delegating to existing McpDispatcher using McpCallContext. Existing MCP service/dispatch logic remains conserved."
+    },
+    {
+      "at": "2026-05-19T22:47:45-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Started implementation of the reviewed MCP WebSocket auth entry."
+    },
+    {
+      "at": "2026-05-19T22:54:08-04:00",
+      "type": "RESOLVED",
+      "note": "Added authenticated /mcp/ws transport, configurable opaque-token validator, dispatcher delegation, and focused WebSocket auth tests."
+    }
+  ]
+}

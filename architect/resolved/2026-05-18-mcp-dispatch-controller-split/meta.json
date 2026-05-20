@@ -1,0 +1,42 @@
+{
+  "id": "2026-05-18-mcp-dispatch-controller-split",
+  "title": "MCP Dispatch Controller Split",
+  "status": "resolved",
+  "createdAt": "2026-05-18T17:11:55-04:00",
+  "activatedAt": "2026-05-18T17:11:55-04:00",
+  "resolvedAt": "2026-05-18T17:18:43-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-05-18T17:18:43-04:00",
+  "tags": [
+    "mcp",
+    "json-rpc",
+    "controller",
+    "refactor",
+    "roles",
+    "tools"
+  ],
+  "related": [
+    "2026-05-17-mcp-http-tool-registry"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "User wants McpDispatcher dispatchSingle split into internal, tools, and roles handlers under the controller package, replacing admin naming with broader roles naming."
+  },
+  "events": [
+    {
+      "at": "2026-05-18T17:11:55-04:00",
+      "type": "CREATED",
+      "note": "Created as active implementation work for the MCP dispatch controller split."
+    },
+    {
+      "at": "2026-05-18T17:11:55-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation began immediately after request."
+    },
+    {
+      "at": "2026-05-18T17:18:43-04:00",
+      "type": "RESOLVED",
+      "note": "Split MCP dispatch into internal, tools, and roles handlers and verified the server test slice."
+    }
+  ]
+}
