@@ -1,7 +1,5 @@
 package dev.mrk.meshingress.api.tools;
 
-import java.util.Map;
-
 public enum ToolVisibility {
     PUBLIC,
     PRIVATE,

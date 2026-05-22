@@ -1,6 +1,5 @@
 package dev.mrk.meshingress.api;
 
-import dev.mrk.meshingress.api.tools.ToolExecutionResult;
 import tools.jackson.databind.node.ObjectNode;
 
 public interface McpDispatchHandler <R extends DispatchExecutionResult> {

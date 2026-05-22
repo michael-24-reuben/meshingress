@@ -22,11 +22,9 @@ public class RolesMcpController implements McpMethodController {
     );
 
     private final RoleToolService roleToolService;
-    private final RoleAuthorizationService roleAuthorizationService;
 
-    public RolesMcpController(RoleToolService roleToolService, RoleAuthorizationService roleAuthorizationService) {
+    public RolesMcpController(RoleToolService roleToolService) {
         this.roleToolService = roleToolService;
-        this.roleAuthorizationService = roleAuthorizationService;
     }
 
     @Override
@@ -41,22 +39,14 @@ public class RolesMcpController implements McpMethodController {
 
     @Override
     public JsonNode dispatch(String method, JsonNode params, McpCallContext context) {
-        McpCallContext authorizedContext = requireAdminRole(context);
         return switch (method) {
-            case "roles/tools/check" -> roleToolService.check(authorizedContext, params);
-            case "roles/tools/register" -> roleToolService.register(authorizedContext, params);
-            case "roles/tools/update" -> roleToolService.update(authorizedContext, params);
-            case "roles/tools/delete" -> roleToolService.delete(authorizedContext, params);
-            case "roles/tools/list" -> roleToolService.list(authorizedContext, params);
-            case "roles/tools/reload" -> roleToolService.reload(authorizedContext);
+            case "roles/tools/check" -> roleToolService.check(context, params);
+            case "roles/tools/register" -> roleToolService.register(context, params);
+            case "roles/tools/update" -> roleToolService.update(context, params);
+            case "roles/tools/delete" -> roleToolService.delete(context, params);
+            case "roles/tools/list" -> roleToolService.list(context, params);
+            case "roles/tools/reload" -> roleToolService.reload(context);
             default -> throw new JsonRpcException(JsonRpcErrorCodes.METHOD_NOT_FOUND, "Method not found");
         };
-    }
-
-    private McpCallContext requireAdminRole(McpCallContext context) {
-        if (!roleAuthorizationService.hasAdminRole(context)) {
-            throw new JsonRpcException(JsonRpcErrorCodes.FORBIDDEN, "Admin role authorization is required");
-        }
-        return context;
     }
 }

@@ -2,11 +2,9 @@ package dev.mrk.toolspace.helloworld;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.tools.ToolExecutionResult;
-import dev.mrk.meshingress.api.tools.annotation.McpFunction;
-import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
-import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
+import dev.mrk.meshingress.api.tools.annotation.*;
 import dev.mrk.meshingress.scopes.McpToolScope;
+import dev.mrk.meshingress.tools.availability.featureflag.EnableWhenFeatureFlagOn;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -26,6 +24,14 @@ public class HelloWorldTool {
         this.objectMapper = objectMapper;
     }
 
+    @McpConfigureMapping(
+            secrets = @McpSecret(name = "instagramApiToken", ref = "instagram-api-token"),
+            availabilityMode = McpAvailabilityMode.ALL,
+            audit = true,
+            debugTrace = true,
+            timeoutMs = 20_000
+    )
+    @EnableWhenFeatureFlagOn("instagram.publish.enabled")
     @McpFunction(value = "call", description = "Greet the Person.")
     public ToolExecutionResult call(HelloWorldGreetArgs arguments, McpCallContext context) {
         String name = arguments.getName();

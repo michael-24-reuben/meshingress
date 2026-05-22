@@ -19,10 +19,16 @@
     <description>Meshingress MCP server and attachable tool modules</description>
 
     <modules>
+        <module>app/meshingress-server</module>
+
+        <module>lib/meshingress-route-annotations</module>
+        <module>lib/meshingress-route-api</module>
+        <module>lib/meshingress-route-framework</module>
         <module>lib/meshingress-tool-api</module>
         <module>lib/meshingress-tool-annotations</module>
+        <module>lib/meshingress-tool-framework</module>
+
         <module>toolspace/helloworld</module>
-        <module>app/meshingress-server</module>
         <module>toolspace/instagram-api</module>
     </modules>
 

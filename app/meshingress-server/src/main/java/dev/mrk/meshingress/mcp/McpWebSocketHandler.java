@@ -7,7 +7,6 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -30,11 +29,6 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
-        if (!session.getAttributes().containsKey(McpAuthHandshakeInterceptor.AUTHENTICATED_SESSION_ATTRIBUTE)) {
-            session.close(CloseStatus.POLICY_VIOLATION.withReason("Unauthenticated MCP session"));
-            return;
-        }
-
         JsonNode request;
         try {
             request = objectMapper.readTree(message.getPayload());
@@ -54,10 +48,10 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
 
     private McpCallContext contextFrom(Map<String, Object> attributes) {
         return new McpCallContext(
-                stringAttribute(attributes, McpAuthHandshakeInterceptor.AUTHORIZATION_ATTRIBUTE),
-                stringAttribute(attributes, McpAuthHandshakeInterceptor.ROLE_ATTRIBUTE),
-                stringAttribute(attributes, McpAuthHandshakeInterceptor.SESSION_ID_ATTRIBUTE),
-                stringAttribute(attributes, McpAuthHandshakeInterceptor.REQUEST_ID_ATTRIBUTE)
+                stringAttribute(attributes, "mcp.authorization"),
+                stringAttribute(attributes, "mcp.role"),
+                stringAttribute(attributes, "mcp.sessionId"),
+                stringAttribute(attributes, "mcp.requestId")
         );
     }
 

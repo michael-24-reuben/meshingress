@@ -28,6 +28,21 @@
         </dependency>
 
         <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-route-framework</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-framework</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+
+        <dependency>
             <groupId>dev.mrk.toolspace</groupId>
             <artifactId>helloworld</artifactId>
             <version>${project.version}</version>
@@ -38,6 +53,7 @@
             <artifactId>instagram-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -126,6 +142,7 @@
             <artifactId>spring-boot-starter-validation-test</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
