@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>dev.mrk.meshingress</groupId>
+        <artifactId>meshingress</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>meshingress-route-framework</artifactId>
+    <name>meshingress-route-framework</name>
+    <description>Runtime scanning, validation, middleware, and availability helpers for annotated Meshingress routes</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-route-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-route-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-annotations</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+</project>
