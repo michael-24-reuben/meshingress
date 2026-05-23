@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.tools.availability.withintimeranges;
 
-import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityCondition;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityCondition;
 import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityValidationContext;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public final class WithinTimeRangesCondition implements AvailabilityCondition<EnableWithinTimeRanges> {
+public final class WithinTimeRangesCondition implements McpAvailabilityCondition<EnableWithinTimeRanges> {
 
     @Override
     public @NonNull @Unmodifiable List<String> validate(EnableWithinTimeRanges annotation, AvailabilityValidationContext context) {

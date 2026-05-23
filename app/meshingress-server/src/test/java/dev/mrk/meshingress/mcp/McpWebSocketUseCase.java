@@ -15,6 +15,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 public class McpWebSocketUseCase {
+    @Deprecated(forRemoval = false) // The credential generation should not take place on the client side. The server should generate and respond with creds
     public record DemoTokens(
             String accessToken,
             String secretKey,
@@ -38,10 +39,10 @@ public class McpWebSocketUseCase {
             "mcp-ws-demo",
             "application-mcp-ws-demo.properties"
     );
-    private static final URI DEFAULT_WS_URI = URI.create("ws://localhost:8080/mcp/ws");
+    private static final URI DEFAULT_WS_URI = URI.create("ws://100.121.15.11:8080/mcp/ws");
 
     public static void main(String[] args) throws Exception {
-        String action = args.length == 0 ? "hello" : args[0];
+        String action = args.length == 0 ? "show" : args[0];
         McpWebSocketUseCase sample = new McpWebSocketUseCase(DEFAULT_CONFIG_PATH, DEFAULT_WS_URI);
 
         switch (action) {

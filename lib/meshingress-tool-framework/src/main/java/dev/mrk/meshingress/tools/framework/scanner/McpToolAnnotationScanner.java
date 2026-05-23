@@ -1,16 +1,21 @@
 package dev.mrk.meshingress.tools.framework.scanner;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.annotation.*;
+import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityValidationContext;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityCondition;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunction;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
 import dev.mrk.meshingress.schema.McpJsonSchemaProvider;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.databind.JsonNode;
@@ -18,6 +23,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -26,6 +32,7 @@ public class McpToolAnnotationScanner {
     private static final Class<?> defaultParamImplementationClass = Void.class;
 
     private final ObjectMapper objectMapper;
+    private static final String QUALIFIED_TOOL_NAME_REGEX = "[a-z][a-z0-9]*(\\.[a-z0-9]+)*";
 
     public McpToolAnnotationScanner(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -41,6 +48,12 @@ public class McpToolAnnotationScanner {
         McpTool tool = toolClass.getAnnotation(McpTool.class);
         if (tool == null) {
             throw new IllegalStateException("Annotated MCP tool requires @McpTool: " + toolClass.getName());
+
+        } else if (!tool.value().isBlank() && !tool.value().matches(QUALIFIED_TOOL_NAME_REGEX)) {
+            throw new IllegalStateException("Mcp tool '%s' requires valid @McpTool annotation: '%s'".formatted(toolClass.getName(), tool.value()));
+
+        } else if (!tool.invocationName().isBlank() && !tool.invocationName().matches(QUALIFIED_TOOL_NAME_REGEX)) {
+            throw new IllegalStateException("Mcp tool '%s' requires valid @McpTool annotation: '%s'".formatted(toolClass.getName(), tool.invocationName()));
         }
 
         String mapping = mapping(toolClass);
@@ -83,16 +96,27 @@ public class McpToolAnnotationScanner {
             if (function == null) {
                 continue;
             }
+
             validateFunction(method);
+
+            McpConfigureMapping functionMapping = method.getAnnotation(McpConfigureMapping.class);
+            if (functionMapping == null) {
+                functionMapping = McpToolDefaults.class.getAnnotation(McpConfigureMapping.class);
+            }
+
             String name = function.value().isBlank() ? method.getName() : function.value();
             String path = compose(mapping, name);
+
+            List<String> availabilityMessages = new ArrayList<>();
+            McpFunctionAvailabilityState availabilityState = evalFunctionAvailability(toolClass, method, name, functionMapping, availabilityMessages);
+            McpFunctionAvailability functionAvailabilityPolicy = newMcpFunctionAvailability(tool, function, functionMapping, availabilityState);
+
             AnnotatedMcpFunction annotatedFunction = new AnnotatedMcpFunction(
                     name,
                     path,
                     function.title(),
                     function.description(),
-                    evalToolFunctionEnabled(tool, function), // Function is only enabled if both the tool and function are enabled
-                    evalToolFunctionVisibility(tool, function),
+                    functionAvailabilityPolicy,
                     method,
                     inputSchemaFor(method, function.description()),
                     functionScopes(toolClass, method),
@@ -105,6 +129,129 @@ public class McpToolAnnotationScanner {
             }
         }
         return List.copyOf(functions.values());
+    }
+
+    /**
+     * Determines whether the availability conditions should be considered available based on the presence of conditions and the availability mode.
+     * If no conditions provided, the tool is always available unless explicitly disabled. If conditions are provided, the availability is determined
+     * by the availability state, which is based on the availability mode (ALL or ANY) and the evaluation of conditions.
+     */
+    private static boolean isConditionsAvailable(boolean foundAvailabilityCondition, McpFunctionAvailabilityState availabilityState) {
+        if (!foundAvailabilityCondition) {
+            return availabilityState.isAvailable();
+        }
+        return true;
+    }
+
+    /**
+     * Compiles tool validity annotation to see if the function is available.
+     * <p>
+     * • If any condition fails, the function is unavailable.
+     * <p>
+     * • If the function mapping mode is ALL, all conditions will be evaluated and messages will be aggregated.
+     * <p>
+     * • If the function mapping mode is ANY, conditions will be evaluated until the first success, and the function is available.
+     */
+    private @Nullable McpFunctionAvailabilityState evalFunctionAvailability(
+            Class<?> toolClass,
+            @NotNull Method method,
+            @NotNull String toolFunctionName,
+            @NotNull McpConfigureMapping functionMapping,
+            List<String> availabilityMessages
+    ) {
+        McpAvailabilityMode availabilityMode = functionMapping.availabilityMode();
+        boolean conditionsAvailable = availabilityMode == McpAvailabilityMode.ALL;
+        boolean foundAvailabilityCondition = false;
+
+        for (Annotation methodAnnotation : method.getAnnotations()) {
+            Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+
+            if (!annotationType.isAnnotationPresent(McpFunctionAvailabilityCondition.class)) {
+                continue;
+            }
+            foundAvailabilityCondition = true;
+
+            McpFunctionAvailabilityCondition conditionAnnotation = annotationType.getAnnotation(McpFunctionAvailabilityCondition.class);
+
+            Class<? extends McpAvailabilityCondition<? extends Annotation>> conditionClass = conditionAnnotation.value();
+
+            try {
+                McpAvailabilityCondition<?> condition = conditionClass.getDeclaredConstructor().newInstance();
+
+                List<String> result = validateReflectiveAvailabilityCondition(condition, methodAnnotation, new AvailabilityValidationContext(toolClass, method));
+
+                boolean conditionPassed = result.isEmpty();
+
+                if (conditionPassed) {
+                    log.info("MCP function {} on {} passed availability condition {}",
+                            toolFunctionName, method.toGenericString(), conditionClass.getName());
+
+                    if (availabilityMode == McpAvailabilityMode.ANY) {
+                        conditionsAvailable = true;
+                        break;
+                    }
+                } else {
+                    availabilityMessages.addAll(result);
+
+                    log.info("MCP function {} on {} is unavailable due to condition {}",
+                            toolFunctionName, method.toGenericString(), conditionClass.getName());
+
+                    result.forEach(message -> log.info(" - {}", message));
+
+                    if (availabilityMode == McpAvailabilityMode.ALL) {
+                        conditionsAvailable = false;
+                        // Do not break if you want ALL to aggregate every failure message.
+                        // break; only if you want fail-fast ALL.
+                    }
+                }
+
+            } catch (ReflectiveOperationException exception) {
+                availabilityMessages.add(
+                        "Unable to evaluate availability condition " + conditionClass.getName() + ": " + exception.getMessage()
+                );
+
+                log.error("Unable to evaluate availability condition {} on {} for MCP function {}: {}",
+                        conditionClass.getName(), method.toGenericString(), toolFunctionName, exception.getMessage(), exception);
+
+                if (availabilityMode == McpAvailabilityMode.ALL) {
+                    conditionsAvailable = false;
+                }
+                // If ANY, ignore failures to evaluate conditions, since we only need one success.
+            }
+        }
+
+        return foundAvailabilityCondition ? new McpFunctionAvailabilityState(availabilityMode, conditionsAvailable) : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> validateReflectiveAvailabilityCondition(McpAvailabilityCondition<?> condition, Annotation annotation, AvailabilityValidationContext context) {
+        return validateAvailabilityCondition(
+                (McpAvailabilityCondition<Annotation>) condition,
+                annotation,
+                context
+        );
+    }
+
+    private static <A extends Annotation> List<String> validateAvailabilityCondition(@NonNull McpAvailabilityCondition<A> condition, A annotation, AvailabilityValidationContext context) {
+        return condition.validate(annotation, context);
+    }
+
+    private McpFunctionAvailability newMcpFunctionAvailability(McpTool tool, McpFunction function, McpConfigureMapping functionMapping, McpFunctionAvailabilityState availabilityState) {
+        boolean foundAvailabilityCondition = availabilityState == null;
+
+        boolean isFunctionConditionsAvailable = isConditionsAvailable(foundAvailabilityCondition, availabilityState);
+        boolean isFunctionStaticEnabled = evalToolFunctionEnabled(tool, function);
+        boolean isFunctionAvailable = isFunctionStaticEnabled && isFunctionConditionsAvailable;
+
+        McpAvailabilityConditionResult conditionResult = ;
+
+        return new McpFunctionAvailability(
+                isFunctionAvailable,
+                evalToolFunctionVisibility(tool, function),
+                functionMapping.availabilityMode(),
+                isFunctionAvailable,
+                List.of(conditionResult)
+        );
     }
 
     private static boolean evalToolFunctionEnabled(@NonNull McpTool tool, McpFunction function) {
@@ -129,9 +276,10 @@ public class McpToolAnnotationScanner {
         if (method.getReturnType().equals(Void.TYPE)) {
             throw new IllegalStateException("MCP tool function must not return void: " + method);
         }
+
         List<Parameter> functionParameters = bindableParameters(method);
-        boolean canInferArgsParam = functionParameters.size() == 1
-                && !functionParameters.getFirst().isAnnotationPresent(McpFunctionParam.class);
+        boolean canInferArgsParam = functionParameters.size() == 1 && !functionParameters.getFirst().isAnnotationPresent(McpFunctionParam.class);
+
         for (Parameter parameter : functionParameters) {
             if (McpCallContext.class.isAssignableFrom(parameter.getType())) {
                 continue;
@@ -392,5 +540,17 @@ public class McpToolAnnotationScanner {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private record McpFunctionAvailabilityState(McpAvailabilityMode availabilityMode, boolean isAvailable) {
+    }
+
+    @McpTool()
+    private static class McpToolDefaults {
+        @McpConfigureMapping
+        @McpFunction("main")
+        public DispatchExecutionResult main(McpCallContext context) {
+            return DispatchExecutionResult.builder().build();
+        }
     }
 }

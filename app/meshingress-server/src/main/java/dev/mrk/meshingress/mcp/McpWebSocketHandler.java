@@ -3,6 +3,8 @@ package dev.mrk.meshingress.mcp;
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.controller.McpDispatcher;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -17,6 +19,8 @@ import java.util.Optional;
 @Component
 public class McpWebSocketHandler extends TextWebSocketHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(McpWebSocketHandler.class);
+
     private final ObjectMapper objectMapper;
     private final McpDispatcher dispatcher;
     private final JsonRpcResponses responses;
@@ -29,10 +33,14 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
+        String requestId = stringAttribute(session.getAttributes(), "mcp.requestId");
+        String sessionId = stringAttribute(session.getAttributes(), "mcp.sessionId");
+        LOGGER.info("=== MCP REQUEST START [ws] requestId={} sessionId={} wsSession={} ===", requestId, sessionId, session.getId());
         JsonNode request;
         try {
             request = objectMapper.readTree(message.getPayload());
         } catch (JacksonException exception) {
+            LOGGER.warn("MCP ws parse error: requestId={} sessionId={} payloadLength={}", requestId, sessionId, message.getPayloadLength(), exception);
             session.sendMessage(new TextMessage(objectMapper.writeValueAsString(
                     responses.error(null, JsonRpcErrorCodes.PARSE_ERROR, "Parse error")
             )));

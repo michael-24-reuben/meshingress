@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.tools.availability.enableondays;
 
-import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityCondition;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityCondition;
 import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityValidationContext;
 import org.springframework.stereotype.Component;
 
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public final class EnableOnDaysCondition implements AvailabilityCondition<EnableOnDays> {
+public final class EnableOnDaysCondition implements McpAvailabilityCondition<EnableOnDays> {
 
     @Override
     public List<String> validate(EnableOnDays annotation, AvailabilityValidationContext context) {

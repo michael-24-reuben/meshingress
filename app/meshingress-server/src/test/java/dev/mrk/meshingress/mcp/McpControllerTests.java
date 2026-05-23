@@ -158,6 +158,7 @@ class McpControllerTests {
                                 }
                                 """))
                 .andExpect(status().isOk())
+                //java.lang.AssertionError: No value at JSON path "$.error.code"
                 .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)));
     }
 

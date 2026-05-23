@@ -1,21 +1,8 @@
 # Notes
 
-## Rating From Planning
-
-Estimated final design rating after refinement:
-
-- Flexibility: 8.5 / 10
-- Security: 8.7 / 10
-- Robustness: 8.8 / 10
-- Simplicity: 7.8 / 10
-- Type safety: 8.5 / 10
-- Debuggability: 8.5 / 10
-- Controller readability: 9 / 10
-- Overall: 8.7 / 10
-
 ## Key Tradeoff
 
-The design improves controller readability by moving cross-cutting route behavior into annotations. That creates framework complexity behind the scenes. Startup validation, route introspection, structured logs, and metrics are required to keep the behavior inspectable.
+The design improves route inspectability by moving route identity and server path metadata into annotations. That creates framework behavior behind the scenes, so startup validation, route introspection, structured logs, and metrics are required to keep behavior understandable.
 
 ## Recommended First Implementation Slice
 
@@ -27,17 +14,14 @@ Start with:
 4. `McpMiddleware` interface
 5. `@McpRequestMiddleware`
 6. `@McpConfigureMapping`
-7. `@EnableWithinTimeRanges`
-8. startup validation
-9. structured route execution logs
+7. startup validation
+8. structured route execution logs
 
-Keep this slice inside the three route library modules only:
+Keep this slice inside the three route library modules:
 
 - `lib/meshingress-route-api`
 - `lib/meshingress-route-annotations`
 - `lib/meshingress-route-framework`
-
-Do not create a centralized route aggregate module and do not attach the implementation to `app/meshingress-server` yet. Add more availability annotations, metrics, and live server routes after the library modules compile and have isolated tests.
 
 ## Module Naming Note
 
@@ -51,20 +35,36 @@ Implemented the first code slice as three `lib/` modules only:
 - `lib/meshingress-route-annotations`
 - `lib/meshingress-route-framework`
 
-No centralized `lib/meshingress-route` aggregate module was introduced. No dependencies or route implementation wiring were added to `app/meshingress-server`.
+No centralized `lib/meshingress-route` aggregate module was introduced.
 
 Implemented source coverage:
 
 - request/response/error/context contracts
-- middleware and availability policy contracts
-- route, middleware, secret, configuration, HTTP method, availability mode, and stability annotations
-- specific availability annotations for time ranges, days, and feature flags
-- framework scanner, registry, validator, middleware executor, availability evaluator, execution pipeline, standard error mapper, and structured logging observer
+- middleware contracts
+- route, middleware, secret, configuration, HTTP method, and stability annotations
+- framework scanner, registry, validator, middleware executor, execution pipeline, standard error mapper, and structured logging observer
+
+## 2026-05-22 Server Attachment
+
+The current `/mcp` transport methods now carry route metadata:
+
+- `mcp.transport.post.v1` -> `POST /mcp`
+- `mcp.transport.get.v1` -> `GET /mcp`
+- `mcp.transport.delete.v1` -> `DELETE /mcp`
+
+The server now creates an `McpRouteRegistry` bean from the annotated `McpController` methods and validates the registry at startup. MCP `tools/list` and `tools/call` remain JSON-RPC methods inside `POST /mcp`.
+
+## 2026-05-22 Controller Dispatch Integration
+
+Moved the annotation-based MCP method dispatch surface out of `app/meshingress-server` and into the route modules:
+
+- `lib/meshingress-route-annotations` owns dispatch annotations.
+- `lib/meshingress-route-api` owns dispatch error contracts.
+- `lib/meshingress-route-framework` owns dispatch scanning, registry, schema records, argument binding, return adaptation, and handler invocation.
+
+`McpDispatcher` now invokes the route-framework dispatch registry directly. `InternalMcpController`, `ToolsMcpController`, and `RolesMcpController` expose their JSON-RPC methods through annotations instead of `McpMethodController` implementations and local `switch` routing.
 
 Verification:
 
-```powershell
-.\mvnw.cmd -pl lib/meshingress-route-framework -am test "-Djava.version=22" "-Dmaven.compiler.release=22" "-Dmaven.compiler.source=22" "-Dmaven.compiler.target=22"
-```
-
-Result: build success, 6 route-framework tests passed.
+- `mvnw.cmd -pl app/meshingress-server -am test-compile` passes with Java 22 compiler overrides.
+- `mvnw.cmd -pl app/meshingress-server -am clean test` runs the new dispatch framework tests successfully. The full server test target still has the pre-existing `McpControllerTests.roleMethodsRequireAdminAuthorization` failure because `roles/tools/list` returns a successful result without admin instead of a JSON-RPC auth error.

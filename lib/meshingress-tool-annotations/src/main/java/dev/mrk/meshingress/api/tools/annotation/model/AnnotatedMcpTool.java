@@ -5,12 +5,6 @@ import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import java.util.List;
 import java.util.Optional;
 
-//         Class<?> controllerType,
-//        Method handlerMethod,
-//        McpRoute route,
-//        McpConfigureMapping configuration,
-//        List<Class<? extends McpMiddleware<?, ?, ?>>> middlewareTypes,
-//        List<Annotation> availabilityAnnotations
 public record AnnotatedMcpTool(
         Class<?> toolClass,
         String mapping,

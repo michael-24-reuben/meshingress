@@ -1,12 +1,12 @@
 {
   "id": "2026-05-20-mcp-route-annotation-framework",
   "title": "MCP Route Annotation Framework",
-  "status": "pending",
+  "status": "active",
   "createdAt": "2026-05-20T20:30:00-04:00",
-  "activatedAt": null,
+  "activatedAt": "2026-05-22T14:27:29-04:00",
   "resolvedAt": null,
   "archivedAt": null,
-  "updatedAt": "2026-05-21T06:34:20-04:00",
+  "updatedAt": "2026-05-22T14:27:29-04:00",
   "tags": [
     "design",
     "spring-boot",
@@ -14,18 +14,18 @@
     "routing",
     "annotations",
     "middleware",
-    "availability",
     "security",
     "observability",
     "framework",
     "module-structure",
     "multi-module",
-    "library-split"
+    "library-split",
+    "server-paths"
   ],
   "related": [],
   "origin": {
     "source": "chat",
-    "summary": "Planning discussion for a Spring Boot MCP controller and annotation framework using HTTPRequest<Query, Params, Body>, class-based middleware, specific availability annotations, route IDs, secrets, startup validation, structured logs, and standard error contracts. Later refined to require exactly three route library modules for the first implementation slice: route API, route annotations, and route framework runtime, without a centralized aggregate module or server-module integration yet."
+    "summary": "Planning and implementation work for a Spring Boot MCP route annotation framework using actual HTTP server paths, route IDs, request/response contracts, class-based middleware, startup validation, structured logs, and standard error contracts."
   },
   "events": [
     {
@@ -41,12 +41,17 @@
     {
       "at": "2026-05-21T06:21:08-04:00",
       "type": "UPDATED",
-      "note": "Constrained the pending implementation shape to three route lib modules only, with no centralized aggregate module and no server-module integration yet."
+      "note": "Constrained the pending implementation shape to three route lib modules only, with no centralized aggregate module."
     },
     {
       "at": "2026-05-21T06:34:20-04:00",
       "type": "UPDATED",
-      "note": "Implemented and verified the first library-only route framework slice across meshingress-route-api, meshingress-route-annotations, and meshingress-route-framework."
+      "note": "Implemented and verified the first route framework library slice across meshingress-route-api, meshingress-route-annotations, and meshingress-route-framework."
+    },
+    {
+      "at": "2026-05-22T14:27:29-04:00",
+      "type": "UPDATED",
+      "note": "Removed tool policy concerns from the route framework record and attached route metadata to the current /mcp server path."
     }
   ]
 }

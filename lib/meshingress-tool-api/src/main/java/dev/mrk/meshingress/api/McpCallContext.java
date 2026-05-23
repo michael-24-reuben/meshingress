@@ -7,6 +7,7 @@ public record McpCallContext(
         String requestId
 ) {
 
+
     @Deprecated
     public String adminHeader() {
         return roleHeader;

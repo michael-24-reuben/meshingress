@@ -13,8 +13,7 @@
 - [x] Add `@McpConfigureMapping`.
 - [x] Add `@McpSecret`.
 - [x] Add `@McpRequestMiddleware` using middleware classes, not strings.
-- [x] Add `@McpAvailabilityPolicy` meta-annotation.
-- [x] Add specific availability annotations.
+- [x] Add annotation-based MCP JSON-RPC dispatch mapping support.
 - [ ] Add JavaDoc examples for string-based parameters.
 - [x] Add JetBrains `@Pattern` annotations where helpful for string integrity.
 
@@ -27,15 +26,6 @@
 - [ ] Enforce one middleware concern per class.
 - [ ] Ensure middleware order is deterministic and follows annotation order.
 
-## Availability
-
-- [x] Implement `EnableWithinTimeRangesPolicy`.
-- [x] Implement `EnableOnDaysPolicy`.
-- [x] Implement `EnableWhenFeatureFlagOnPolicy`.
-- [x] Support `McpAvailabilityMode.ALL`.
-- [x] Consider `McpAvailabilityMode.ANY` only if a real route needs it.
-- [ ] Ensure availability runs after authentication/authorization middleware.
-
 ## Secrets
 
 - [ ] Implement secret reference resolver.
@@ -46,9 +36,10 @@
 
 - [x] Implement route scanning/registry.
 - [x] Implement route execution aspect/interceptor.
+- [x] Implement annotation-based MCP JSON-RPC dispatch scanner/registry/invoker.
+- [x] Replace `McpMethodController` dispatch ownership with route-framework dispatch metadata.
 - [x] Inject server-authoritative route ID into request/context.
 - [x] Run middleware pipeline.
-- [x] Evaluate availability annotations.
 - [ ] Resolve secrets before handler execution only when needed.
 - [x] Convert framework exceptions into standard error responses.
 
@@ -56,25 +47,24 @@
 
 - [x] Add startup route registry validator.
 - [x] Validate unique route IDs.
-- [x] Validate method signatures use exactly `HTTPRequest<Query, Params, Body>`.
+- [x] Validate route paths use actual server paths.
 - [x] Validate middleware references.
-- [x] Validate availability policy references.
-- [x] Validate annotation values such as time ranges, zones, feature flags, and secret refs.
+- [x] Validate annotation values such as secret refs.
 
 ## Observability
 
 - [x] Add structured logs for route lifecycle.
 - [ ] Add debug trace mode per route.
-- [ ] Add metrics for route duration, middleware duration, availability decisions, errors, and timeouts.
+- [ ] Add metrics for route duration, middleware duration, errors, and timeouts.
 - [ ] Ensure sensitive values are redacted.
 
 ## Testing
 
-- [x] Unit test middleware interface and implementations.
-- [x] Unit test availability policies.
+- [ ] Unit test middleware interface and implementations.
 - [x] Unit test startup validator failure cases.
-- [x] Integration test controller execution path.
-- [ ] Integration test unauthenticated requests cannot probe availability details.
+- [x] Integration test controller route metadata attachment.
+- [x] Unit test annotation-based MCP dispatch scanning, argument binding, and duplicate detection.
+- [x] Integration test annotation-based MCP dispatch through `POST /mcp`.
 - [ ] Integration test malformed annotation config fails fast at startup.
 
 ## Module Structure
@@ -86,6 +76,6 @@
 - [x] Wire Maven parent modules in dependency order.
 - [x] Ensure `meshingress-route-api` does not depend on Spring runtime classes.
 - [x] Ensure `meshingress-route-annotations` does not contain execution logic.
-- [x] Ensure `meshingress-route-framework` owns Spring integration and route execution behavior.
+- [x] Ensure `meshingress-route-framework` owns route scanning, validation, and execution behavior.
 - [x] Keep app-specific controllers, middleware, policies, secrets, and external clients in `app/meshingress-server` unless they are clearly reusable.
-- [x] Do not add route-framework dependencies or route implementation wiring to `app/meshingress-server` in the first slice.
+- [x] Attach current `/mcp` server path metadata in `app/meshingress-server`.

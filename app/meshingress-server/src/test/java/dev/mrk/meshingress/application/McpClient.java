@@ -26,7 +26,7 @@ public class McpClient {
     }
 
     public static void main(String[] args) throws Exception {
-        String url = args.length > 0 ? args[0] : "http://localhost:8080";
+        String url = args.length > 0 ? args[0] : "http://100.121.15.11:8080";
         McpClient c = new McpClient(url);
 
         // Mirror the original test requests but as live client calls

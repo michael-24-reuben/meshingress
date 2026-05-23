@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.tools.availability.enableondays;
 
-import dev.mrk.meshingress.api.tools.annotation.McpToolAvailabilityCondition;
+import dev.mrk.meshingress.api.tools.annotation.McpFunctionAvailabilityCondition;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,9 +10,11 @@ import java.time.DayOfWeek;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@McpToolAvailabilityCondition(EnableOnDaysCondition.class)
+@McpFunctionAvailabilityCondition(EnableOnDaysCondition.class)
 public @interface EnableOnDays {
 
     DayOfWeek[] value();
 }
+
+
 

@@ -1,5 +1,6 @@
 package dev.mrk.meshingress.mcp.tools;
 
+import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -75,7 +76,7 @@ public class ArchitectEntriesListTool implements McpToolHandler {
     }
 
     @Override
-    public ToolExecutionResult call(ObjectNode arguments, McpCallContext context) {
+    public DispatchExecutionResult call(ObjectNode arguments, McpCallContext context) {
         String statusFilter = arguments.path("status").asString("");
         String tagFilter = arguments.path("tag").asString("");
         String queryFilter = arguments.path("query").asString("").toLowerCase();
@@ -90,11 +91,10 @@ public class ArchitectEntriesListTool implements McpToolHandler {
 
         ObjectNode structured = objectMapper.createObjectNode();
         structured.set("entries", entries);
-        return ToolExecutionResult.text(
-                objectMapper,
-                "Found " + entries.size() + " architect entr" + (entries.size() == 1 ? "y." : "ies."),
-                structured
-        );
+        return DispatchExecutionResult.builder()
+                .text("Found " + entries.size() + " architect entr" + (entries.size() == 1 ? "y." : "ies."))
+                .structuredContent(structured)
+                .build();
     }
 
     private void collectStatusEntries(Path statusPath, String fallbackStatus, String tagFilter, String queryFilter, ArrayNode entries) {

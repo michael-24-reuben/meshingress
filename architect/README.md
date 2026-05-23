@@ -98,8 +98,20 @@ architect/
 │     ├─ verification.md
 │     └─ summary.md
 │
-└─ archived/
-   └─ 2026-05-01-obsolete-design-draft/
+├─ archived/
+│  └─ 2026-05-01-obsolete-design-draft/
+│     ├─ meta.json
+│     ├─ brief.md
+│     └─ summary.md
+│
+├─ discontinued/
+│  └─ 2026-05-02-stopped-custom-plugin-loader/
+│     ├─ meta.json
+│     ├─ brief.md
+│     └─ summary.md
+│
+└─ superseded/
+   └─ 2026-05-03-custom-http-client-wrapper/
       ├─ meta.json
       ├─ brief.md
       └─ summary.md
@@ -203,11 +215,71 @@ summary.md
 
 ## `archived/`
 
-Use `archived/` for stale, rejected, obsolete, or intentionally abandoned records.
+Use `archived/` for stale, obsolete, or preserved records that do not fit a more specific terminal state.
 
 Do not move completed work to `archived/` by default. Completed work belongs in `resolved/`.
 
-Use `archived/` only when the entry is no longer relevant but should still be preserved.
+Do not use `archived/` when the stronger reason is known. Use `discontinued/` for intentionally stopped work and `superseded/` for work replaced by a better implementation, later decision, or existing library.
+
+---
+
+## `discontinued/`
+
+Use `discontinued/` for work that was intentionally stopped and is not expected to continue.
+
+Good candidates:
+
+* prototypes that are no longer maintained
+* implementation tracks cancelled by project direction
+* features deliberately dropped from scope
+* work stopped because its cost, risk, or priority changed
+
+Discontinued entries must preserve the reason in `meta.json` so future readers know why the work stopped.
+
+A discontinued entry should usually include:
+
+```txt
+meta.json
+brief.md
+summary.md
+```
+
+Optional:
+
+```txt
+context.md
+assessment.md
+```
+
+---
+
+## `superseded/`
+
+Use `superseded/` for work that was replaced by a better solution, later design, existing library, platform capability, or another architect entry.
+
+Good candidates:
+
+* implementations reversed after a better approach appeared
+* custom code replaced by an existing library
+* design drafts invalidated by a later architecture decision
+* entries replaced by a more accurate or more complete entry
+
+Superseded entries must preserve the reason in `meta.json`. When there is a replacement entry, library, module, or decision, record it in both `meta.json.related` and the supersession metadata.
+
+A superseded entry should usually include:
+
+```txt
+meta.json
+brief.md
+summary.md
+```
+
+Optional:
+
+```txt
+context.md
+assessment.md
+```
 
 ---
 
@@ -229,6 +301,10 @@ Use this file for:
 
 Do not put full investigation notes in `meta.json`.
 
+Terminal states that abandon or replace work must include a compact reason in `meta.json.disposition.reason`. Use Markdown files for longer explanation.
+
+Use `disposition` only when the entry is moved to a terminal non-resolution space such as `discontinued/` or `superseded/`. Keep it `null` for ordinary `pending`, `active`, `blocked`, `resolved`, and generic `archived` entries unless the archive reason needs to be indexed.
+
 Example:
 
 ```json
@@ -240,6 +316,8 @@ Example:
   "activatedAt": null,
   "resolvedAt": null,
   "archivedAt": null,
+  "discontinuedAt": null,
+  "supersededAt": null,
   "updatedAt": "2026-05-07T02:10:00-04:00",
   "tags": [
     "logging",
@@ -255,6 +333,7 @@ Example:
     "source": "chat",
     "summary": "Discussion about storing raw PolicyEvaluationResult output over time for audit, debugging, and action-package use."
   },
+  "disposition": null,
   "events": [
     {
       "at": "2026-05-07T02:10:00-04:00",
@@ -262,6 +341,41 @@ Example:
       "note": "Created from discussion about process scan log storage."
     }
   ]
+}
+```
+
+Disposition example for `discontinued/`:
+
+```json
+{
+  "status": "discontinued",
+  "discontinuedAt": "2026-05-08T14:30:00-04:00",
+  "disposition": {
+    "type": "discontinued",
+    "reason": "Stopped because the feature no longer fits the MVP scope.",
+    "decidedAt": "2026-05-08T14:30:00-04:00",
+    "decidedBy": "maintainer",
+    "replacement": null
+  }
+}
+```
+
+Disposition example for `superseded/`:
+
+```json
+{
+  "status": "superseded",
+  "supersededAt": "2026-05-08T16:45:00-04:00",
+  "related": [
+    "2026-05-08-adopt-standard-http-client"
+  ],
+  "disposition": {
+    "type": "superseded",
+    "reason": "Replaced by the standard HTTP client because it already provides retries, timeouts, and metrics hooks.",
+    "decidedAt": "2026-05-08T16:45:00-04:00",
+    "decidedBy": "maintainer",
+    "replacement": "2026-05-08-adopt-standard-http-client"
+  }
 }
 ```
 
@@ -273,6 +387,8 @@ active
 blocked
 resolved
 archived
+discontinued
+superseded
 ```
 
 Recommended event types:
@@ -286,6 +402,8 @@ UNBLOCKED
 RESOLVED
 REOPENED
 ARCHIVED
+DISCONTINUED
+SUPERSEDED
 RENAMED
 LINKED
 ```
@@ -561,6 +679,11 @@ Alternative flow:
 
 ```txt
 pending -> archived
+pending -> discontinued
+active -> discontinued
+pending -> superseded
+active -> superseded
+resolved -> superseded
 active -> blocked -> active -> resolved
 resolved -> active
 resolved -> archived
@@ -624,19 +747,56 @@ When work is complete:
     * `verification.md`
     * `summary.md`
 
+## Discontinuing an Entry
+
+When work is intentionally stopped and is not expected to continue:
+
+1. Move the folder to `discontinued/`.
+2. Update `meta.json`:
+
+    * `status: "discontinued"`
+    * `discontinuedAt`
+    * `updatedAt`
+    * `disposition.type: "discontinued"`
+    * `disposition.reason`
+    * append `DISCONTINUED` event
+3. Add or finalize `summary.md` with the human-readable explanation.
+4. Preserve useful context, but do not treat the entry as completed work.
+
+## Superseding an Entry
+
+When work is replaced by a better implementation, another entry, an existing library, or a later decision:
+
+1. Move the folder to `superseded/`.
+2. Update `meta.json`:
+
+    * `status: "superseded"`
+    * `supersededAt`
+    * `updatedAt`
+    * `disposition.type: "superseded"`
+    * `disposition.reason`
+    * `disposition.replacement` when known
+    * `related` with the replacement entry when applicable
+    * append `SUPERSEDED` event
+3. Add or finalize `summary.md` with what replaced the entry and why.
+4. If the replacement is an existing library or external capability rather than another architect entry, name it in `disposition.replacement` and explain it in `summary.md`.
+
 ## Reopening an Entry
 
-When resolved work needs more changes:
+When resolved, discontinued, or superseded work needs more changes:
 
 1. Move the folder back to `active/`.
 2. Update `meta.json`:
 
     * `status: "active"`
-    * `resolvedAt: null`
+    * `resolvedAt: null` when reopening from `resolved/`
+    * `discontinuedAt: null` when reopening from `discontinued/`
+    * `supersededAt: null` when reopening from `superseded/`
+    * `disposition: null` unless the prior disposition remains important as indexed context
     * `updatedAt`
     * append `REOPENED` event
 3. Add new notes to `notes.md`.
-4. Preserve old resolution files unless they are misleading.
+4. Preserve old resolution, discontinuation, or supersession files unless they are misleading.
 
 ---
 
@@ -702,6 +862,8 @@ future
 mvp
 post-mvp
 manual-check-needed
+discontinued
+superseded
 ```
 
 ---
@@ -729,6 +891,7 @@ Use relationships for:
 * related architecture decisions
 * PRDs that depend on another PRD
 * fixes that came from the same root cause
+* superseded entries and their replacements
 
 ---
 
@@ -790,6 +953,24 @@ architect/archived/YYYY-MM-DD-short-title/
 └─ summary.md
 ```
 
+## Discontinued Entry Template
+
+```txt
+architect/discontinued/YYYY-MM-DD-short-title/
+├─ meta.json
+├─ brief.md
+└─ summary.md
+```
+
+## Superseded Entry Template
+
+```txt
+architect/superseded/YYYY-MM-DD-short-title/
+├─ meta.json
+├─ brief.md
+└─ summary.md
+```
+
 ---
 
 # Example Entry: Process Scan Log Storage
@@ -814,6 +995,8 @@ architect/pending/2026-05-07-process-scan-log-storage-and-rotation/
   "activatedAt": null,
   "resolvedAt": null,
   "archivedAt": null,
+  "discontinuedAt": null,
+  "supersededAt": null,
   "updatedAt": "2026-05-07T02:10:00-04:00",
   "tags": [
     "logging",
@@ -830,6 +1013,7 @@ architect/pending/2026-05-07-process-scan-log-storage-and-rotation/
     "source": "chat",
     "summary": "Discussion about storing raw process evaluation logs over time for debugging, audit, bot review, and future action-package execution."
   },
+  "disposition": null,
   "events": [
     {
       "at": "2026-05-07T02:10:00-04:00",
@@ -913,10 +1097,13 @@ Possible future commands:
 
 ```txt
 task-sentinel architect list --status pending
+task-sentinel architect list --status superseded
 task-sentinel architect list --tag logging
 task-sentinel architect open 2026-05-07-process-scan-log-storage-and-rotation
 task-sentinel architect related 2026-05-07-policy-action-package-contract
 task-sentinel architect move --to active 2026-05-07-process-scan-log-storage-and-rotation
+task-sentinel architect discontinue 2026-05-07-process-scan-log-storage-and-rotation --reason "No longer fits MVP scope"
+task-sentinel architect supersede 2026-05-07-custom-http-client --replacement 2026-05-08-adopt-standard-http-client --reason "Existing client covers retries and metrics"
 task-sentinel architect summarize --status resolved
 ```
 
@@ -930,6 +1117,7 @@ Potential future uses:
 * build a local project knowledge graph
 * calculate time from creation to resolution
 * identify recurring subsystem problems
+* audit why work was discontinued or superseded
 
 ---
 

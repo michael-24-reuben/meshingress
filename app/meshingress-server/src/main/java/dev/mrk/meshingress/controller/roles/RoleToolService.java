@@ -9,6 +9,8 @@ import dev.mrk.meshingress.mcp.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
 import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -17,6 +19,8 @@ import tools.jackson.databind.node.ObjectNode;
 
 @Service
 public class RoleToolService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoleToolService.class);
 
     private final ObjectMapper objectMapper;
     private final ToolRegistry toolRegistry;
@@ -138,6 +142,7 @@ public class RoleToolService {
         return result;
     }
 
+
     private ObjectNode checkResultToJson(ToolCheckResult check) {
         ObjectNode result = objectMapper.createObjectNode();
         result.put("valid", check.valid());
@@ -190,6 +195,7 @@ public class RoleToolService {
         try {
             return ToolVisibility.fromWire(value.asString("public"));
         } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Invalid tool visibility value: {}", value.asString(""), exception);
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "visibility must be public, private, or admin");
         }
     }

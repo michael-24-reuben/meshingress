@@ -3,9 +3,13 @@ package dev.mrk.meshingress.controller;
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.mcp.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.JsonRpcResponses;
+import dev.mrk.meshingress.route.annotations.McpHttpMethod;
+import dev.mrk.meshingress.route.annotations.McpRoute;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.JacksonException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +28,8 @@ import java.util.Optional;
 @RequestMapping("/mcp")
 public class McpController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(McpController.class);
+
     private final ObjectMapper objectMapper;
     private final McpDispatcher dispatcher;
     private final JsonRpcResponses responses;
@@ -34,6 +40,7 @@ public class McpController {
         this.responses = responses;
     }
 
+    @McpRoute(id = "mcp.transport.post.v1", method = McpHttpMethod.POST, path = "/mcp")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<JsonNode> post(
             @RequestBody String body,
@@ -43,10 +50,13 @@ public class McpController {
             @RequestHeader(value = "Mcp-Session-Id", required = false) String sessionId,
             @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
+        LOGGER.info("=== MCP REQUEST START [http] requestId={} sessionId={} ===", requestId, sessionId);
         JsonNode request;
         try {
             request = objectMapper.readTree(body);
         } catch (JacksonException exception) {
+            int bodyLength = body == null ? 0 : body.length();
+            LOGGER.warn("MCP http parse error: requestId={} sessionId={} bodyLength={}", requestId, sessionId, bodyLength, exception);
             return ResponseEntity.ok(responses.error(null, JsonRpcErrorCodes.PARSE_ERROR, "Parse error"));
         }
 
@@ -57,13 +67,17 @@ public class McpController {
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
+    @McpRoute(id = "mcp.transport.get.v1", method = McpHttpMethod.GET, path = "/mcp")
     @GetMapping
     public ResponseEntity<Void> get() {
+        LOGGER.info("=== MCP REQUEST START [http] method=GET ===");
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
+    @McpRoute(id = "mcp.transport.delete.v1", method = McpHttpMethod.DELETE, path = "/mcp")
     @DeleteMapping
     public ResponseEntity<Void> delete() {
+        LOGGER.info("=== MCP REQUEST START [http] method=DELETE ===");
         return ResponseEntity.accepted().build();
     }
 

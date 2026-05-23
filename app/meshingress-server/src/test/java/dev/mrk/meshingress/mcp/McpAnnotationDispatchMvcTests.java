@@ -2,9 +2,9 @@ package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.MeshingressApplication;
 import dev.mrk.meshingress.api.McpCallContext;
-import dev.mrk.meshingress.dispatch.annotation.McpDispatchMapping;
-import dev.mrk.meshingress.dispatch.annotation.McpDispatchMethod;
-import dev.mrk.meshingress.dispatch.annotation.McpDispatchParam;
+import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
+import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
+import dev.mrk.meshingress.route.annotations.McpDispatchParam;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;

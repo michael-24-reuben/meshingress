@@ -1,13 +1,13 @@
 package dev.mrk.meshingress.tools.availability.featureflag;
 
-import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityCondition;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityCondition;
 import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityValidationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public final class FeatureFlagOnCondition implements AvailabilityCondition<EnableWhenFeatureFlagOn> {
+public final class FeatureFlagOnCondition implements McpAvailabilityCondition<EnableWhenFeatureFlagOn> {
 
     @Override
     public List<String> validate(EnableWhenFeatureFlagOn annotation, AvailabilityValidationContext context) {

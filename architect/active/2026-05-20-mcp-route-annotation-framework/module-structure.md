@@ -1,10 +1,10 @@
 # Module Structure
 
-## Recommended Library Split
+## Library Split
 
 Use the route framework as a small layered set of `lib/` modules rather than placing all types directly in the server application.
 
-Do not add a centralized aggregate module. The first implementation slice should create only these route modules:
+Do not add a centralized aggregate module. The route system should use only these route modules:
 
 ```txt
 lib/
@@ -13,7 +13,7 @@ lib/
 └─ meshingress-route-framework/
 ```
 
-This split keeps stable contracts separate from annotations and separates both from the Spring/runtime execution layer.
+This split keeps stable contracts separate from annotations and separates both from the runtime execution layer.
 
 ## `lib/meshingress-route-api`
 
@@ -26,8 +26,6 @@ Owns:
 - `McpErrorResponse`
 - `McpRouteExecutionContext`
 - `McpMiddleware<Q, P, B>`
-- `AvailabilityPolicy<A extends Annotation>`
-- `AvailabilityDecision`
 - framework exception base types where appropriate
 
 Should avoid:
@@ -48,12 +46,7 @@ Owns:
 - `@McpConfigureMapping`
 - `@McpSecret`
 - `@McpRequestMiddleware`
-- `@McpAvailabilityPolicy`
-- `@EnableWithinTimeRanges`
-- `@EnableOnDays`
-- `@EnableWhenFeatureFlagOn`
-- future specific availability annotations
-- route metadata enums such as HTTP method, availability mode, stability, or capability flags
+- route metadata enums such as HTTP method or stability
 
 May depend on:
 
@@ -63,9 +56,9 @@ May depend on:
 Should avoid:
 
 - Spring runtime classes unless absolutely necessary
-- generic `args = { "key=value" }` availability as the preferred model
 - route execution code
 - secret resolution code
+- MCP tool metadata policy logic
 
 ## `lib/meshingress-route-framework`
 
@@ -77,7 +70,6 @@ Owns:
 - route registry
 - startup validator
 - middleware executor
-- availability evaluator
 - route execution aspect/interceptor
 - standard error mapper
 - structured logging bridge
@@ -100,13 +92,9 @@ Should avoid:
 
 ## Server Application Boundary
 
-Do not introduce the implementation into `app/meshingress-server` yet.
+The server app may consume the framework to declare and validate actual server paths.
 
-The first implementation slice should stop at the reusable library modules. The server app should not gain route-framework dependencies, controllers, middleware adapters, route scanning configuration, or execution bridge wiring in this pending slice.
-
-Future server integration can consume the framework and define concrete routes and route-specific middleware/policies after the library modules are stable.
-
-Future dependency direction:
+Current server route attachment:
 
 ```txt
 app/meshingress-server
@@ -115,20 +103,17 @@ app/meshingress-server
     depends on lib/meshingress-route-api
 ```
 
-Example controller package responsibilities:
+Current annotated paths:
 
 ```txt
-app/meshingress-server/src/main/java/dev/mrk/meshingress/server/
-├─ controllers/        route controllers
-├─ middleware/         app-specific middleware implementations
-├─ availability/       app-specific availability policy implementations if not reusable
-├─ security/           secret resolver, auth token verifier, principal mapping
-└─ config/             Spring configuration
+POST /mcp
+GET /mcp
+DELETE /mcp
 ```
 
 ## Naming Decision
 
-`meshingress-route-framework` is a good module name only when the module contains the runtime framework: scanning, validation, execution, logging, and error handling.
+`meshingress-route-framework` is a good module name only when the module contains the route framework machinery: scanning, validation, execution, logging, and error handling.
 
 Do not use `meshingress-route-framework` for an annotation-only module. Use `meshingress-route-annotations` for pure annotations and `meshingress-route-api` for stable contracts.
 
@@ -142,11 +127,3 @@ lib/meshingress-route-spring/
 ```
 
 Do not introduce this split until there is real pressure to support a non-Spring runtime.
-
-## Explicit Non-Goals For First Slice
-
-- Do not create `lib/meshingress-route` as a centralized route module.
-- Do not place reusable route framework code in `app/meshingress-server`.
-- Do not add route framework dependencies to `app/meshingress-server`.
-- Do not convert existing MCP controllers or WebSocket/HTTP dispatch paths yet.
-- Do not attach a live annotated route to the server module yet.

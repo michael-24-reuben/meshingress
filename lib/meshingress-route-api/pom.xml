@@ -12,5 +12,5 @@
 
     <artifactId>meshingress-route-api</artifactId>
     <name>meshingress-route-api</name>
-    <description>Stable request, response, middleware, and availability contracts for Meshingress routes</description>
+    <description>Stable request, response, middleware, and route execution contracts for Meshingress routes</description>
 </project>

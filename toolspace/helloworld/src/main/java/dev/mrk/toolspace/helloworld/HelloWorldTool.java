@@ -1,13 +1,11 @@
 package dev.mrk.toolspace.helloworld;
 
 import dev.mrk.meshingress.api.McpCallContext;
-import dev.mrk.meshingress.api.tools.ToolExecutionResult;
+import dev.mrk.meshingress.api.result.DispatchExecutionResult;
+import dev.mrk.meshingress.api.result.ResultContent;
 import dev.mrk.meshingress.api.tools.annotation.*;
 import dev.mrk.meshingress.scopes.McpToolScope;
-import dev.mrk.meshingress.tools.availability.featureflag.EnableWhenFeatureFlagOn;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
 
 @McpTool(
         value = "helloworld.greet",
@@ -25,27 +23,16 @@ public class HelloWorldTool {
     }
 
     @McpConfigureMapping(
-            secrets = @McpSecret(name = "instagramApiToken", ref = "instagram-api-token"),
-            availabilityMode = McpAvailabilityMode.ALL,
-            audit = true,
-            debugTrace = true,
             timeoutMs = 20_000
     )
-    @EnableWhenFeatureFlagOn("instagram.publish.enabled")
     @McpFunction(value = "call", description = "Greet the Person.")
-    public ToolExecutionResult call(HelloWorldGreetArgs arguments, McpCallContext context) {
+    public DispatchExecutionResult call(HelloWorldGreetArgs arguments, McpCallContext context) {
         String name = arguments.getName();
+        DispatchExecutionResult.Builder dispatch = DispatchExecutionResult.builder()
+                .appendContent(ResultContent.text("Hello, " + name + "!"))
+                .structuredContent(objectMapper.createObjectNode().put("message", "Hello, " + name + "!"))
+                .error(false);
 
-        ObjectNode structured = objectMapper.createObjectNode();
-        structured.put("message", "Hello, " + name + "!");
-
-        ArrayNode content = objectMapper.createArrayNode();
-
-        ObjectNode text = objectMapper.createObjectNode();
-        text.put("type", "text");
-        text.put("text", "Hello, " + name + "!");
-        content.add(text);
-
-        return new ToolExecutionResult(content, structured, false);
+        return dispatch.build();
     }
 }

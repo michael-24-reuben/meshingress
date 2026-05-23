@@ -1,13 +1,15 @@
 package dev.mrk.meshingress.controller.tools;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
-import dev.mrk.meshingress.api.tools.ToolExecutionResult;
-import dev.mrk.meshingress.controller.McpMethodController;
 import dev.mrk.meshingress.mcp.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolExecutor;
 import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
+import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
+import dev.mrk.meshingress.route.annotations.McpDispatchParam;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +19,10 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import java.util.Set;
-
 @Component
-//@McpDispatchMapping("tools")
-public class ToolsMcpController implements McpMethodController {
+@McpDispatchMapping("tools")
+public class ToolsMcpController {
     private static final Logger log = LoggerFactory.getLogger(ToolsMcpController.class);
-    private static final Set<String> METHODS = Set.of("tools/list", "tools/call");
 
     private final ObjectMapper objectMapper;
     private final ToolRegistry toolRegistry;
@@ -35,27 +34,9 @@ public class ToolsMcpController implements McpMethodController {
         this.toolExecutor = toolExecutor;
     }
 
-    @Override
-    public Set<String> supportedMethods() {
-        return METHODS;
-    }
-
-    @Override
-    public boolean supports(String method) {
-        return METHODS.contains(method);
-    }
-
-    @Override
-    public JsonNode dispatch(String method, JsonNode params, McpCallContext context) {
-        return switch (method) {
-            case "tools/list" -> toolsList();
-            case "tools/call" -> toolsCall(params, context);
-            default -> throw new JsonRpcException(JsonRpcErrorCodes.METHOD_NOT_FOUND, "Method not found");
-        };
-    }
-
-    // @McpDispatchMethod("/list")
-    private @NonNull ObjectNode toolsList() {
+    @McpDispatchMethod("list")
+    public @NonNull ObjectNode toolsList() {
+        log.debug("MCP tools/list requested");
         ObjectNode result = objectMapper.createObjectNode();
         ArrayNode tools = objectMapper.createArrayNode();
         for (McpToolDescriptor descriptor : toolRegistry.listPublicEnabledTools()) {
@@ -65,8 +46,8 @@ public class ToolsMcpController implements McpMethodController {
         return result;
     }
 
-    // @McpDispatchMethod("/call")
-    private ObjectNode toolsCall(@NonNull JsonNode params, McpCallContext context) {
+    @McpDispatchMethod("call")
+    public ObjectNode toolsCall(@McpDispatchParam("params") @NonNull JsonNode params, McpCallContext context) {
         if (!params.isObject()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params must be an object");
         }
@@ -74,6 +55,7 @@ public class ToolsMcpController implements McpMethodController {
         if (name.isBlank()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params.name is required");
         }
+        log.info("MCP tools/call: name={} requestId={} sessionId={}", name, context.requestId(), context.sessionId());
         JsonNode arguments = params.path("arguments");
         if (arguments.isMissingNode() || arguments.isNull()) {
             arguments = objectMapper.createObjectNode();
@@ -82,13 +64,7 @@ public class ToolsMcpController implements McpMethodController {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params.arguments must be an object");
         }
 
-        ToolExecutionResult result = toolExecutor.execute(name, (ObjectNode) arguments, context);
+        DispatchExecutionResult result = toolExecutor.execute(name, (ObjectNode) arguments, context);
         return result.toJson(objectMapper);
     }
 }
-/*
-* Tools can then use annotations:
-```
-@McpDispatchMapping("tools")
-public class HelloWorldTool implements McpToolHandler
-```*/

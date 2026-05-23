@@ -2,69 +2,45 @@
 
 ## Objective
 
-Design and implement a Spring Boot MCP route execution model where controller methods use a stable request envelope:
+Design and implement a Spring Boot MCP route execution model where server paths can be declared with reusable route metadata:
 
 ```java
-post(HTTPRequest<Query, Params, Body> request)
-```
-
-The controller should remain declarative and readable while route execution concerns are handled by a small framework layer.
-
-## Target Controller Shape
-
-```java
-@PostMapping("/publish/{workspaceId}")
 @McpRoute(
-        id = "instagram.publish.post.v1",
+        id = "mcp.transport.post.v1",
         method = POST,
-        path = "/mcp/tools/instagram/publish/{workspaceId}"
+        path = "/mcp"
 )
-@McpRequestMiddleware({
-        ConfirmAuthToken.class,
-        RequireWorkspaceAccess.class,
-        RequireRouteId.class
-})
-@McpConfigureMapping(
-        secrets = {
-                @McpSecret(name = "instagramApiToken", ref = "instagram-api-token")
-        },
-        availabilityMode = ALL,
-        audit = true,
-        debugTrace = true,
-        timeoutMs = 20_000
-)
-@EnableWithinTimeRanges(
-        zone = "America/New_York",
-        ranges = {
-                "09:00-17:00",
-                "19:00-21:00"
-        }
-)
-@EnableOnDays({
-        MONDAY,
-        TUESDAY,
-        WEDNESDAY,
-        THURSDAY,
-        FRIDAY
-})
-@EnableWhenFeatureFlagOn("instagram.publish.enabled")
-public HTTPResponse<PublishPostResponse> post(
-        HTTPRequest<PublishPostQuery, PublishPostParams, PublishPostBody> request
-) {
+@PostMapping("/mcp")
+public ResponseEntity<JsonNode> post(...) {
     ...
 }
 ```
 
+The route annotation modules should describe actual HTTP server paths. JSON-RPC method dispatch remains inside the MCP transport body only where the MCP protocol requires it.
+
+## Current Server Boundary
+
+The current live server route is:
+
+```txt
+POST /mcp
+GET /mcp
+DELETE /mcp
+```
+
+`POST /mcp` remains the MCP JSON-RPC transport. MCP tool calls such as `tools/list` and `tools/call` stay JSON-RPC methods handled inside that transport.
+
 ## Core Decisions
 
+- Use `@McpRoute` to describe actual server paths, not JSON-RPC method strings.
+- Keep JSON-RPC envelope handling inside the `/mcp` transport.
+- Keep MCP tool calling as JSON-RPC because MCP clients expect `tools/list` and `tools/call` over the transport body.
 - Use class-based middleware references instead of string middleware names.
 - Each middleware class should represent exactly one middleware unit.
 - Middleware should implement a shared interface with a consistent calling method.
-- Replace generic availability argument maps with individual availability annotations.
 - Keep `@McpConfigureMapping` for common route execution settings only.
 - Use server-authoritative route IDs from `@McpRoute`; do not trust client-provided route IDs.
-- Add structured logs and metrics to reduce annotation-runtime opacity.
-- Add startup validation to catch bad annotations, invalid route config, missing beans, and malformed values before serving traffic.
+- Add structured logs and route registry validation so annotation behavior remains inspectable.
 
 ## Scope Boundary
 
@@ -74,7 +50,6 @@ This framework should handle route execution concerns:
 - request envelope
 - middleware execution
 - security middleware
-- availability checks
 - secret references
 - audit/debug trace
 - timeout metadata
@@ -82,4 +57,4 @@ This framework should handle route execution concerns:
 - route registry validation
 - observability hooks
 
-It should not absorb domain/business logic, external API implementation logic, or complex dynamic policy DSL behavior.
+It should not absorb domain/business logic, external API implementation logic, MCP tool policy logic, or MCP tool metadata policy logic.

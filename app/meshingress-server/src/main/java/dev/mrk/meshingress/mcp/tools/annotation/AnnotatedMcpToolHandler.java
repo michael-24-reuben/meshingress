@@ -1,15 +1,16 @@
 package dev.mrk.meshingress.mcp.tools.annotation;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
-import dev.mrk.meshingress.api.tools.ToolExecutionResult;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunction;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
-import dev.mrk.meshingress.dispatch.resolver.TypedJsonArgumentBinder;
 import dev.mrk.meshingress.mcp.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.JsonRpcException;
+import dev.mrk.meshingress.route.api.McpDispatchException;
+import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     }
 
     @Override
-    public ToolExecutionResult call(ObjectNode arguments, McpCallContext context) {
+    public DispatchExecutionResult call(ObjectNode arguments, McpCallContext context) {
         try {
             Object result = function.method().invoke(bean, invocationArguments(arguments, context));
             return adaptResult(result);
@@ -107,7 +108,11 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
             }
             return null;
         }
-        return argumentBinder.bind(function.path(), param.name(), value, param.bindType(), objectMapper);
+        try {
+            return argumentBinder.bind(function.path(), param.name(), value, param.bindType(), objectMapper);
+        } catch (McpDispatchException exception) {
+            throw newJsonRpcException(exception.code(), exception.getMessage());
+        }
     }
 
     private static @NonNull JsonRpcException newJsonRpcException(int code, String message) {
@@ -116,12 +121,15 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
         return jsonRpcException;
     }
 
-    private ToolExecutionResult adaptResult(Object result) {
-        if (result instanceof ToolExecutionResult toolExecutionResult) {
+    private DispatchExecutionResult adaptResult(Object result) {
+        if (result instanceof DispatchExecutionResult toolExecutionResult) {
             return toolExecutionResult;
         }
         JsonNode structured = result instanceof JsonNode jsonNode ? jsonNode : objectMapper.valueToTree(result);
         String text = structured == null || structured.isNull() ? "" : structured.toString();
-        return ToolExecutionResult.text(objectMapper, text, structured);
+        return DispatchExecutionResult.builder()
+                .text(text)
+                .structuredContent(structured)
+                .build();
     }
 }

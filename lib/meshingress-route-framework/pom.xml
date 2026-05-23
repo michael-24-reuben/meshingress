@@ -12,7 +12,7 @@
 
     <artifactId>meshingress-route-framework</artifactId>
     <name>meshingress-route-framework</name>
-    <description>Runtime scanning, validation, middleware, and availability helpers for annotated Meshingress routes</description>
+    <description>Runtime scanning, validation, middleware, and invocation helpers for annotated Meshingress routes</description>
 
     <dependencies>
         <dependency>
@@ -25,17 +25,16 @@
             <artifactId>meshingress-route-annotations</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-tool-annotations</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

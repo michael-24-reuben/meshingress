@@ -19,5 +19,7 @@ public @interface McpFunction {
 
     ToolVisibility visibility() default ToolVisibility.PUBLIC;
 
+    /*boolean destructive() default false;*/
+
     boolean enabled() default true;
 }
