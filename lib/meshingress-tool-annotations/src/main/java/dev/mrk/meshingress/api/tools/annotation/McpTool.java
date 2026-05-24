@@ -16,8 +16,8 @@ public @interface McpTool {
      * Defines a unique tool ID, used to identify the tool in the system. Provides a failsafe
      * for when {@link #invocationName()} is not specified, as the tool can still be invoked using the tool ID with version.
      */
-    @Pattern("[a-z][a-z0-9]*(\\.[a-z0-9]+)*")
-    String value() default "";
+    @Pattern("[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]+)*")
+    String value()/* default ""*/; // default is omitted because a tool needs to have an ID, and the empty string would be an invalid ID.
 
     String title() default "";
 
@@ -39,7 +39,7 @@ public @interface McpTool {
      * • mytool.subtool
      * </pre>
      */
-    @Pattern("[a-z][a-z0-9]*(\\.[a-z0-9]+)*")
+    @Pattern("[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]+)*")
     String invocationName() default "";
 
     String defaultFunction() default "main";

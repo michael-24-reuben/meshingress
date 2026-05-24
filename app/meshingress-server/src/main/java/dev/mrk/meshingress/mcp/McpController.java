@@ -1,8 +1,9 @@
-package dev.mrk.meshingress.controller;
+package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.api.McpCallContext;
-import dev.mrk.meshingress.mcp.JsonRpcErrorCodes;
-import dev.mrk.meshingress.mcp.JsonRpcResponses;
+import dev.mrk.meshingress.controller.McpDispatcher;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcResponses;
 import dev.mrk.meshingress.route.annotations.McpHttpMethod;
 import dev.mrk.meshingress.route.annotations.McpRoute;
 import tools.jackson.databind.JsonNode;

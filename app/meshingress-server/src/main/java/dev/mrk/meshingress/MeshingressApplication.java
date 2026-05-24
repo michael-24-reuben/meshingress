@@ -4,12 +4,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.context.annotation.Bean;
+
+import dev.mrk.meshingress.config.MeshingressProperties;
 
 import java.util.Objects;
 
 @SpringBootApplication
+@EnableConfigurationProperties(MeshingressProperties.class)
 public class MeshingressApplication {
 
     static void main(String[] args) {

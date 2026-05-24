@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.route.framework;
 
-import dev.mrk.meshingress.route.annotations.McpConfigureMapping;
+import dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping;
 import dev.mrk.meshingress.route.annotations.McpRequestMiddleware;
 import dev.mrk.meshingress.route.annotations.McpRoute;
 import dev.mrk.meshingress.route.api.McpMiddleware;

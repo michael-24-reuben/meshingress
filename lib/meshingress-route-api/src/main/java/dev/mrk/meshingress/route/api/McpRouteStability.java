@@ -1,4 +1,4 @@
-package dev.mrk.meshingress.route.annotations;
+package dev.mrk.meshingress.route.api;
 
 public enum McpRouteStability {
     EXPERIMENTAL,

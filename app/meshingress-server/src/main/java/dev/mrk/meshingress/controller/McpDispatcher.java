@@ -1,9 +1,9 @@
 package dev.mrk.meshingress.controller;
 
 import dev.mrk.meshingress.api.McpCallContext;
-import dev.mrk.meshingress.mcp.JsonRpcErrorCodes;
-import dev.mrk.meshingress.mcp.JsonRpcException;
-import dev.mrk.meshingress.mcp.JsonRpcResponses;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcResponses;
 import dev.mrk.meshingress.route.api.McpDispatchException;
 import dev.mrk.meshingress.route.framework.dispatch.McpDispatchRegistry;
 import dev.mrk.meshingress.route.framework.dispatch.McpHandlerMethodInvoker;

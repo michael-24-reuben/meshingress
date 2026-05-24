@@ -1,5 +1,6 @@
 package dev.mrk.meshingress.mcp;
 
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;

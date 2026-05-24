@@ -2,7 +2,7 @@ package dev.mrk.meshingress.tools.availability.withintimeranges;
 
 
 import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityDecision;
-import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityPolicy;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityPolicy;
 import dev.mrk.meshingress.api.tools.annotation.availability.ToolAvailabilityContext;
 
 import java.time.Clock;
@@ -10,7 +10,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-public class EnableWithinTimeRangesPolicy implements AvailabilityPolicy<EnableWithinTimeRanges> {
+public class EnableWithinTimeRangesPolicy implements McpAvailabilityPolicy<EnableWithinTimeRanges> {
 
     private final Clock clock;
 
@@ -23,10 +23,7 @@ public class EnableWithinTimeRangesPolicy implements AvailabilityPolicy<EnableWi
     }
 
     @Override
-    public AvailabilityDecision evaluate(
-            EnableWithinTimeRanges annotation,
-            ToolAvailabilityContext context
-    ) {
+    public AvailabilityDecision evaluate(EnableWithinTimeRanges annotation, ToolAvailabilityContext context, PolicyEvaluationState state) {
         ZoneId zone = ZoneId.of(annotation.zone());
         LocalTime now = ZonedDateTime.now(clock).withZoneSameInstant(zone).toLocalTime();
         for (String range : annotation.ranges()) {

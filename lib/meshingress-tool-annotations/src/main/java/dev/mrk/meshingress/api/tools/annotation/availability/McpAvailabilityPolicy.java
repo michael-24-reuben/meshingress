@@ -10,28 +10,36 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-public interface AvailabilityPolicy<A extends Annotation> {
+public interface McpAvailabilityPolicy<A extends Annotation> {
+    /**
+     * A different evaluation state can trigger a different availability outcome. This enum exists to allow policies to differentiate
+     * between a simple availability check (e.g. for tool listing) and an actual invocation attempt, which may have different requirements or side effects.
+     */
+    enum PolicyEvaluationState {
+        INVOKE_TOOL,
+        SCAN_AVAILABILITY
+    }
 
     ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    AvailabilityDecision evaluate(A annotation, ToolAvailabilityContext context);
+    AvailabilityDecision evaluate(A annotation, ToolAvailabilityContext context, PolicyEvaluationState state);
 
-    default McpAvailabilityConditionResult evaluateCondition(@NotNull A annotation, ToolAvailabilityContext context) {
+    default McpAvailabilityConditionResult evaluateCondition(@NotNull A annotation, ToolAvailabilityContext context, PolicyEvaluationState state) {
         McpFunctionAvailabilityCondition condition = annotation.annotationType().getAnnotation(McpFunctionAvailabilityCondition.class);
 
         if (condition == null) {
             throw new IllegalArgumentException(
-                    "Annotation @" + annotation.annotationType().getName() + " is not annotated with @McpToolAvailabilityCondition"
+                    "Annotation @" + annotation.annotationType().getName() + " is not annotated with @" + McpFunctionAvailabilityCondition.class.getSimpleName()
             );
         }
 
-        AvailabilityDecision evaluation = evaluate(annotation, context);
+        AvailabilityDecision evaluation = evaluate(annotation, context, state);
 
         return new McpAvailabilityConditionResult(
                 annotation.annotationType().getSimpleName(),
                 condition.value().getSimpleName(),
                 evaluation.allowed(),
-                evaluation.reason(),
+                new String[]{evaluation.reason()},
                 gatherAnnotationDetails(annotation)
         );
     }

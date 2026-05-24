@@ -1,4 +1,4 @@
-package dev.mrk.meshingress.mcp;
+package dev.mrk.meshingress.mcp.jsonrpc;
 
 import tools.jackson.databind.JsonNode;
 

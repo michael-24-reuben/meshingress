@@ -1,0 +1,31 @@
+package dev.mrk.meshingress.scopes;
+
+public enum ScopeCategory {
+    LOCAL,
+    FILES,
+    NETWORK,
+    DATABASE,
+    PROCESS,
+    EMAIL,
+    NOTIFICATIONS,
+    USER,
+    TOKEN,
+    CONFIG,
+    ENVIRONMENT,
+    SECRETS,
+    KEYSTORE,
+    EXTERNAL_API,
+    OBSERVABILITY,
+    SCHEDULING,
+    JOBS,
+    TOOLS,
+    POLICY,
+    DEPLOYMENT,
+    PLUGINS,
+    BACKUPS,
+    CACHE,
+    STREAMS,
+    MESSAGING,
+    HEALTH,
+    AUDIT
+}

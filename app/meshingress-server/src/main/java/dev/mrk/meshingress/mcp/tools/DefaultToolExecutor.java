@@ -3,11 +3,10 @@ package dev.mrk.meshingress.mcp.tools;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
-import org.springframework.util.PatternMatchUtils;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
-import dev.mrk.meshingress.mcp.JsonRpcErrorCodes;
-import dev.mrk.meshingress.mcp.JsonRpcException;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.api.McpCallContext;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +17,7 @@ import java.util.regex.Pattern;
 public class DefaultToolExecutor implements ToolExecutor {
 
     private static final Pattern TOOL_CALL_PATTERN = Pattern.compile(
-            "^(?<tool>[a-z][a-z0-9]*(?:\\.[a-z0-9]+)*)(/(?<method>[a-z][a-z0-9]*))*$"
+            "^(?<tool>[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]+)*)(/(?<method>[a-z][a-z0-9-]*))*$"
     );
     private final ToolRegistry toolRegistry;
 

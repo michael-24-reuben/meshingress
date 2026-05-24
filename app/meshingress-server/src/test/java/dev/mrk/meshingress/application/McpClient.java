@@ -26,7 +26,7 @@ public class McpClient {
     }
 
     public static void main(String[] args) throws Exception {
-        String url = args.length > 0 ? args[0] : "http://100.121.15.11:8080";
+        String url = args.length > 0 ? args[0] : "http://100.121.15.11:4737";
         McpClient c = new McpClient(url);
 
         // Mirror the original test requests but as live client calls
@@ -122,28 +122,30 @@ public class McpClient {
 
     // Payloads ported from the original test class
     private static String initializePayload() {
-        return "{" +
-                "\"jsonrpc\": \"2.0\",\n" +
-                "\"id\": 1,\n" +
-                "\"method\": \"initialize\",\n" +
-                "\"params\": {\n" +
-                "  \"protocolVersion\": \"2025-11-25\",\n" +
-                "  \"capabilities\": {},\n" +
-                "  \"clientInfo\": {\n" +
-                "    \"name\": \"test-client\",\n" +
-                "    \"version\": \"0.1.0\"\n" +
-                "  }\n" +
-                "}\n" +
-                "}";
+        return """
+                {
+                  "jsonrpc": "2.0",
+                  "id": 1,
+                  "method": "initialize",
+                  "params": {
+                    "protocolVersion": "2025-11-25",
+                    "capabilities": {},
+                    "clientInfo": {
+                      "name": "test-client",
+                      "version": "0.1.0"
+                    }
+                  }
+                }""";
     }
 
     private static String toolsListPayload(int id) {
-        return "{" +
-                "\"jsonrpc\": \"2.0\",\n" +
-                "\"id\": " + id + ",\n" +
-                "\"method\": \"tools/list\",\n" +
-                "\"params\": {}\n" +
-                "}";
+        return """
+                {
+                  "jsonrpc": "2.0",
+                  "id": %d,
+                  "method": "tools/list",
+                  "params": {}
+                }""".formatted(id);
     }
 
     private static String toolsCallHelloPayload() {
@@ -170,7 +172,7 @@ public class McpClient {
                   "params": {
                     "name": "instagram.fetch",
                     "arguments": {
-                      "name": "https://www.instagram.com/reel/DWCd2FtkfTj/"
+                      "url": "https://www.instagram.com/reel/DWCd2FtkfTj/"
                     }
                   }
                 }""";
@@ -201,42 +203,44 @@ public class McpClient {
     }
 
     private static String adminListPayload() {
-        return "{" +
-                "\"jsonrpc\": \"2.0\",\n" +
-                "\"id\": 5,\n" +
-                "\"method\": \"roles/tools/list\",\n" +
-                "\"params\": {\n" +
-                "  \"includeDisabled\": true,\n" +
-                "  \"includePrivate\": true\n" +
-                "}\n" +
-                "}";
+        return """
+                {
+                  "jsonrpc": "2.0",
+                  "id": 5,
+                  "method": "roles/tools/list",
+                  "params": {
+                    "includeDisabled": true,
+                    "includePrivate": true
+                  }
+                }""";
     }
 
     private static String toolRequest(int id, String method) {
-        return "{" +
-                "\"jsonrpc\": \"2.0\",\n" +
-                "\"id\": " + id + ",\n" +
-                "\"method\": \"" + method + "\",\n" +
-                "\"params\": {\n" +
-                "  \"tool\": {\n" +
-                "    \"name\": \"architect.entries.copy\",\n" +
-                "    \"title\": \"List Architect Entries Alias\",\n" +
-                "    \"description\": \"List architect entries through a dynamic alias.\",\n" +
-                "    \"enabled\": true,\n" +
-                "    \"visibility\": \"public\",\n" +
-                "    \"handlerKey\": \"architect.entries.list\",\n" +
-                "    \"inputSchema\": {\n" +
-                "      \"type\": \"object\",\n" +
-                "      \"properties\": {\n" +
-                "        \"status\": {\n" +
-                "          \"type\": \"string\"\n" +
-                "        }\n" +
-                "      },\n" +
-                "      \"additionalProperties\": false\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n" +
-                "}";
+        return """
+                {
+                  "jsonrpc": "2.0",
+                  "id": %d,
+                  "method": "%s",
+                  "params": {
+                    "tool": {
+                      "name": "architect.entries.copy",
+                      "title": "List Architect Entries Alias",
+                      "description": "List architect entries through a dynamic alias.",
+                      "enabled": true,
+                      "visibility": "public",
+                      "handlerKey": "architect.entries.list",
+                      "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  }
+                }""".formatted(id, method);
     }
 }
 

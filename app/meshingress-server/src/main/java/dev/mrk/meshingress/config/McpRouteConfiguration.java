@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.config;
 
-import dev.mrk.meshingress.controller.McpController;
+import dev.mrk.meshingress.mcp.McpController;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.framework.AnnotatedMcpRoute;
 import dev.mrk.meshingress.route.framework.McpRouteAnnotationScanner;

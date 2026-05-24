@@ -1,7 +1,10 @@
 package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.controller.McpDispatcher;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcResponses;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +23,14 @@ import java.util.Optional;
 public class McpWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(McpWebSocketHandler.class);
+    private final MeshingressProperties properties;
 
     private final ObjectMapper objectMapper;
     private final McpDispatcher dispatcher;
     private final JsonRpcResponses responses;
 
-    public McpWebSocketHandler(ObjectMapper objectMapper, McpDispatcher dispatcher, JsonRpcResponses responses) {
+    public McpWebSocketHandler(MeshingressProperties properties, ObjectMapper objectMapper, McpDispatcher dispatcher, JsonRpcResponses responses) {
+        this.properties = properties;
         this.objectMapper = objectMapper;
         this.dispatcher = dispatcher;
         this.responses = responses;
@@ -33,8 +38,26 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
+        MeshingressProperties.Mcp.WebSocket websocket = properties.mcp().websocket();
         String requestId = stringAttribute(session.getAttributes(), "mcp.requestId");
         String sessionId = stringAttribute(session.getAttributes(), "mcp.sessionId");
+
+        long maxBytes = websocket.maxMessageSize().toBytes();
+        if (message.getPayloadLength() > maxBytes) {
+            LOGGER.warn(
+                    "MCP ws message too large: requestId={} sessionId={} payloadLength={} maxBytes={}",
+                    requestId,
+                    sessionId,
+                    message.getPayloadLength(),
+                    maxBytes
+            );
+
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(
+                    responses.error(null, JsonRpcErrorCodes.INVALID_REQUEST, "Message too large")
+            )));
+            return;
+        }
+
         LOGGER.info("=== MCP REQUEST START [ws] requestId={} sessionId={} wsSession={} ===", requestId, sessionId, session.getId());
         JsonNode request;
         try {

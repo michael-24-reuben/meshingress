@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.route.framework;
 
-import dev.mrk.meshingress.route.annotations.McpSecret;
+import dev.mrk.meshingress.api.tools.annotation.McpSecret;
 import dev.mrk.meshingress.route.api.McpRouteValidationException;
 
 import java.util.ArrayList;

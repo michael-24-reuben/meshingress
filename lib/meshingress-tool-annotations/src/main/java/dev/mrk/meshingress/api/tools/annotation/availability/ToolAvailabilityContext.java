@@ -1,20 +1,21 @@
 package dev.mrk.meshingress.api.tools.annotation.availability;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 
 import java.util.Map;
 
 public record ToolAvailabilityContext(
-        String toolName,
+        @NotNull String toolName,
         String functionName,
-        JsonNode arguments,
-        McpCallContext callContext,
+        @Nullable JsonNode arguments,
+        @Nullable McpCallContext callContext,
         Map<String, Object> attributes
 ) {
 
     public ToolAvailabilityContext {
-        toolName = toolName == null ? "" : toolName;
         functionName = functionName == null ? "" : functionName;
         attributes = attributes == null ? Map.of() : Map.copyOf(attributes);
     }

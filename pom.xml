@@ -21,6 +21,7 @@
     <modules>
         <module>app/meshingress-server</module>
 
+        <module>lib/meshingress-config</module>
         <module>lib/meshingress-route-annotations</module>
         <module>lib/meshingress-route-api</module>
         <module>lib/meshingress-route-framework</module>

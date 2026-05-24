@@ -6,7 +6,7 @@ public record McpAvailabilityConditionResult(
         String annotation,
         String condition,
         boolean available,
-        String reason,
+        String[] reason,
         ObjectNode details
 ) {
 }

@@ -1,7 +1,7 @@
 package dev.mrk.meshingress.tools.availability.enableondays;
 
 import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityDecision;
-import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityPolicy;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityPolicy;
 import dev.mrk.meshingress.api.tools.annotation.availability.ToolAvailabilityContext;
 
 import java.time.Clock;
@@ -9,7 +9,7 @@ import java.time.DayOfWeek;
 import java.time.ZonedDateTime;
 import java.util.Set;
 
-public class EnableOnDaysPolicy implements AvailabilityPolicy<EnableOnDays> {
+public class EnableOnDaysPolicy implements McpAvailabilityPolicy<EnableOnDays> {
 
     private final Clock clock;
 
@@ -22,7 +22,7 @@ public class EnableOnDaysPolicy implements AvailabilityPolicy<EnableOnDays> {
     }
 
     @Override
-    public AvailabilityDecision evaluate(EnableOnDays annotation, ToolAvailabilityContext context) {
+    public AvailabilityDecision evaluate(EnableOnDays annotation, ToolAvailabilityContext context, PolicyEvaluationState state) {
         Set<DayOfWeek> allowedDays = Set.of(annotation.value());
         DayOfWeek currentDay = ZonedDateTime.now(clock).getDayOfWeek();
         return allowedDays.contains(currentDay)
