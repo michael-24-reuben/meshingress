@@ -2,6 +2,7 @@ package dev.mrk.meshingress.api.tools.annotation.model;
 
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.annotation.McpFunctionAvailability;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.lang.reflect.Method;
@@ -12,6 +13,7 @@ public record AnnotatedMcpFunction(
         String path,
         String title,
         String description,
+        McpFunctionDescriptor descriptor,
         McpFunctionAvailability availability,
         Method method,
         ObjectNode inputSchema,

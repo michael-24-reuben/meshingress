@@ -2,6 +2,7 @@ package dev.mrk.meshingress.mcp.tools;
 
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.*;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -60,7 +61,7 @@ public class ArchitectEntriesListTool implements McpToolHandler {
         annotations.put("destructiveHint", false);
         annotations.put("idempotentHint", true);
 
-        return new McpToolDescriptor(
+        McpFunctionDescriptor function = new McpFunctionDescriptor(
                 "architect.entries.list",
                 "List Architect Entries",
                 "List structured engineering memory entries by status, tag, or text query.",
@@ -70,6 +71,18 @@ public class ArchitectEntriesListTool implements McpToolHandler {
                 "architect.entries.list",
                 schema,
                 null,
+                annotations,
+                false
+        );
+
+        return new McpToolDescriptor(
+                "architect.entries",
+                "Architect Entries",
+                "Architect engineering memory functions.",
+                1,
+                true,
+                ToolVisibility.PUBLIC,
+                List.of(function),
                 annotations,
                 false
         );

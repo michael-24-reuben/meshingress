@@ -26,15 +26,16 @@ class McpToolAnnotationScannerTests {
         AnnotatedMcpTool tool = scanner.scan(HelloWorldAnnotatedTool.class);
 
         assertEquals("tools", tool.mapping());
-        assertEquals("helloworld.greet", tool.descriptor().name());
+        assertEquals("helloworld", tool.descriptor().name());
         assertEquals("Hello World", tool.descriptor().title());
-        assertEquals("helloworld.greet", tool.descriptor().handlerKey());
         assertEquals(ToolVisibility.PUBLIC, tool.descriptor().visibility());
         assertEquals("LOCAL_READ", tool.descriptor().annotations().path("scopes").get(0).asString());
         assertEquals("EXTERNAL_API_READ", tool.functions().getFirst().annotations().path("scopes").get(0).asString());
 
         assertEquals(1, tool.functions().size());
         assertEquals("call", tool.functions().getFirst().name());
+        assertEquals("helloworld.call", tool.functions().getFirst().descriptor().name());
+        assertEquals("helloworld.call", tool.functions().getFirst().descriptor().handlerKey());
         assertEquals("tools/call", tool.functions().getFirst().path());
         assertEquals("Invoke the tool with the provided arguments.", tool.functions().getFirst().description());
         assertEquals("object", tool.functions().getFirst().inputSchema().path("type").asString());
@@ -60,14 +61,13 @@ class McpToolAnnotationScannerTests {
         assertEquals(1, tool.functions().getFirst().parameters().size());
         assertEquals("args", tool.functions().getFirst().parameters().getFirst().name());
         assertEquals(HelloWorldGreetArgs.class, tool.functions().getFirst().parameters().getFirst().bindType());
-        assertEquals("name", tool.descriptor().inputSchema().path("required").get(0).asString());
+        assertEquals("name", tool.functions().getFirst().descriptor().inputSchema().path("required").get(0).asString());
     }
 
     @McpTool(
-            value = "helloworld.greet",
+            value = "helloworld",
             title = "Hello World",
-            description = "Return a greeting from an external Meshingress tool module.",
-            invocationName = "helloworld.greet"
+            description = "Return a greeting from an external Meshingress tool module."
     )
     @McpToolScopes(McpToolScope.LOCAL_READ)
     @McpToolMapping("tools")

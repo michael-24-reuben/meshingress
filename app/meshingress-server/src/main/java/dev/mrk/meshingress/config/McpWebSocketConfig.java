@@ -1,42 +1,37 @@
 package dev.mrk.meshingress.config;
 
 import dev.mrk.meshingress.mcp.McpWebSocketHandler;
-import org.springframework.beans.factory.annotation.Value;
+import dev.mrk.meshingress.config.MeshingressProperties.Mcp.WebSocket;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSocket
 public class McpWebSocketConfig implements WebSocketConfigurer {
 
     private final McpWebSocketHandler webSocketHandler;
-    private final String path;
-    private final String allowedOrigins;
+    private final McpWebSocketHandshakeInterceptor handshakeInterceptor;
+    private final WebSocket websocketProperties;
 
     public McpWebSocketConfig(
             McpWebSocketHandler webSocketHandler,
-            @Value("${meshingress.mcp.websocket.path:/mcp/ws}") String path,
-            @Value("${meshingress.mcp.websocket.allowed-origins:*}") String allowedOrigins
+            McpWebSocketHandshakeInterceptor handshakeInterceptor,
+            MeshingressProperties properties
     ) {
         this.webSocketHandler = webSocketHandler;
-        this.path = path;
-        this.allowedOrigins = allowedOrigins;
+        this.handshakeInterceptor = handshakeInterceptor;
+        this.websocketProperties = properties.mcp().websocket();
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketHandler, path)
-                .setAllowedOriginPatterns(originPatterns());
-    }
-
-    private String[] originPatterns() {
-        return Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(origin -> !origin.isBlank())
-                .toArray(String[]::new);
+        if (!websocketProperties.enabled()) {
+            return;
+        }
+        registry.addHandler(webSocketHandler, websocketProperties.path())
+                .addInterceptors(handshakeInterceptor)
+                .setAllowedOriginPatterns(websocketProperties.allowedOrigins().toArray(String[]::new));
     }
 }

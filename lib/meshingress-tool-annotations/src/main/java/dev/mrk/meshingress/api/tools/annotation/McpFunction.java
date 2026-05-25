@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface McpFunction {
 
-    @Pattern("[a-z][a-z0-9-]*")
+    @Pattern("[a-z][a-z0-9-_]*")
     String value() default "";
 
     String title() default "";

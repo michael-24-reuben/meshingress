@@ -32,6 +32,7 @@
         <module>toolspace/helloworld</module>
         <module>toolspace/instagram-api</module>
         <module>toolspace/powershell-cli-tool</module>
+        <module>toolspace/whatsapp-cobalt</module>
     </modules>
 
     <properties>

@@ -119,9 +119,7 @@ public final class DispatchExecutionResult {
             root.set("structuredContent", structuredContent);
         }
 
-        if (error) {
-            root.put("isError", true);
-        }
+        root.put("isError", error);
 
         ObjectNode metaNode = buildMeta(objectMapper);
         if (!metaNode.isEmpty()) {

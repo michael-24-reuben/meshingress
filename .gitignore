@@ -4,7 +4,14 @@ data/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-architect/
+
+### Architect ###
+architect/**/env.yaml
+architect/**/env.local.yaml
+architect/**/secrets.json
+architect/**/private.md
+architect/**/raw-logs/
+architect/**/captures/
 
 ### STS ###
 .apt_generated
@@ -33,3 +40,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### AI plugin - Antigravity ###
+.env
+.antigravity/

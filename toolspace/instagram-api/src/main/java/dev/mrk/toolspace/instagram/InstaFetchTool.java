@@ -15,10 +15,9 @@ import dev.mrk.toolspace.instagram.instafetch.InstaFetch;
 import tools.jackson.databind.JsonNode;
 
 @McpTool(
-        value = "instagram.fetch",
+        value = "instagram",
         title = "Instagram Fetch",
         description = "Fetches data from Instagram based on a given URL.",
-        invocationName = "instagram.fetch",
         defaultFunction = "fetch"
 )
 @McpToolMapping("tools")
@@ -46,7 +45,7 @@ public class InstaFetchTool {
                     .build();
         }
 
-        JsonNode response = new InstaFetch(FetchPath.asUrl(url)).submitRequest();
+        JsonNode response = new InstaFetch(FetchPath.from(url)).submitRequest();
 
         return DispatchExecutionResult.builder()
                 .appendContent(ResultContent.json(response))

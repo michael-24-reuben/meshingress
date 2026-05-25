@@ -35,7 +35,9 @@ public class AnnotatedMcpToolHandlerProvider {
                 continue;
             }
             AnnotatedMcpTool tool = scanner.scan(ClassUtils.getUserClass(bean));
-            handlers.add(new AnnotatedMcpToolHandler(bean, tool, objectMapper, argumentBinder));
+            for (var function : tool.functions()) {
+                handlers.add(new AnnotatedMcpToolHandler(bean, tool, function, objectMapper, argumentBinder));
+            }
         }
         return List.copyOf(handlers);
     }

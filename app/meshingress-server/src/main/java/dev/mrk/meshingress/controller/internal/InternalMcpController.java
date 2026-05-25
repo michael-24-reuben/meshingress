@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.controller.internal;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
 import dev.mrk.meshingress.route.annotations.McpDispatchParam;
@@ -19,9 +20,11 @@ public class InternalMcpController {
     private static final Logger LOGGER = LoggerFactory.getLogger(InternalMcpController.class);
 
     private final ObjectMapper objectMapper;
+    private final MeshingressProperties properties;
 
-    public InternalMcpController(ObjectMapper objectMapper) {
+    public InternalMcpController(ObjectMapper objectMapper, MeshingressProperties properties) {
         this.objectMapper = objectMapper;
+        this.properties = properties;
     }
 
     @McpDispatchMethod("initialize")
@@ -34,11 +37,25 @@ public class InternalMcpController {
         ObjectNode tools = objectMapper.createObjectNode();
         tools.put("listChanged", true);
         capabilities.set("tools", tools);
+        ObjectNode meshingress = objectMapper.createObjectNode();
+        meshingress.put("instanceId", properties.identity().instanceId());
+        meshingress.put("environment", properties.identity().environment());
+        meshingress.put("nodeRole", properties.identity().nodeRole());
+        meshingress.put("publicBaseUrl", properties.identity().publicBaseUrl().toString());
+        meshingress.put("websocketEnabled", properties.mcp().websocket().enabled());
+        if (properties.mcp().websocket().enabled()) {
+            meshingress.put("websocketPath", properties.mcp().websocket().path());
+        }
+        capabilities.set("meshingress", meshingress);
         result.set("capabilities", capabilities);
 
         ObjectNode serverInfo = objectMapper.createObjectNode();
-        serverInfo.put("name", "meshingress");
+        serverInfo.put("name", properties.identity().name());
         serverInfo.put("version", "0.1.0");
+        serverInfo.put("instanceId", properties.identity().instanceId());
+        serverInfo.put("environment", properties.identity().environment());
+        serverInfo.put("nodeRole", properties.identity().nodeRole());
+        serverInfo.put("publicBaseUrl", properties.identity().publicBaseUrl().toString());
         result.set("serverInfo", serverInfo);
         return result;
     }

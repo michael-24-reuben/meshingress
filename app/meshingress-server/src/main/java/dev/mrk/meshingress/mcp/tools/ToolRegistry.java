@@ -4,6 +4,7 @@ import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolPatch;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,9 +13,13 @@ public interface ToolRegistry {
 
     List<McpToolDescriptor> listPublicEnabledTools();
 
+    List<McpFunctionDescriptor> listPublicEnabledFunctions();
+
     List<McpToolDescriptor> listRoleVisibleTools(boolean includeDisabled, boolean includePrivate);
 
     Optional<McpToolDescriptor> findEnabledTool(String name);
+
+    Optional<McpFunctionDescriptor> findEnabledFunction(String name);
 
     Optional<McpToolDescriptor> findTool(String name);
 

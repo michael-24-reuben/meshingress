@@ -34,15 +34,13 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     public AnnotatedMcpToolHandler(
             Object bean,
             AnnotatedMcpTool tool,
+            AnnotatedMcpFunction function,
             ObjectMapper objectMapper,
             TypedJsonArgumentBinder argumentBinder
     ) {
         this.bean = bean;
         this.tool = tool;
-        this.function = tool.defaultFunction()
-                .orElseThrow(() -> new IllegalStateException(
-                        "Annotated MCP tool requires at least one @McpFunction: " + tool.toolClass().getName()
-                ));
+        this.function = function;
         this.objectMapper = objectMapper;
         this.argumentBinder = argumentBinder;
         this.function.method().setAccessible(true);
@@ -50,7 +48,7 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
 
     @Override
     public McpToolDescriptor descriptor() {
-        return tool.descriptor();
+        return tool.descriptor().withFunctions(java.util.List.of(function.descriptor()));
     }
 
     @Override

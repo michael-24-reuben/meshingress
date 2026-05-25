@@ -1,10 +1,14 @@
 package dev.mrk.meshingress.api.tools;
 
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
+
+import java.util.List;
 
 public record McpToolDescriptor(
         String name,
@@ -13,12 +17,13 @@ public record McpToolDescriptor(
         int version,
         boolean enabled,
         ToolVisibility visibility,
-        String handlerKey,
-        JsonNode inputSchema,
-        JsonNode outputSchema,
+        List<McpFunctionDescriptor> functions,
         JsonNode annotations,
         boolean dynamic
 ) {
+    public McpToolDescriptor {
+        functions = functions == null ? List.of() : List.copyOf(functions);
+    }
 
     public @NonNull ObjectNode toMcpJson(@NonNull ObjectMapper objectMapper) {
         ObjectNode tool = objectMapper.createObjectNode();
@@ -27,7 +32,11 @@ public record McpToolDescriptor(
             tool.put("title", title);
         }
         tool.put("description", description == null ? "" : description);
-        tool.set("inputSchema", inputSchema == null ? objectMapper.createObjectNode() : inputSchema);
+        ArrayNode functionNodes = objectMapper.createArrayNode();
+        for (McpFunctionDescriptor function : functions) {
+            functionNodes.add(function.toMcpJson(objectMapper));
+        }
+        tool.set("functions", functionNodes);
         if (annotations != null && annotations.isObject()) {
             tool.set("annotations", annotations);
         }
@@ -43,9 +52,7 @@ public record McpToolDescriptor(
                 nextVersion,
                 enabled,
                 visibility,
-                handlerKey,
-                inputSchema,
-                outputSchema,
+                functions,
                 annotations,
                 dynamic
         );
@@ -60,14 +67,26 @@ public record McpToolDescriptor(
                 nextVersion,
                 patch.enabled() == null ? enabled : patch.enabled(),
                 patch.visibility() == null ? visibility : patch.visibility(),
-                patch.handlerKey() == null ? handlerKey : patch.handlerKey(),
-                patch.inputSchema() == null ? inputSchema : patch.inputSchema(),
-                patch.outputSchema() == null ? outputSchema : patch.outputSchema(),
+                functions,
                 patch.annotations() == null ? annotations : patch.annotations(),
                 dynamic
         );
     }
 
+    @Contract("_ -> new")
+    public @NonNull McpToolDescriptor withFunctions(@NonNull List<McpFunctionDescriptor> nextFunctions) {
+        return new McpToolDescriptor(
+                name,
+                title,
+                description,
+                version,
+                enabled,
+                visibility,
+                nextFunctions,
+                annotations,
+                dynamic
+        );
+    }
 
     public @NonNull String toString() {
         return "ToolDescriptor{" +
@@ -77,9 +96,7 @@ public record McpToolDescriptor(
                 ", version=" + version +
                 ", enabled=" + enabled +
                 ", visibility=" + visibility +
-                ", handlerKey='" + handlerKey + '\'' +
-                ", inputSchema=" + inputSchema +
-                ", outputSchema=" + outputSchema +
+                ", functions=" + functions +
                 ", annotations=" + annotations +
                 ", dynamic=" + dynamic +
                 '}';

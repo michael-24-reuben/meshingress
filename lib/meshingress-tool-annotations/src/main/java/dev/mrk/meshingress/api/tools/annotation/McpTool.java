@@ -13,10 +13,9 @@ import java.lang.annotation.Target;
 public @interface McpTool {
 
     /**
-     * Defines a unique tool ID, used to identify the tool in the system. Provides a failsafe
-     * for when {@link #invocationName()} is not specified, as the tool can still be invoked using the tool ID with version.
+     * Defines a unique tool ID, used to identify the tool in the system.
      */
-    @Pattern("[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]+)*")
+    @Pattern("[a-z][a-z0-9-_]*")
     String value()/* default ""*/; // default is omitted because a tool needs to have an ID, and the empty string would be an invalid ID.
 
     String title() default "";
@@ -28,19 +27,6 @@ public @interface McpTool {
     boolean enabled() default true;
 
     ToolVisibility visibility() default ToolVisibility.PUBLIC;
-
-    /**
-     * The invocation name is used for invoking the tool without specifying the version.
-     * If not specified, the invocation name will be the same as the tool ID without the version.
-     * The invocation name must be in the format: `[a-z][a-z0-9]*(\.[a-z0-9]+)*`
-     * Accepted formats
-     * <pre>
-     * • mytool
-     * • mytool.subtool
-     * </pre>
-     */
-    @Pattern("[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]+)*")
-    String invocationName() default "";
 
     String defaultFunction() default "main";
 

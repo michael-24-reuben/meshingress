@@ -2,7 +2,8 @@ package dev.mrk.meshingress.controller.tools;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
-import dev.mrk.meshingress.api.tools.McpToolDescriptor;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
+import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolExecutor;
@@ -27,20 +28,23 @@ public class ToolsMcpController {
     private final ObjectMapper objectMapper;
     private final ToolRegistry toolRegistry;
     private final ToolExecutor toolExecutor;
+    private final MeshingressProperties properties;
 
-    public ToolsMcpController(ObjectMapper objectMapper, ToolRegistry toolRegistry, ToolExecutor toolExecutor) {
+    public ToolsMcpController(ObjectMapper objectMapper, ToolRegistry toolRegistry, ToolExecutor toolExecutor, MeshingressProperties properties) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
         this.toolExecutor = toolExecutor;
+        this.properties = properties;
     }
 
     @McpDispatchMethod("list")
     public @NonNull ObjectNode toolsList() {
+        ensureRegistryEnabled();
         log.debug("MCP tools/list requested");
         ObjectNode result = objectMapper.createObjectNode();
         ArrayNode tools = objectMapper.createArrayNode();
-        for (McpToolDescriptor descriptor : toolRegistry.listPublicEnabledTools()) {
-            tools.add(descriptor.toMcpJson(objectMapper));
+        for (McpFunctionDescriptor function : toolRegistry.listPublicEnabledFunctions()) {
+            tools.add(function.toMcpJson(objectMapper));
         }
         result.set("tools", tools);
         return result;
@@ -48,6 +52,7 @@ public class ToolsMcpController {
 
     @McpDispatchMethod("call")
     public ObjectNode toolsCall(@McpDispatchParam("params") @NonNull JsonNode params, McpCallContext context) {
+        ensureRegistryEnabled();
         if (!params.isObject()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params must be an object");
         }
@@ -65,6 +70,20 @@ public class ToolsMcpController {
         }
 
         DispatchExecutionResult result = toolExecutor.execute(name, (ObjectNode) arguments, context);
-        return result.toJson(objectMapper);
+        ObjectNode response = result.toJson(objectMapper);
+        if (!properties.dispatch().includeGeneratedAt() && response.has("_meta")) {
+            ObjectNode meta = (ObjectNode) response.get("_meta");
+            meta.remove("generatedAt");
+            if (meta.isEmpty()) {
+                response.remove("_meta");
+            }
+        }
+        return response;
+    }
+
+    private void ensureRegistryEnabled() {
+        if (!properties.tools().registry().enabled()) {
+            throw new JsonRpcException(JsonRpcErrorCodes.METHOD_NOT_FOUND, "Tool registry is disabled.");
+        }
     }
 }

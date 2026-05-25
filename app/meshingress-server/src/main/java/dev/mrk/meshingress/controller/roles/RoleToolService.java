@@ -4,11 +4,13 @@ import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolPatch;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
 import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.security.McpAccessPolicyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,19 +26,23 @@ public class RoleToolService {
 
     private final ObjectMapper objectMapper;
     private final ToolRegistry toolRegistry;
+    private final McpAccessPolicyService accessPolicyService;
 
-    public RoleToolService(ObjectMapper objectMapper, ToolRegistry toolRegistry) {
+    public RoleToolService(ObjectMapper objectMapper, ToolRegistry toolRegistry, McpAccessPolicyService accessPolicyService) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
+        this.accessPolicyService = accessPolicyService;
     }
 
     public ObjectNode check(McpCallContext context, JsonNode params) {
+        accessPolicyService.requireAdmin(context);
         McpToolDescriptor descriptor = descriptorFromParams(params.path("tool"), true);
         boolean updateMode = params.path("mode").asString("").equals("update");
         return checkResultToJson(toolRegistry.check(descriptor, updateMode));
     }
 
     public ObjectNode register(McpCallContext context, JsonNode params) {
+        accessPolicyService.requireAdmin(context);
         McpToolDescriptor descriptor = descriptorFromParams(params.path("tool"), true);
         McpToolDescriptor registered = toolRegistry.register(descriptor, context);
 
@@ -49,6 +55,7 @@ public class RoleToolService {
     }
 
     public ObjectNode update(McpCallContext context, JsonNode params) {
+        accessPolicyService.requireAdmin(context);
         if (!params.isObject()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/update params must be an object");
         }
@@ -72,6 +79,7 @@ public class RoleToolService {
     }
 
     public ObjectNode delete(McpCallContext context, JsonNode params) {
+        accessPolicyService.requireAdmin(context);
         if (!params.isObject()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/delete params must be an object");
         }
@@ -100,6 +108,7 @@ public class RoleToolService {
     }
 
     public ObjectNode list(McpCallContext context, JsonNode params) {
+        accessPolicyService.requireAdmin(context);
         boolean includeDisabled = params.path("includeDisabled").asBoolean(false);
         boolean includePrivate = params.path("includePrivate").asBoolean(false);
 
@@ -111,7 +120,6 @@ public class RoleToolService {
             tool.put("version", descriptor.version());
             tool.put("enabled", descriptor.enabled());
             tool.put("visibility", descriptor.visibility().toWire());
-            tool.put("handlerKey", descriptor.handlerKey());
             tool.put("dynamic", descriptor.dynamic());
             tools.add(tool);
         }
@@ -136,6 +144,7 @@ public class RoleToolService {
     }
 
     public ObjectNode reload(McpCallContext context) {
+        accessPolicyService.requireAdmin(context);
         ObjectNode result = objectMapper.createObjectNode();
         result.put("reloaded", true);
         result.put("registryVersion", toolRegistry.registryVersion());
@@ -167,10 +176,52 @@ public class RoleToolService {
                 tool.path("version").asInt(1),
                 !tool.has("enabled") || tool.path("enabled").asBoolean(),
                 visibilityFromJson(tool.path("visibility")),
+                functionsFromParams(tool, dynamic),
+                optionalObject(tool, "annotations"),
+                dynamic
+        );
+    }
+
+    private java.util.List<McpFunctionDescriptor> functionsFromParams(JsonNode tool, boolean dynamic) {
+        JsonNode functions = tool.path("functions");
+        if (functions.isArray()) {
+            java.util.List<McpFunctionDescriptor> descriptors = new java.util.ArrayList<>();
+            for (JsonNode function : functions) {
+                descriptors.add(functionFromJson(function, tool, dynamic));
+            }
+            return java.util.List.copyOf(descriptors);
+        }
+
+        return java.util.List.of(new McpFunctionDescriptor(
+                tool.path("name").asString(""),
+                tool.path("title").asString(null),
+                tool.path("description").asString(""),
+                tool.path("version").asInt(1),
+                !tool.has("enabled") || tool.path("enabled").asBoolean(),
+                visibilityFromJson(tool.path("visibility")),
                 tool.path("handlerKey").asString(""),
                 requiredObject(tool, "inputSchema"),
                 optionalObject(tool, "outputSchema"),
                 optionalObject(tool, "annotations"),
+                dynamic
+        ));
+    }
+
+    private McpFunctionDescriptor functionFromJson(JsonNode function, JsonNode parentTool, boolean dynamic) {
+        if (!function.isObject()) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "function must be an object");
+        }
+        return new McpFunctionDescriptor(
+                function.path("name").asString(""),
+                function.path("title").asString(null),
+                function.path("description").asString(parentTool.path("description").asString("")),
+                function.path("version").asInt(parentTool.path("version").asInt(1)),
+                !function.has("enabled") || function.path("enabled").asBoolean(),
+                function.has("visibility") ? visibilityFromJson(function.path("visibility")) : visibilityFromJson(parentTool.path("visibility")),
+                function.path("handlerKey").asString(""),
+                requiredObject(function, "inputSchema"),
+                optionalObject(function, "outputSchema"),
+                optionalObject(function, "annotations"),
                 dynamic
         );
     }

@@ -10,10 +10,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -24,6 +27,18 @@ class McpControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void mcpCorsPreflightAllowsBrowserToolClientOrigin() throws Exception {
+        mockMvc.perform(options("/mcp")
+                        .header("Origin", "http://127.0.0.1:4738")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type,x-request-id,authorization,x-mcp-session-id"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:4738"))
+                .andExpect(header().string("Access-Control-Allow-Methods", "POST,OPTIONS"))
+                .andExpect(header().string("Access-Control-Allow-Headers", "content-type, x-request-id, authorization, x-mcp-session-id"));
+    }
 
     @Test
     void initializeReturnsToolCapabilities() throws Exception {
@@ -78,10 +93,10 @@ class McpControllerTests {
                                   "id": 20,
                                   "method": "tools/list",
                                   "params": {}
-                                }
-                                """))
+                }
+                """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.tools[1].name", is("helloworld.greet")));
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("helloworld.greet")));
     }
 
     @Test

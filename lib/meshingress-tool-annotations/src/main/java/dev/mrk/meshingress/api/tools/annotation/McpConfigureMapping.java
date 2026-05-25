@@ -18,4 +18,5 @@ public @interface McpConfigureMapping {
     boolean debugTrace() default false;
 
     long timeoutMs() default 0L;
+
 }

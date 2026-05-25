@@ -12,11 +12,13 @@ import dev.mrk.meshingress.api.tools.annotation.availability.ToolAvailabilityCon
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunction;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.schema.McpJsonSchemaProvider;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.databind.JsonNode;
@@ -31,6 +33,7 @@ import java.util.*;
 public class McpToolAnnotationScanner {
     private static final Logger log = LoggerFactory.getLogger(McpToolAnnotationScanner.class);
     private static final Class<?> defaultParamImplementationClass = Void.class;
+    private static final McpConfigureMapping DEFAULT_FUNCTION_MAPPING = resolveDefaultFunctionMapping();
 
     private final ObjectMapper objectMapper;
     private static final String QUALIFIED_TOOL_NAME_REGEX = "[a-z][a-z0-9]*(\\.[a-z0-9]+)*";
@@ -53,29 +56,24 @@ public class McpToolAnnotationScanner {
 
         } else if (!tool.value().isBlank() && !tool.value().matches(QUALIFIED_TOOL_NAME_REGEX)) {
             throw new IllegalStateException("Mcp tool '%s' requires valid @McpTool annotation: '%s'".formatted(toolClass.getName(), tool.value()));
-
-        } else if (!tool.invocationName().isBlank() && !tool.invocationName().matches(QUALIFIED_TOOL_NAME_REGEX)) {
-            throw new IllegalStateException("Mcp tool '%s' requires valid @McpTool annotation: '%s'".formatted(toolClass.getName(), tool.invocationName()));
         }
 
         String mapping = mapping(toolClass);
-        List<AnnotatedMcpFunction> functions = scanFunctions(toolClass, tool, mapping);
-        AnnotatedMcpFunction defaultFunction = defaultFunction(tool, functions);
-        ObjectNode inputSchema = defaultFunction == null
-                ? emptyObjectSchema(tool.description())
-                : defaultFunction.inputSchema();
         ObjectNode annotations = scopesJson(toolClass.getAnnotation(McpToolScopes.class));
-        McpToolDescriptor descriptor = newMcpToolDescriptor(tool, inputSchema, annotations);
 
-        return new AnnotatedMcpTool(toolClass, mapping, tool.invocationName(), descriptor, functions);
+        List<AnnotatedMcpFunction> functions = scanFunctions(toolClass, tool, mapping);
+
+        McpToolDescriptor descriptor = newMcpToolDescriptor(tool, functions, annotations);
+
+        return new AnnotatedMcpTool(toolClass, mapping, tool.defaultFunction(), descriptor, functions);
     }
 
     @Contract("_, _, _ -> new")
-    private @NonNull McpToolDescriptor newMcpToolDescriptor(@NonNull McpTool tool, ObjectNode inputSchema, ObjectNode annotations) {
-        String handlerKey = !tool.handlerKey().isBlank()
-                ? tool.handlerKey()
-                : (!tool.invocationName().isBlank() ? tool.invocationName() : tool.value());
-
+    private @NonNull McpToolDescriptor newMcpToolDescriptor(
+            @NonNull McpTool tool,
+            List<AnnotatedMcpFunction> functions,
+            ObjectNode annotations
+    ) {
         return new McpToolDescriptor(
                 tool.value(),
                 blankToNull(tool.title()),
@@ -83,6 +81,34 @@ public class McpToolAnnotationScanner {
                 tool.version(),
                 tool.enabled(),
                 tool.visibility(),
+                functions.stream()
+                        .map(AnnotatedMcpFunction::descriptor)
+                        .toList(),
+                annotations,
+                tool.dynamic()
+        );
+    }
+
+    private @NonNull McpFunctionDescriptor newMcpFunctionDescriptor(
+            @NonNull McpTool tool,
+            @NonNull McpFunction function,
+            String functionName,
+            ObjectNode inputSchema,
+            ObjectNode annotations,
+            McpFunctionAvailability availability
+    ) {
+        String functionDescriptorName = qualifiedFunctionName(tool.value(), functionName);
+        String handlerKey = !tool.handlerKey().isBlank()
+                ? tool.handlerKey()
+                : functionDescriptorName;
+
+        return new McpFunctionDescriptor(
+                functionDescriptorName,
+                blankToNull(function.title()),
+                function.description(),
+                tool.version(),
+                availability.enabled(),
+                availability.visibility(),
                 handlerKey,
                 inputSchema,
                 null,
@@ -103,25 +129,39 @@ public class McpToolAnnotationScanner {
 
             McpConfigureMapping functionMapping = method.getAnnotation(McpConfigureMapping.class);
             if (functionMapping == null) {
-                functionMapping = McpToolDefaults.class.getAnnotation(McpConfigureMapping.class);
+                functionMapping = DEFAULT_FUNCTION_MAPPING;
+            }
+            if (functionMapping == null) {
+                throw new IllegalStateException("McpConfigureMapping default is not available");
             }
 
-            String name = function.value().isBlank() ? method.getName() : function.value();
+            String name = function.value().isBlank() ? method.getName() : normalize(function.value(), false);
             String path = compose(mapping, name);
 
             List<String> availabilityMessages = new ArrayList<>();
             McpFunctionAvailabilityState availabilityState = evalFunctionAvailability(tool, toolClass, method, name, functionMapping, availabilityMessages);
             McpFunctionAvailability functionAvailabilityPolicy = newMcpFunctionAvailability(tool, function, functionMapping, availabilityState);
+            ObjectNode inputSchema = inputSchemaFor(method, function.description());
+            ObjectNode functionAnnotations = functionScopes(toolClass, method);
+            McpFunctionDescriptor descriptor = newMcpFunctionDescriptor(
+                    tool,
+                    function,
+                    name,
+                    inputSchema,
+                    functionAnnotations,
+                    functionAvailabilityPolicy
+            );
 
             AnnotatedMcpFunction annotatedFunction = new AnnotatedMcpFunction(
                     name,
                     path,
                     function.title(),
                     function.description(),
+                    descriptor,
                     functionAvailabilityPolicy,
                     method,
-                    inputSchemaFor(method, function.description()),
-                    functionScopes(toolClass, method),
+                    inputSchema,
+                    functionAnnotations,
                     parametersFor(method)
             );
             AnnotatedMcpFunction existing = functions.putIfAbsent(path, annotatedFunction);
@@ -133,6 +173,14 @@ public class McpToolAnnotationScanner {
         return List.copyOf(functions.values());
     }
 
+    private static @Nullable McpConfigureMapping resolveDefaultFunctionMapping() {
+        try {
+            Method method = McpToolDefaults.class.getDeclaredMethod("main", McpCallContext.class);
+            return method.getAnnotation(McpConfigureMapping.class);
+        } catch (NoSuchMethodException exception) {
+            return null;
+        }
+    }
 
     /**
      * Compiles tool validity annotation to see if the function is available.
@@ -571,13 +619,13 @@ public class McpToolAnnotationScanner {
         if (functions.isEmpty()) {
             return null;
         }
-        if (tool.invocationName().isBlank()) {
+        String defaultFunctionName = tool.defaultFunction();
+        if (defaultFunctionName == null || defaultFunctionName.isBlank()) {
             return functions.getFirst();
         }
         return functions.stream()
-                .filter(function -> tool.invocationName().equals(function.name())
-                        || tool.invocationName().equals(function.path())
-                        || tool.invocationName().equals(tool.value()))
+                .filter(function -> defaultFunctionName.equals(function.name())
+                        || defaultFunctionName.equals(function.path()))
                 .findFirst()
                 .orElse(functions.getFirst());
     }
@@ -591,6 +639,23 @@ public class McpToolAnnotationScanner {
         String left = normalize(mapping, true);
         String right = normalize(function, false);
         return left.isBlank() ? right : left + "/" + right;
+    }
+
+    private String qualifiedFunctionName(String toolName, String functionName) {
+        String tool = normalizeDottedName(toolName, "tool");
+        String function = normalizeDottedName(functionName, "function");
+        return tool + "." + function;
+    }
+
+    private String normalizeDottedName(String value, String label) {
+        String normalized = value == null ? "" : value.trim();
+        if (normalized.isBlank()) {
+            throw new IllegalStateException("MCP " + label + " name must not be blank");
+        }
+        if (normalized.startsWith(".") || normalized.endsWith(".") || normalized.contains("..")) {
+            throw new IllegalStateException("MCP " + label + " name must use non-empty dotted segments: " + value);
+        }
+        return normalized;
     }
 
     private String normalize(String value, boolean allowBlank) {

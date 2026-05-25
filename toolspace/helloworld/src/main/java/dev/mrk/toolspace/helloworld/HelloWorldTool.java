@@ -8,7 +8,7 @@ import dev.mrk.meshingress.scopes.McpToolScope;
 import tools.jackson.databind.ObjectMapper;
 
 @McpTool(
-        value = "helloworld.greet",
+        value = "helloworld",
         title = "Hello World",
         description = "Return a greeting from an external Meshingress tool module."
 )
@@ -25,7 +25,7 @@ public class HelloWorldTool {
     @McpConfigureMapping(
             timeoutMs = 20_000
     )
-    @McpFunction(value = "call", description = "Greet the Person.")
+    @McpFunction(value = "greet", description = "Greet the Person.")
     public DispatchExecutionResult call(HelloWorldGreetArgs arguments, McpCallContext context) {
         String name = arguments.getName();
         DispatchExecutionResult.Builder dispatch = DispatchExecutionResult.builder()

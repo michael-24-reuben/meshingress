@@ -1,6 +1,5 @@
 package dev.mrk.meshingress;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,7 +22,7 @@ public class MeshingressApplication {
     @Bean
     ApplicationRunner serverPropertiesPrinter(
             ServerProperties serverProperties,
-            @Value("${meshingress.mcp.websocket.path:/mcp/ws}") String wsPath
+            MeshingressProperties properties
     ) {
         return args -> {
             String host = serverProperties.getAddress() != null
@@ -31,12 +30,17 @@ public class MeshingressApplication {
                     : "localhost";
             int port = Objects.requireNonNullElse(serverProperties.getPort(), -1);
             String httpUrl = String.format("http://%s:%d", host, port);
-            String wsUrl = String.format("ws://%s:%d%s", host, port, wsPath);
+            String wsUrl = properties.mcp().websocket().enabled()
+                    ? String.format("ws://%s:%d%s", host, port, properties.mcp().websocket().path())
+                    : "disabled";
 
             System.out.println("\n" +
                     "╔═════════════════════════════════════════════════════════════╗\n" +
                     "║               Meshingress Server Started                    ║\n" +
                     "╠═════════════════════════════════════════════════════════════╣\n" +
+                    "║ Runtime:    " + String.format("%-47s", properties.identity().name()) + "║\n" +
+                    "║ Instance:   " + String.format("%-47s", properties.identity().instanceId()) + "║\n" +
+                    "║ Environment:" + String.format(" %-46s", properties.identity().environment()) + "║\n" +
                     "║ Server Host: " + String.format("%-47s", host) +            "║\n" +
                     "║ Server Port: " + String.format("%-47d", port) +            "║\n" +
                     "║ HTTP URL:    " + String.format("%-47s", httpUrl) +         "║\n" +
