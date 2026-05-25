@@ -1,0 +1,22 @@
+# Todo
+
+- [x] Review current Spring Security generated-password behavior in this app and identify the safest way to capture or mirror it for bootstrap storage.
+- [x] Design the JSON file shape for bootstrap state, admin users, and MCP credential records.
+- [x] Choose the final store filename and path, with `data/mcp-auth-store.json` as the current candidate.
+- [x] Define store registry interfaces for admin and MCP auth persistence.
+- [x] Implement a JSON-backed store registry implementation.
+- [x] Add startup initialization that creates the JSON store when missing.
+- [x] Seed bootstrap admin state with the Spring Security generated password.
+- [x] Add first-admin registration endpoint.
+- [x] Support optional new admin password plus confirmation.
+- [x] Include future-ready admin fields such as email without making them required for MVP.
+- [x] Generate MCP auth credentials after first admin registration.
+- [x] Return generated MCP auth material only once in the registration response.
+- [x] Persist generated MCP auth data for runtime validation.
+- [x] Replace property-backed `McpCredentialValidator` with store-backed validation.
+- [x] Remove or demote `application-mcp-ws-demo.properties` from the primary WebSocket setup flow.
+- [ ] Update the Java and PowerShell MCP WebSocket samples to use the new registration flow.
+- [x] Add tests for bootstrap store creation and first-admin registration.
+- [x] Add tests for duplicate admin registration rejection.
+- [x] Add tests for MCP WebSocket auth using stored credentials.
+- [ ] Keep this architect entry active after implementation starts until SQL-backed persistence is implemented or explicitly split into a linked architect entry.
