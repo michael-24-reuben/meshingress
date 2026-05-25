@@ -3,6 +3,7 @@ package dev.mrk.meshingress.mcp.tools.annotation;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
+import dev.mrk.meshingress.mcp.tools.cache.McpCacheManager;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
 import dev.mrk.meshingress.tools.framework.scanner.McpToolAnnotationScanner;
 import org.springframework.context.ApplicationContext;
@@ -19,10 +20,12 @@ public class AnnotatedMcpToolHandlerProvider {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+    private final McpCacheManager cacheManager;
 
-    public AnnotatedMcpToolHandlerProvider(ApplicationContext applicationContext, ObjectMapper objectMapper) {
+    public AnnotatedMcpToolHandlerProvider(ApplicationContext applicationContext, ObjectMapper objectMapper, McpCacheManager cacheManager) {
         this.applicationContext = applicationContext;
         this.objectMapper = objectMapper;
+        this.cacheManager = cacheManager;
     }
 
     public List<McpToolHandler> handlers() {
@@ -36,7 +39,7 @@ public class AnnotatedMcpToolHandlerProvider {
             }
             AnnotatedMcpTool tool = scanner.scan(ClassUtils.getUserClass(bean));
             for (var function : tool.functions()) {
-                handlers.add(new AnnotatedMcpToolHandler(bean, tool, function, objectMapper, argumentBinder));
+                handlers.add(new AnnotatedMcpToolHandler(bean, tool, function, objectMapper, argumentBinder, cacheManager));
             }
         }
         return List.copyOf(handlers);

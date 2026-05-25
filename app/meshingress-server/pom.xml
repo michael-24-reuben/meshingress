@@ -169,7 +169,16 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </execution>
+                </executions>
                 <configuration>
+                    <skip>false</skip>
                     <mainClass>dev.mrk.meshingress.MeshingressApplication</mainClass>
                     <excludes>
                         <exclude>

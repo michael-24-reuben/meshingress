@@ -4,11 +4,13 @@ import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
+import dev.mrk.meshingress.api.tools.annotation.McpCacheResult;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunction;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
+import dev.mrk.meshingress.mcp.tools.cache.McpCacheManager;
 import dev.mrk.meshingress.route.api.McpDispatchException;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
 import org.jspecify.annotations.NonNull;
@@ -30,19 +32,22 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     private final AnnotatedMcpFunction function;
     private final ObjectMapper objectMapper;
     private final TypedJsonArgumentBinder argumentBinder;
+    private final McpCacheManager cacheManager;
 
     public AnnotatedMcpToolHandler(
             Object bean,
             AnnotatedMcpTool tool,
             AnnotatedMcpFunction function,
             ObjectMapper objectMapper,
-            TypedJsonArgumentBinder argumentBinder
+            TypedJsonArgumentBinder argumentBinder,
+            McpCacheManager cacheManager
     ) {
         this.bean = bean;
         this.tool = tool;
         this.function = function;
         this.objectMapper = objectMapper;
         this.argumentBinder = argumentBinder;
+        this.cacheManager = cacheManager;
         this.function.method().setAccessible(true);
     }
 
@@ -53,6 +58,18 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
 
     @Override
     public DispatchExecutionResult call(ObjectNode arguments, McpCallContext context) {
+        McpCacheResult cachePolicy = function.method().getAnnotation(McpCacheResult.class);
+        return cacheManager.execute(
+                cachePolicy,
+                tool.descriptor().name(),
+                function.descriptor().name(),
+                arguments,
+                context,
+                () -> invoke(arguments, context)
+        );
+    }
+
+    private DispatchExecutionResult invoke(ObjectNode arguments, McpCallContext context) {
         try {
             Object result = function.method().invoke(bean, invocationArguments(arguments, context));
             return adaptResult(result);

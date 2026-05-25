@@ -4,6 +4,8 @@ import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.result.ResultContent;
 import dev.mrk.meshingress.api.tools.annotation.*;
+import dev.mrk.meshingress.api.tools.annotation.cache.McpCacheKeyMode;
+import dev.mrk.meshingress.api.tools.annotation.cache.McpCacheStorage;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import tools.jackson.databind.ObjectMapper;
 
@@ -22,6 +24,21 @@ public class HelloWorldTool {
         this.objectMapper = objectMapper;
     }
 
+    @McpCacheResult(
+            enabled = true,
+            ttlMs = 60_000L,
+            namespace = "helloworld",
+            keyPrefix = "greet",
+            includeArguments = {"name"},
+            includeToolId = true,
+            includeFunctionName = true,
+            includePrincipal = false,
+            includeSession = false,
+            cacheErrors = false,
+            cacheEmptyResults = true,
+            keyMode = McpCacheKeyMode.CANONICAL_ARGUMENTS,
+            storage = McpCacheStorage.DEFAULT
+    )
     @McpConfigureMapping(
             timeoutMs = 20_000
     )

@@ -18,6 +18,7 @@ public record MeshingressProperties(
         @Valid @NotNull Mcp mcp,
         @Valid @NotNull Tools tools,
         @Valid @NotNull Dispatch dispatch,
+        @Valid @NotNull Cache cache,
         @Valid @NotNull Security security,
         @Valid @NotNull Scopes scopes,
         @Valid @NotNull Audit audit,
@@ -28,6 +29,7 @@ public record MeshingressProperties(
         mcp = mcp == null ? Mcp.defaults() : mcp;
         tools = tools == null ? Tools.defaults() : tools;
         dispatch = dispatch == null ? Dispatch.defaults() : dispatch;
+        cache = cache == null ? Cache.defaults() : cache;
         security = security == null ? Security.defaults() : security;
         scopes = scopes == null ? Scopes.defaults() : scopes;
         audit = audit == null ? Audit.defaults() : audit;
@@ -137,6 +139,41 @@ public record MeshingressProperties(
 
         static Dispatch defaults() {
             return new Dispatch(Duration.ofSeconds(30), 32, 256, true, false, true, true);
+        }
+    }
+
+    public record Cache(
+            boolean enabled,
+            @NotBlank String defaultStorage,
+            @NotBlank String directory,
+            @NotNull Duration defaultTtl,
+            @NotNull Duration maxTtl,
+            @NotNull DataSize maxEntrySize,
+            @NotNull DataSize maxTotalSize,
+            boolean createDirectories,
+            boolean cleanupOnStartup
+    ) {
+        public Cache {
+            defaultStorage = defaultString(defaultStorage, "file");
+            directory = defaultString(directory, ".cache/meshingress/cache");
+            defaultTtl = Objects.requireNonNullElse(defaultTtl, Duration.ofMinutes(5));
+            maxTtl = Objects.requireNonNullElse(maxTtl, Duration.ofHours(1));
+            maxEntrySize = Objects.requireNonNullElse(maxEntrySize, DataSize.ofMegabytes(1));
+            maxTotalSize = Objects.requireNonNullElse(maxTotalSize, DataSize.ofMegabytes(256));
+        }
+
+        static Cache defaults() {
+            return new Cache(
+                    true,
+                    "file",
+                    ".cache/meshingress/cache",
+                    Duration.ofMinutes(5),
+                    Duration.ofHours(1),
+                    DataSize.ofMegabytes(1),
+                    DataSize.ofMegabytes(256),
+                    true,
+                    true
+            );
         }
     }
 
