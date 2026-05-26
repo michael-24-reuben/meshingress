@@ -7,7 +7,10 @@ import dev.mrk.meshingress.api.tools.annotation.*;
 import dev.mrk.meshingress.api.tools.annotation.cache.McpCacheKeyMode;
 import dev.mrk.meshingress.api.tools.annotation.cache.McpCacheStorage;
 import dev.mrk.meshingress.scopes.McpToolScope;
+import dev.mrk.meshingress.tools.availability.enableondays.EnableOnDays;
 import tools.jackson.databind.ObjectMapper;
+
+import java.time.DayOfWeek;
 
 @McpTool(
         value = "helloworld",
@@ -39,6 +42,7 @@ public class HelloWorldTool {
             keyMode = McpCacheKeyMode.CANONICAL_ARGUMENTS,
             storage = McpCacheStorage.DEFAULT
     )
+//    @EnableOnDays({DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY})
     @McpConfigureMapping(
             timeoutMs = 20_000
     )

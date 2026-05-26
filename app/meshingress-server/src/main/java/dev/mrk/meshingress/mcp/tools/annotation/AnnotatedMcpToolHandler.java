@@ -4,7 +4,10 @@ import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
-import dev.mrk.meshingress.api.tools.annotation.McpCacheResult;
+import dev.mrk.meshingress.api.tools.annotation.*;
+import dev.mrk.meshingress.api.tools.annotation.availability.AvailabilityDecision;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityPolicy;
+import dev.mrk.meshingress.api.tools.annotation.availability.ToolAvailabilityContext;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunction;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
@@ -20,8 +23,11 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.*;
 
 public class AnnotatedMcpToolHandler implements McpToolHandler {
 
@@ -59,6 +65,13 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     @Override
     public DispatchExecutionResult call(ObjectNode arguments, McpCallContext context) {
         McpCacheResult cachePolicy = function.method().getAnnotation(McpCacheResult.class);
+
+        AvailabilityDecisions availabilityDecisions = evaluateAvailabilityPolicy(arguments, context);
+
+        if (!availabilityDecisions.allowed()) {
+            throw new JsonRpcException(JsonRpcErrorCodes.TOOL_UNAVAILABLE, "Tool function is not available: " + String.join("; ", availabilityDecisions.reasons()));
+        }
+
         return cacheManager.execute(
                 cachePolicy,
                 tool.descriptor().name(),
@@ -67,6 +80,71 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
                 context,
                 () -> invoke(arguments, context)
         );
+    }
+
+    public AvailabilityDecisions evaluateAvailabilityPolicy(ObjectNode arguments, McpCallContext context) {
+        Method method = this.function.method();
+        McpConfigureMapping configureMapping = method.getAnnotation(McpConfigureMapping.class);
+        McpAvailabilityMode availabilityMode = configureMapping.availabilityMode();
+
+        boolean evaluatedAnyPolicy = false;
+        boolean availabilityAllowed = availabilityMode == McpAvailabilityMode.ALL;
+        List<String> availabilityReasons = new ArrayList<>();
+        Map<String, Object> availabilityMetadata = new HashMap<>();
+
+
+        for (Annotation methodAnnotation : method.getAnnotations()) {
+            Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+
+            McpFunctionAvailabilityPolicy policyAnnotation = annotationType.getAnnotation(McpFunctionAvailabilityPolicy.class);
+            if (policyAnnotation == null) {
+                continue;
+            }
+
+            try {
+                Class<? extends McpAvailabilityPolicy<? extends Annotation>> policyClass = policyAnnotation.value();
+                McpAvailabilityPolicy<?> policy = policyClass.getDeclaredConstructor().newInstance();
+
+                ToolAvailabilityContext toolContext = new ToolAvailabilityContext(tool.name(), function.name(), arguments, context, Map.of());
+                AvailabilityDecision evaluation = evaluatePolicyReflectively(policy, methodAnnotation, toolContext);
+
+                evaluatedAnyPolicy = true;
+
+                if (availabilityMode == McpAvailabilityMode.ALL) {
+                    availabilityAllowed = availabilityAllowed && evaluation.allowed();
+                } else {
+                    availabilityAllowed = availabilityAllowed || evaluation.allowed();
+                }
+
+                availabilityReasons.add(evaluation.reason());
+                availabilityMetadata.put(annotationType.getSimpleName(), evaluation.metadata());
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (!evaluatedAnyPolicy) {
+            return new AvailabilityDecisions(true, List.of("no availability policies declared"), Map.of());
+        }
+        return new AvailabilityDecisions(availabilityAllowed, availabilityReasons, availabilityMetadata);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <A extends Annotation> AvailabilityDecision evaluatePolicyReflectively(
+            McpAvailabilityPolicy<?> policy,
+            Annotation annotation,
+            ToolAvailabilityContext context
+    ) {
+        Objects.requireNonNull(policy, "policy must not be null");
+        Objects.requireNonNull(annotation, "annotation must not be null");
+
+        try {
+            return ((McpAvailabilityPolicy<A>) policy).evaluate((A) annotation, context, McpAvailabilityPolicy.PolicyEvaluationState.INVOKE_TOOL);
+        } catch (ClassCastException ex) {
+            throw new IllegalStateException(
+                    "Availability policy " + policy.getClass().getName() + " is not compatible with annotation @" + annotation.annotationType().getName(),
+                    ex
+            );
+        }
     }
 
     private DispatchExecutionResult invoke(ObjectNode arguments, McpCallContext context) {
@@ -146,5 +224,8 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
                 .text(text)
                 .structuredContent(structured)
                 .build();
+    }
+
+    public record AvailabilityDecisions(boolean allowed, List<String> reasons, Map<String, Object> metadata) {
     }
 }

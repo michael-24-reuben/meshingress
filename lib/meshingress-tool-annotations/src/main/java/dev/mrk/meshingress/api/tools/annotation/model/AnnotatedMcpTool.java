@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public record AnnotatedMcpTool(
+        String name,
         Class<?> toolClass,
         String mapping,
         String defaultFunctionName,

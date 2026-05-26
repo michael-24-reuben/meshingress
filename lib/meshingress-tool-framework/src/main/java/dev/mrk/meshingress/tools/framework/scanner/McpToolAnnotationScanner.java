@@ -65,7 +65,7 @@ public class McpToolAnnotationScanner {
 
         McpToolDescriptor descriptor = newMcpToolDescriptor(tool, functions, annotations);
 
-        return new AnnotatedMcpTool(toolClass, mapping, tool.defaultFunction(), descriptor, functions);
+        return new AnnotatedMcpTool(tool.value(), toolClass, mapping, tool.defaultFunction(), descriptor, functions);
     }
 
     @Contract("_, _, _ -> new")
