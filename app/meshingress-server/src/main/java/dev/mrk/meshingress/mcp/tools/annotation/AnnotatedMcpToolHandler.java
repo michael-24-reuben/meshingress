@@ -85,7 +85,9 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     public AvailabilityDecisions evaluateAvailabilityPolicy(ObjectNode arguments, McpCallContext context) {
         Method method = this.function.method();
         McpConfigureMapping configureMapping = method.getAnnotation(McpConfigureMapping.class);
-        McpAvailabilityMode availabilityMode = configureMapping.availabilityMode();
+        McpAvailabilityMode availabilityMode = configureMapping == null
+                ? McpAvailabilityMode.ALL
+                : configureMapping.availabilityMode();
 
         boolean evaluatedAnyPolicy = false;
         boolean availabilityAllowed = availabilityMode == McpAvailabilityMode.ALL;

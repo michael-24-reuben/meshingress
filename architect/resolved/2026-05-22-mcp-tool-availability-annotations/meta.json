@@ -1,12 +1,12 @@
 {
   "id": "2026-05-22-mcp-tool-availability-annotations",
   "title": "MCP Tool Availability Annotations",
-  "status": "pending",
+  "status": "resolved",
   "createdAt": "2026-05-22T14:27:29-04:00",
   "activatedAt": null,
-  "resolvedAt": null,
+  "resolvedAt": "2026-05-25T21:25:00-04:00",
   "archivedAt": null,
-  "updatedAt": "2026-05-22T14:27:29-04:00",
+  "updatedAt": "2026-05-25T21:25:00-04:00",
   "tags": [
     "mcp",
     "tools",
@@ -28,6 +28,12 @@
       "at": "2026-05-22T14:27:29-04:00",
       "type": "CREATED",
       "note": "Created separate pending record for MCP tool availability annotations and validation."
+    },
+    {
+      "at": "2026-05-25T21:25:00-04:00",
+      "type": "RESOLVED",
+      "note": "Availability annotations scan and invocation enforcement are in place, with optional mapping defaulting to ALL."
     }
   ]
 }
+

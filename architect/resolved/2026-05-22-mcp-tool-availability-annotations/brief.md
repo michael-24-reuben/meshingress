@@ -38,3 +38,4 @@ public class InstagramPublishTool {
 This architect entry covers tool-level and tool-function-level availability metadata, validation, and runtime evaluation.
 
 It should not change HTTP server route configuration. Actual server paths remain owned by the route annotation framework.
+
