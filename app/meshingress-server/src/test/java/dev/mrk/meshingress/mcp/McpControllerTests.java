@@ -237,6 +237,75 @@ class McpControllerTests {
     }
 
     @Test
+    void roleAdminCanReconcileBundledToolRegistrationPhase() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 30,
+                                  "method": "roles/tools/register",
+                                  "params": {
+                                    "phase": "bundle",
+                                    "toolId": "helloworld.greet",
+                                    "bundle": {
+                                      "bundleId": "meshingress-tool-bundle"
+                                    }
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.registered", is(true)))
+                .andExpect(jsonPath("$.result.phase", is("bundle")))
+                .andExpect(jsonPath("$.result.sourceKind", is("CLASSPATH_BUNDLE")))
+                .andExpect(jsonPath("$.result.status", is("reconciled")))
+                .andExpect(jsonPath("$.result.registeredFunctions[0]", is("helloworld.greet")));
+    }
+
+    @Test
+    void bundleRegistrationFailsWhenToolIsNotOnClasspath() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 31,
+                                  "method": "roles/tools/register",
+                                  "params": {
+                                    "phase": "bundle",
+                                    "toolId": "missing.bundle.tool"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.INVALID_PARAMS)))
+                .andExpect(jsonPath("$.error.data.errorCode", is("BUNDLE_TOOL_NOT_PRESENT")));
+    }
+
+    @Test
+    void nativeRegistrationIsDisabledForHttpByDefault() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 32,
+                                  "method": "roles/tools/register",
+                                  "params": {
+                                    "phase": "native",
+                                    "toolId": "meshingress.runtime.info"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.data.errorCode", is("TOOL_REGISTRATION_PHASE_DISABLED")));
+    }
+
+    @Test
     void reservedMcpMethodsHaveMvpResponses() throws Exception {
         mockMvc.perform(get("/mcp"))
                 .andExpect(status().isMethodNotAllowed());

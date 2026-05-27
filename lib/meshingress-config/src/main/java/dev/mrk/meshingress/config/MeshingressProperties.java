@@ -92,6 +92,7 @@ public record MeshingressProperties(
 
     public record Tools(
             @Valid @NotNull Registry registry,
+            @Valid @NotNull Registration registration,
             List<String> allowList,
             List<String> denyList,
             @NotNull Duration defaultTimeout,
@@ -100,13 +101,14 @@ public record MeshingressProperties(
     ) {
         public Tools {
             registry = registry == null ? Registry.defaults() : registry;
+            registration = registration == null ? Registration.defaults() : registration;
             allowList = normalizeList(allowList, List.of());
             denyList = normalizeList(denyList, List.of());
             defaultTimeout = Objects.requireNonNullElse(defaultTimeout, Duration.ofSeconds(30));
         }
 
         static Tools defaults() {
-            return new Tools(Registry.defaults(), List.of(), List.of(), Duration.ofSeconds(30), true, false);
+            return new Tools(Registry.defaults(), Registration.defaults(), List.of(), List.of(), Duration.ofSeconds(30), true, false);
         }
 
         public record Registry(
@@ -120,6 +122,54 @@ public record MeshingressProperties(
             static Registry defaults() {
                 return new Registry(true, true, true, false, true, false);
             }
+        }
+
+        public record Registration(
+                boolean enabled,
+                boolean allowExperimental,
+                boolean allowStaging,
+                boolean allowBundle,
+                boolean allowNativeHttp,
+                boolean experimentalReplaceExisting,
+                boolean allowExperimentalOverrideBundle,
+                boolean allowExperimentalOverrideStaging,
+                boolean allowStagingOverrideBundle,
+                boolean allowOverrideNative,
+                @NotNull StagingConflictPolicy stagingConflictPolicy,
+                @NotBlank String localJarRoot,
+                boolean requireLocalJarChecksum,
+                boolean requireMavenVersionPin,
+                boolean requireApprovalForDynamicPhases
+        ) {
+            public Registration {
+                stagingConflictPolicy = stagingConflictPolicy == null ? StagingConflictPolicy.REPLACE_EXISTING : stagingConflictPolicy;
+                localJarRoot = defaultString(localJarRoot, "tools/lib");
+            }
+
+            static Registration defaults() {
+                return new Registration(
+                        true,
+                        true,
+                        true,
+                        true,
+                        false,
+                        true,
+                        false,
+                        true,
+                        false,
+                        false,
+                        StagingConflictPolicy.REPLACE_EXISTING,
+                        "tools/lib",
+                        true,
+                        true,
+                        true
+                );
+            }
+        }
+
+        public enum StagingConflictPolicy {
+            REJECT,
+            REPLACE_EXISTING
         }
     }
 

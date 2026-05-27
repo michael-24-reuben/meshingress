@@ -91,3 +91,30 @@ class LocalMavenRepositoryArtifactResolverTests {
         Files.writeString(base.resolve(artifactId + "-" + version + ".pom"), pomXml);
     }
 }
+/*
+app/meshingress-config/src/main/java/dev/mrk/meshingress/config/MeshingressProperties.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/BundleSpec.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/LocalJarSpec.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/MavenCoordinatesSpec.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/NativeSpec.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationContext.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationErrors.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationPhase.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationRecord.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationRequest.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationResult.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolSourceKind.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/InMemoryToolRegistrationStore.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationIds.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationStore.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationStrategy.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationService.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ExperimentalToolRegistrationStrategy.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/StagingToolRegistrationStrategy.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/BundleToolRegistrationStrategy.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/NativeToolRegistrationStrategy.java
+app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/RoleToolService.java
+app/meshingress-server/src/main/resources/application.properties
+app/meshingress-server/src/test/java/dev/mrk/meshingress/mcp/McpControllerTests.java
+* app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ExperimentalToolRegistrationStrategy.java
+*/

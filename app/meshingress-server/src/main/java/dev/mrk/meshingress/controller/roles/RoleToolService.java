@@ -5,6 +5,7 @@ import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolPatch;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
+import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationService;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
@@ -27,11 +28,18 @@ public class RoleToolService {
     private final ObjectMapper objectMapper;
     private final ToolRegistry toolRegistry;
     private final McpAccessPolicyService accessPolicyService;
+    private final ToolRegistrationService toolRegistrationService;
 
-    public RoleToolService(ObjectMapper objectMapper, ToolRegistry toolRegistry, McpAccessPolicyService accessPolicyService) {
+    public RoleToolService(
+            ObjectMapper objectMapper,
+            ToolRegistry toolRegistry,
+            McpAccessPolicyService accessPolicyService,
+            ToolRegistrationService toolRegistrationService
+    ) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
         this.accessPolicyService = accessPolicyService;
+        this.toolRegistrationService = toolRegistrationService;
     }
 
     public ObjectNode check(McpCallContext context, JsonNode params) {
@@ -43,6 +51,9 @@ public class RoleToolService {
 
     public ObjectNode register(McpCallContext context, JsonNode params) {
         accessPolicyService.requireAdmin(context);
+        if (toolRegistrationService.isPhaseRegistration(params)) {
+            return toolRegistrationService.register(context, params);
+        }
         McpToolDescriptor descriptor = descriptorFromParams(params.path("tool"), true);
         McpToolDescriptor registered = toolRegistry.register(descriptor, context);
 

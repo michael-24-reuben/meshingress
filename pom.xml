@@ -19,6 +19,7 @@
     <description>Meshingress MCP server and attachable tool modules</description>
 
     <modules>
+        <module>app/meshingress-tool-bundle</module>
         <module>app/meshingress-server</module>
 
         <module>lib/meshingress-config</module>
@@ -34,6 +35,7 @@
         <module>toolspace/instagram-api</module>
         <module>toolspace/powershell-cli-tool</module>
         <module>toolspace/whatsapp-cobalt</module>
+        <module>toolspace/sample-module</module>
     </modules>
 
     <properties>

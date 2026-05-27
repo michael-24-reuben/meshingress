@@ -47,28 +47,9 @@
             <version>${project.version}</version>
         </dependency>
 
-
         <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>helloworld</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>instagram-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>powershell-cli</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>whatsapp-cobalt</artifactId>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-bundle</artifactId>
             <version>${project.version}</version>
         </dependency>
 
