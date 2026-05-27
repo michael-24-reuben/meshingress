@@ -8,11 +8,13 @@ High-level architecture (big picture)
 ------------------------------------
 - Maven reactor with three module families:
   - `lib/meshingress-tool-api` contains the shared MCP tool SPI.
-  - `toolspace/*` contains attachable tool modules, currently `toolspace/helloworld`.
+  - `toolspace/*` contains attachable tool modules, including `toolspace/helloworld`, `toolspace/instagram-api`, `toolspace/powershell-cli-tool`, `toolspace/whatsapp-cobalt`, and `toolspace/sample-module`.
   - `app/meshingress-server` contains the Spring Boot application. Java 22 is used (see `pom.xml`).
+  - `app/meshingress-tool-bundle` aggregates tool module dependencies for server startup discovery.
 - Two logical surfaces:
   - HTTP/REST internal API under `/api/v1/architect/*` (in `architect/` domain work; see `architect/README.md`).
   - MCP transport: a JSON-RPC 2.0 over HTTP endpoint at POST `/mcp` implemented by `mcp/McpController` and routed to `mcp/McpDispatcher`.
+  - MCP transport over WebSocket at `/mcp/ws` configured by `meshingress.mcp.websocket.path`.
 - MCP is the main plugin/extension surface: tool modules implement the API `McpToolHandler`, expose handlers as Spring beans, server internals discover them via `ToolRegistry`, and `ToolExecutor` invokes them.
 
 Key files to read first
@@ -28,8 +30,11 @@ Key files to read first
 - `app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/tools/ToolsMcpController.java` — public MCP tool listing and calling.
 - `app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/RolesMcpController.java` — role-gated registry methods.
 - `app/meshingress-server/src/main/java/dev/mrk/meshingress/mcp/JsonRpcResponses.java` — canonical JSON-RPC response formatting.
+- `app/meshingress-server/src/main/java/dev/mrk/meshingress/config/McpWebSocketConfig.java` — WebSocket transport wiring for MCP.
+- `app/meshingress-server/src/main/java/dev/mrk/meshingress/mcp/McpWebSocketHandler.java` — WebSocket JSON-RPC handling.
 - `app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/RoleAuthorizationService.java` — role auth logic (X-Mcp-Role header, legacy X-Mcp-Admin header, or Bearer admin token).
 - `app/meshingress-server/src/main/resources/application.properties` — application properties; default name set.
+- `app/meshingress-tool-bundle/pom.xml` — tool dependency bundle attached by the server.
 - `architect/README.md` — project-specific developer/agent conventions and task tracking (highly recommended).
 
 What to know about MCP (concrete patterns)
@@ -38,6 +43,7 @@ What to know about MCP (concrete patterns)
 - Supported methods (as implemented): `initialize`, `notifications/initialized`, `ping`, `tools/list`, `tools/call`, and role-gated methods under `roles/tools/*` (check/register/update/delete/list/reload).
 - Initialization: `initialize` returns `protocolVersion` (default constant `2025-11-25`) and `capabilities.tools.listChanged = true`.
 - Tool call shape: POST `/mcp` body {"jsonrpc":"2.0","id":...,"method":"tools/call","params":{"name":"<tool>","arguments":{...}}}
+- MCP WebSocket transport uses the same JSON-RPC methods at `meshingress.mcp.websocket.path` (default `/mcp/ws`); see `samples/mcp-websocket/README.md`.
 - Tool integration points to implement or inspect:
   - `ToolRegistry#listPublicEnabledTools()` — dispatcher uses this to produce `tools/list`.
   - `ToolExecutor#execute(name, arguments, context)` — returns a `ToolExecutionResult` whose `toJson(objectMapper)` is returned to the client.
@@ -73,7 +79,7 @@ Where agents should edit to add a tool
 1. Create a module under `toolspace/<name>` that depends on `dev.mrk.meshingress:meshingress-tool-api`.
 2. Implement `McpToolHandler` and return a `McpToolDescriptor` from `descriptor()`.
 3. Expose the handler as a Spring bean. Prefer a module-local Boot auto-configuration file under `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
-4. Attach the module by adding it as a dependency of `app/meshingress-server`.
+4. Attach the module by adding it as a dependency of `app/meshingress-tool-bundle/pom.xml` (the server depends on this bundle).
 5. Add MVC tests in `app/meshingress-server` that confirm `tools/list` and `tools/call` see the attached tool.
 
 Quick JSON-RPC examples
