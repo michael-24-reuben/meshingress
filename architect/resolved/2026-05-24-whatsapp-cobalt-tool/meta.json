@@ -1,0 +1,40 @@
+{
+  "id": "2026-05-24-whatsapp-cobalt-tool",
+  "title": "WhatsApp Cobalt Tool",
+  "status": "active",
+  "createdAt": "2026-05-24T12:35:56-04:00",
+  "activatedAt": "2026-05-24T12:35:56-04:00",
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-05-24T12:35:56-04:00",
+  "tags": [
+    "toolspace",
+    "mcp",
+    "whatsapp",
+    "cobalt",
+    "messaging",
+    "privacy"
+  ],
+  "related": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User asked to back up the repo and install an Auties00/Cobalt-backed Meshingress toolspace module, with a privacy boundary around not exposing WhatsApp conversation reading."
+  },
+  "module": {
+    "parent": "toolspace",
+    "name": "whatsapp-cobalt",
+    "path": "toolspace/whatsapp-cobalt"
+  },
+  "events": [
+    {
+      "at": "2026-05-24T12:35:56-04:00",
+      "type": "CREATED",
+      "note": "Created active record for a narrow WhatsApp Cobalt toolspace integration."
+    },
+    {
+      "at": "2026-05-24T12:35:56-04:00",
+      "type": "BACKUP_CREATED",
+      "note": "Pushed backup branch backup-2026-05-24-123317 before implementation."
+    }
+  ]
+}
