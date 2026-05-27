@@ -1,0 +1,35 @@
+{
+  "id": "2026-05-27-meshingress-repository-artifact-implementation",
+  "title": "Meshingress Repository Artifact Implementation",
+  "status": "pending",
+  "createdAt": "2026-05-27T16:30:00-04:00",
+  "activatedAt": null,
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-05-27T16:30:00-04:00",
+  "tags": [
+    "repository",
+    "artifact-registry",
+    "security-assessment",
+    "tool-installation",
+    "cli-anything",
+    "mcp-runtime",
+    "supply-chain",
+    "sbom",
+    "signing",
+    "policy",
+    "future"
+  ],
+  "related": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User decided to split generated tool handling into a Meshingress Repository that ingests, scans, reviews, signs, and publishes artifacts separately from the official MCP runtime. The repository should support more than tool installables, including availability annotations and future artifact types."
+  },
+  "events": [
+    {
+      "at": "2026-05-27T16:30:00-04:00",
+      "type": "CREATED",
+      "note": "Created implementation package for app/meshingress-repository and supporting artifact libraries."
+    }
+  ]
+}
