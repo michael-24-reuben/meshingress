@@ -37,6 +37,15 @@ public class ToolsMcpController {
         this.properties = properties;
     }
 
+    @McpDispatchMethod("register")
+    public @NonNull ObjectNode toolsRegister(@McpDispatchParam("params") @NonNull JsonNode params, McpCallContext context) {
+        ensureRegistryEnabled();
+        String artifactId = params.path("artifactId").asString("");
+        log.debug("MCP tools/registe: artifactId={} requestId={} sessionId={}", artifactId, context.requestId(), context.sessionId());
+
+        return objectMapper.createObjectNode();
+    }
+
     @McpDispatchMethod("list")
     public @NonNull ObjectNode toolsList() {
         ensureRegistryEnabled();

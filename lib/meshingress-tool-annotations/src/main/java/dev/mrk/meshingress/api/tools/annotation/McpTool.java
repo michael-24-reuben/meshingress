@@ -16,7 +16,7 @@ public @interface McpTool {
      * Defines a unique tool ID, used to identify the tool in the system.
      */
     @Pattern("[a-z][a-z0-9-_]*")
-    String value()/* default ""*/; // default is omitted because a tool needs to have an ID, and the empty string would be an invalid ID.
+    String value();
 
     String title() default "";
 

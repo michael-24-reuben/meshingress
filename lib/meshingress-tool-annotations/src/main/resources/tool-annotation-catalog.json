@@ -1,0 +1,3418 @@
+[
+  {
+    "annotation": "dev.mrk.meshingress.api.tools.annotation.McpTool",
+    "simpleName": "McpTool",
+    "elements": [
+      {
+        "name": "defaultFunction",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "main",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "description",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "dynamic",
+        "type": "boolean",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": false,
+        "array": false,
+        "kind": "boolean"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": true,
+        "array": false,
+        "kind": "boolean"
+      },
+      {
+        "name": "handlerKey",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "title",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "value",
+        "type": "java.lang.String",
+        "required": true,
+        "annotations": [ ],
+        "defaultValue": null,
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "version",
+        "type": "int",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": 1,
+        "array": false,
+        "kind": "number"
+      },
+      {
+        "name": "visibility",
+        "type": "dev.mrk.meshingress.api.tools.ToolVisibility",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": {
+          "enumType": "dev.mrk.meshingress.api.tools.ToolVisibility",
+          "name": "PUBLIC"
+        },
+        "array": false,
+        "kind": "enum",
+        "enumValues": [
+          {
+            "name": "PUBLIC",
+            "ordinal": 0,
+            "fields": {
+              "toWire": "public"
+            }
+          },
+          {
+            "name": "PRIVATE",
+            "ordinal": 1,
+            "fields": {
+              "toWire": "private"
+            }
+          },
+          {
+            "name": "ADMIN",
+            "ordinal": 2,
+            "fields": {
+              "toWire": "admin"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "annotation": "dev.mrk.meshingress.api.tools.annotation.McpToolMapping",
+    "simpleName": "McpToolMapping",
+    "elements": [
+      {
+        "name": "value",
+        "type": "java.lang.String",
+        "required": true,
+        "annotations": [ ],
+        "defaultValue": null,
+        "array": false,
+        "kind": "string"
+      }
+    ]
+  },
+  {
+    "annotation": "dev.mrk.meshingress.api.tools.annotation.McpToolScopes",
+    "simpleName": "McpToolScopes",
+    "elements": [
+      {
+        "name": "value",
+        "type": "[Ldev.mrk.meshingress.scopes.McpToolScope;",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": [ ],
+        "array": true,
+        "componentType": "dev.mrk.meshingress.scopes.McpToolScope",
+        "componentKind": "enum",
+        "enumValues": [
+          {
+            "name": "LOCAL_READ",
+            "ordinal": 0,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_LOCAL_READ",
+              "category": {
+                "name": "LOCAL",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read local non-file host/runtime information.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "LOCAL_WRITE",
+            "ordinal": 1,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_LOCAL_WRITE",
+              "category": {
+                "name": "LOCAL",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Modify local non-file host/runtime state.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "RUNTIME_READ",
+            "ordinal": 2,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_RUNTIME_READ",
+              "category": {
+                "name": "LOCAL",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read runtime metadata such as version, capabilities, or uptime.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "LOW",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "RUNTIME_WRITE",
+            "ordinal": 3,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_RUNTIME_WRITE",
+              "category": {
+                "name": "LOCAL",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Modify runtime behavior or mutable runtime settings.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_LIST",
+            "ordinal": 4,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_LIST",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "List files or directories without reading file contents.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_METADATA_READ",
+            "ordinal": 5,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_METADATA_READ",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read file metadata such as size, timestamps, and permissions.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_READ",
+            "ordinal": 6,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_READ",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read file contents.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_WRITE",
+            "ordinal": 7,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_WRITE",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create or modify file contents.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_COPY",
+            "ordinal": 8,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_COPY",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Copy files or directories.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_MOVE",
+            "ordinal": 9,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_MOVE",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Move or rename files or directories.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_DELETE",
+            "ordinal": 10,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_DELETE",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete files or directories.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_UPLOAD",
+            "ordinal": 11,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_UPLOAD",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Upload files into a local or managed file store.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_DOWNLOAD",
+            "ordinal": 12,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_DOWNLOAD",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Download files from a local or managed file store.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "FILES_ARCHIVE",
+            "ordinal": 13,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_FILES_ARCHIVE",
+              "category": {
+                "name": "FILES",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Archive, compress, or package files.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "NETWORK_ACCESS",
+            "ordinal": 14,
+            "fields": {
+              "accessMode": {
+                "name": "MANAGE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_NETWORK_ACCESS",
+              "category": {
+                "name": "NETWORK",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Broad network access. Prefer narrower network scopes when possible.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "NETWORK_OUTBOUND",
+            "ordinal": 15,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_NETWORK_OUTBOUND",
+              "category": {
+                "name": "NETWORK",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Open outbound network connections.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "NETWORK_INBOUND",
+            "ordinal": 16,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_NETWORK_INBOUND",
+              "category": {
+                "name": "NETWORK",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Bind or listen for inbound network connections.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DNS_RESOLVE",
+            "ordinal": 17,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_DNS_RESOLVE",
+              "category": {
+                "name": "NETWORK",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Resolve DNS names.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": false,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "HTTP_CLIENT",
+            "ordinal": 18,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_HTTP_CLIENT",
+              "category": {
+                "name": "NETWORK",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Make outbound HTTP or HTTPS requests.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "WEBSOCKET_CONNECT",
+            "ordinal": 19,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_WEBSOCKET_CONNECT",
+              "category": {
+                "name": "NETWORK",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Open outbound WebSocket connections.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DATABASE_READ",
+            "ordinal": 20,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DATABASE_READ",
+              "category": {
+                "name": "DATABASE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read database records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DATABASE_WRITE",
+            "ordinal": 21,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DATABASE_WRITE",
+              "category": {
+                "name": "DATABASE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create or update database records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DATABASE_DELETE",
+            "ordinal": 22,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DATABASE_DELETE",
+              "category": {
+                "name": "DATABASE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete database records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DATABASE_SCHEMA_READ",
+            "ordinal": 23,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DATABASE_SCHEMA_READ",
+              "category": {
+                "name": "DATABASE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read database schema metadata.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DATABASE_SCHEMA_WRITE",
+            "ordinal": 24,
+            "fields": {
+              "accessMode": {
+                "name": "ADMIN",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DATABASE_SCHEMA_WRITE",
+              "category": {
+                "name": "DATABASE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create, alter, or drop database schema objects.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DATABASE_TRANSACTION_MANAGE",
+            "ordinal": 25,
+            "fields": {
+              "accessMode": {
+                "name": "MANAGE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DATABASE_TRANSACTION_MANAGE",
+              "category": {
+                "name": "DATABASE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Manage explicit database transaction behavior.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DATABASE_ADMIN",
+            "ordinal": 26,
+            "fields": {
+              "accessMode": {
+                "name": "ADMIN",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DATABASE_ADMIN",
+              "category": {
+                "name": "DATABASE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Perform privileged database administrative operations.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "PROCESS_READ",
+            "ordinal": 27,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_PROCESS_READ",
+              "category": {
+                "name": "PROCESS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read process information.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "PROCESS_EXECUTE",
+            "ordinal": 28,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_PROCESS_EXECUTE",
+              "category": {
+                "name": "PROCESS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Execute a process without shell command parsing.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "PROCESS_KILL",
+            "ordinal": 29,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_PROCESS_KILL",
+              "category": {
+                "name": "PROCESS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Terminate a process.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SHELL_EXECUTE",
+            "ordinal": 30,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SHELL_EXECUTE",
+              "category": {
+                "name": "PROCESS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Execute shell commands.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "EMAIL_SEND",
+            "ordinal": 31,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_EMAIL_SEND",
+              "category": {
+                "name": "EMAIL",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Send email.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "NOTIFICATIONS_READ",
+            "ordinal": 32,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_NOTIFICATIONS_READ",
+              "category": {
+                "name": "NOTIFICATIONS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read notification state or delivery status.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "NOTIFICATIONS_SEND",
+            "ordinal": 33,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_NOTIFICATIONS_SEND",
+              "category": {
+                "name": "NOTIFICATIONS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Send notifications through configured channels.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "NOTIFICATIONS_MANAGE",
+            "ordinal": 34,
+            "fields": {
+              "accessMode": {
+                "name": "MANAGE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_NOTIFICATIONS_MANAGE",
+              "category": {
+                "name": "NOTIFICATIONS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Manage notification channels, templates, or routing.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "USER_READ",
+            "ordinal": 35,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_USER_READ",
+              "category": {
+                "name": "USER",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read user records or profile data.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "USER_WRITE",
+            "ordinal": 36,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_USER_WRITE",
+              "category": {
+                "name": "USER",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create or modify user records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "USER_DELETE",
+            "ordinal": 37,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_USER_DELETE",
+              "category": {
+                "name": "USER",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete user records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOKEN_INTROSPECT",
+            "ordinal": 38,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOKEN_INTROSPECT",
+              "category": {
+                "name": "TOKEN",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Inspect token validity or claims.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOKEN_ISSUE",
+            "ordinal": 39,
+            "fields": {
+              "accessMode": {
+                "name": "ADMIN",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOKEN_ISSUE",
+              "category": {
+                "name": "TOKEN",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Issue new tokens.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOKEN_REVOKE",
+            "ordinal": 40,
+            "fields": {
+              "accessMode": {
+                "name": "ADMIN",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOKEN_REVOKE",
+              "category": {
+                "name": "TOKEN",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Revoke active tokens.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOKEN_ROTATE",
+            "ordinal": 41,
+            "fields": {
+              "accessMode": {
+                "name": "ADMIN",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOKEN_ROTATE",
+              "category": {
+                "name": "TOKEN",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Rotate token material or token signing state.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "CONFIG_READ",
+            "ordinal": 42,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_CONFIG_READ",
+              "category": {
+                "name": "CONFIG",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read application configuration.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "CONFIG_WRITE",
+            "ordinal": 43,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_CONFIG_WRITE",
+              "category": {
+                "name": "CONFIG",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Modify application configuration.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "ENVIRONMENT_READ",
+            "ordinal": 44,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_ENVIRONMENT_READ",
+              "category": {
+                "name": "ENVIRONMENT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read environment variables or environment-derived settings.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "ENVIRONMENT_WRITE",
+            "ordinal": 45,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_ENVIRONMENT_WRITE",
+              "category": {
+                "name": "ENVIRONMENT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Modify process or runtime environment settings.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SECRETS_USE",
+            "ordinal": 46,
+            "fields": {
+              "accessMode": {
+                "name": "USE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SECRETS_USE",
+              "category": {
+                "name": "SECRETS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Use a secret without exposing its raw value to the tool.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SECRETS_READ",
+            "ordinal": 47,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SECRETS_READ",
+              "category": {
+                "name": "SECRETS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read raw secret values.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SECRETS_WRITE",
+            "ordinal": 48,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SECRETS_WRITE",
+              "category": {
+                "name": "SECRETS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create or update secrets.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SECRETS_DELETE",
+            "ordinal": 49,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SECRETS_DELETE",
+              "category": {
+                "name": "SECRETS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete secrets.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "KEYSTORE_USE",
+            "ordinal": 50,
+            "fields": {
+              "accessMode": {
+                "name": "USE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_KEYSTORE_USE",
+              "category": {
+                "name": "KEYSTORE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Use key material for signing, encryption, or authentication without exposing raw key material.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "KEYSTORE_READ",
+            "ordinal": 51,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_KEYSTORE_READ",
+              "category": {
+                "name": "KEYSTORE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read raw keystore material.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "KEYSTORE_WRITE",
+            "ordinal": 52,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_KEYSTORE_WRITE",
+              "category": {
+                "name": "KEYSTORE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create or update keystore material.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "KEYSTORE_DELETE",
+            "ordinal": 53,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_KEYSTORE_DELETE",
+              "category": {
+                "name": "KEYSTORE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete keystore material.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "EXTERNAL_API_READ",
+            "ordinal": 54,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_EXTERNAL_API_READ",
+              "category": {
+                "name": "EXTERNAL_API",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read from external APIs.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "EXTERNAL_API_WRITE",
+            "ordinal": 55,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_EXTERNAL_API_WRITE",
+              "category": {
+                "name": "EXTERNAL_API",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Write to external APIs or trigger external API side effects.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "LOGS_READ",
+            "ordinal": 56,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_LOGS_READ",
+              "category": {
+                "name": "OBSERVABILITY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read logs.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "LOGS_APPEND",
+            "ordinal": 57,
+            "fields": {
+              "accessMode": {
+                "name": "APPEND",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_LOGS_APPEND",
+              "category": {
+                "name": "OBSERVABILITY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Append log records without mutating existing logs.",
+              "isHighRiskOrAbove": false,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": false,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "METRICS_READ",
+            "ordinal": 58,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_METRICS_READ",
+              "category": {
+                "name": "OBSERVABILITY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read metrics.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": false,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "METRICS_EMIT",
+            "ordinal": 59,
+            "fields": {
+              "accessMode": {
+                "name": "EMIT",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_METRICS_EMIT",
+              "category": {
+                "name": "OBSERVABILITY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Emit metrics.",
+              "isHighRiskOrAbove": false,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": false,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "LOW",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TELEMETRY_SEND",
+            "ordinal": 60,
+            "fields": {
+              "accessMode": {
+                "name": "EMIT",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TELEMETRY_SEND",
+              "category": {
+                "name": "OBSERVABILITY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Send telemetry.",
+              "isHighRiskOrAbove": false,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SCHEDULE_READ",
+            "ordinal": 61,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SCHEDULE_READ",
+              "category": {
+                "name": "SCHEDULING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read schedules.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SCHEDULE_WRITE",
+            "ordinal": 62,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SCHEDULE_WRITE",
+              "category": {
+                "name": "SCHEDULING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create or modify schedules.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "SCHEDULE_DELETE",
+            "ordinal": 63,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_SCHEDULE_DELETE",
+              "category": {
+                "name": "SCHEDULING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete schedules.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "JOBS_READ",
+            "ordinal": 64,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_JOBS_READ",
+              "category": {
+                "name": "JOBS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read job state.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "JOBS_EXECUTE",
+            "ordinal": 65,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_JOBS_EXECUTE",
+              "category": {
+                "name": "JOBS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Start or trigger jobs.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "JOBS_CANCEL",
+            "ordinal": 66,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_JOBS_CANCEL",
+              "category": {
+                "name": "JOBS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Cancel jobs.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOOLS_READ",
+            "ordinal": 67,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOOLS_READ",
+              "category": {
+                "name": "TOOLS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read registered tool metadata.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOOLS_REGISTER",
+            "ordinal": 68,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOOLS_REGISTER",
+              "category": {
+                "name": "TOOLS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Register new tools.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOOLS_UPDATE",
+            "ordinal": 69,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOOLS_UPDATE",
+              "category": {
+                "name": "TOOLS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Update registered tool metadata or behavior.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOOLS_DISABLE",
+            "ordinal": 70,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOOLS_DISABLE",
+              "category": {
+                "name": "TOOLS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Disable registered tools.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOOLS_DELETE",
+            "ordinal": 71,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOOLS_DELETE",
+              "category": {
+                "name": "TOOLS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete tool registrations.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "TOOLS_CALL",
+            "ordinal": 72,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_TOOLS_CALL",
+              "category": {
+                "name": "TOOLS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Invoke another registered tool.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "POLICY_READ",
+            "ordinal": 73,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_POLICY_READ",
+              "category": {
+                "name": "POLICY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read authorization policy.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "POLICY_WRITE",
+            "ordinal": 74,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_POLICY_WRITE",
+              "category": {
+                "name": "POLICY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Modify authorization policy.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "POLICY_EVALUATE",
+            "ordinal": 75,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_POLICY_EVALUATE",
+              "category": {
+                "name": "POLICY",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Request policy evaluation.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DEPLOYMENTS_READ",
+            "ordinal": 76,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DEPLOYMENTS_READ",
+              "category": {
+                "name": "DEPLOYMENT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read deployment state.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DEPLOYMENTS_DEPLOY",
+            "ordinal": 77,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DEPLOYMENTS_DEPLOY",
+              "category": {
+                "name": "DEPLOYMENT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Deploy runtime components.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "DEPLOYMENTS_ROLLBACK",
+            "ordinal": 78,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_DEPLOYMENTS_ROLLBACK",
+              "category": {
+                "name": "DEPLOYMENT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Rollback deployments.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "PLUGINS_READ",
+            "ordinal": 79,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_PLUGINS_READ",
+              "category": {
+                "name": "PLUGINS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read plugin metadata.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "PLUGINS_INSTALL",
+            "ordinal": 80,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_PLUGINS_INSTALL",
+              "category": {
+                "name": "PLUGINS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Install plugins or load extension code.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "PLUGINS_UPDATE",
+            "ordinal": 81,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_PLUGINS_UPDATE",
+              "category": {
+                "name": "PLUGINS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Update plugins.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "PLUGINS_REMOVE",
+            "ordinal": 82,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_PLUGINS_REMOVE",
+              "category": {
+                "name": "PLUGINS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Remove plugins.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "BACKUPS_READ",
+            "ordinal": 83,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_BACKUPS_READ",
+              "category": {
+                "name": "BACKUPS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read backup contents or backup metadata.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "BACKUPS_CREATE",
+            "ordinal": 84,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_BACKUPS_CREATE",
+              "category": {
+                "name": "BACKUPS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create backups.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "BACKUPS_RESTORE",
+            "ordinal": 85,
+            "fields": {
+              "accessMode": {
+                "name": "EXECUTE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_BACKUPS_RESTORE",
+              "category": {
+                "name": "BACKUPS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Restore from backups.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "BACKUPS_DELETE",
+            "ordinal": 86,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_BACKUPS_DELETE",
+              "category": {
+                "name": "BACKUPS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete backups.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "CACHE_READ",
+            "ordinal": 87,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_CACHE_READ",
+              "category": {
+                "name": "CACHE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read cache entries.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": false,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "CACHE_WRITE",
+            "ordinal": 88,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_CACHE_WRITE",
+              "category": {
+                "name": "CACHE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Create or update cache entries.",
+              "isHighRiskOrAbove": false,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": false,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "CACHE_DELETE",
+            "ordinal": 89,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_CACHE_DELETE",
+              "category": {
+                "name": "CACHE",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete cache entries.",
+              "isHighRiskOrAbove": false,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": false,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "STREAM_READ",
+            "ordinal": 90,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_STREAM_READ",
+              "category": {
+                "name": "STREAMS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read from streams or long-lived transports.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "STREAM_WRITE",
+            "ordinal": 91,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_STREAM_WRITE",
+              "category": {
+                "name": "STREAMS",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Write to streams or long-lived transports.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "MESSAGE_PUBLISH",
+            "ordinal": 92,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_MESSAGE_PUBLISH",
+              "category": {
+                "name": "MESSAGING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Publish messages.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "MESSAGE_SUBSCRIBE",
+            "ordinal": 93,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_MESSAGE_SUBSCRIBE",
+              "category": {
+                "name": "MESSAGING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Subscribe to messages.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "QUEUE_READ",
+            "ordinal": 94,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_QUEUE_READ",
+              "category": {
+                "name": "MESSAGING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read queue state or messages.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "QUEUE_WRITE",
+            "ordinal": 95,
+            "fields": {
+              "accessMode": {
+                "name": "WRITE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_QUEUE_WRITE",
+              "category": {
+                "name": "MESSAGING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Write or enqueue messages.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "QUEUE_MANAGE",
+            "ordinal": 96,
+            "fields": {
+              "accessMode": {
+                "name": "MANAGE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_QUEUE_MANAGE",
+              "category": {
+                "name": "MESSAGING",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Manage queue configuration or lifecycle.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "HEALTH_CHECK",
+            "ordinal": 97,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": false,
+              "authority": "SCOPE_HEALTH_CHECK",
+              "category": {
+                "name": "HEALTH",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Run health checks.",
+              "isHighRiskOrAbove": false,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": false,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "LOW",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "AUDIT_READ",
+            "ordinal": 98,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_AUDIT_READ",
+              "category": {
+                "name": "AUDIT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Read audit records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "HIGH",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "AUDIT_APPEND",
+            "ordinal": 99,
+            "fields": {
+              "accessMode": {
+                "name": "APPEND",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_AUDIT_APPEND",
+              "category": {
+                "name": "AUDIT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Append audit records without mutating existing audit history.",
+              "isHighRiskOrAbove": false,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": false,
+              "riskLevel": {
+                "name": "MEDIUM",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "AUDIT_EXPORT",
+            "ordinal": 100,
+            "fields": {
+              "accessMode": {
+                "name": "READ",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_AUDIT_EXPORT",
+              "category": {
+                "name": "AUDIT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Export audit records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": false,
+              "isReadOnly": true,
+              "privileged": false,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          },
+          {
+            "name": "AUDIT_DELETE",
+            "ordinal": 101,
+            "fields": {
+              "accessMode": {
+                "name": "DELETE",
+                "enumType": "dev.mrk.meshingress.scopes.AccessMode",
+                "fields": { }
+              },
+              "auditRecommended": true,
+              "authority": "SCOPE_AUDIT_DELETE",
+              "category": {
+                "name": "AUDIT",
+                "enumType": "dev.mrk.meshingress.scopes.ScopeCategory",
+                "fields": { }
+              },
+              "description": "Delete audit records.",
+              "isHighRiskOrAbove": true,
+              "isMutating": true,
+              "isReadOnly": false,
+              "privileged": true,
+              "requiresAudit": true,
+              "requiresExplicitApproval": true,
+              "riskLevel": {
+                "name": "CRITICAL",
+                "enumType": "dev.mrk.meshingress.scopes.RiskLevel",
+                "fields": { }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "annotation": "dev.mrk.meshingress.api.tools.annotation.McpFunction",
+    "simpleName": "McpFunction",
+    "elements": [
+      {
+        "name": "description",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": true,
+        "array": false,
+        "kind": "boolean"
+      },
+      {
+        "name": "title",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "value",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "visibility",
+        "type": "dev.mrk.meshingress.api.tools.ToolVisibility",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": {
+          "enumType": "dev.mrk.meshingress.api.tools.ToolVisibility",
+          "name": "PUBLIC"
+        },
+        "array": false,
+        "kind": "enum",
+        "enumValues": [
+          {
+            "name": "PUBLIC",
+            "ordinal": 0,
+            "fields": {
+              "toWire": "public"
+            }
+          },
+          {
+            "name": "PRIVATE",
+            "ordinal": 1,
+            "fields": {
+              "toWire": "private"
+            }
+          },
+          {
+            "name": "ADMIN",
+            "ordinal": 2,
+            "fields": {
+              "toWire": "admin"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "annotation": "dev.mrk.meshingress.api.tools.annotation.McpFunctionParam",
+    "simpleName": "McpFunctionParam",
+    "elements": [
+      {
+        "name": "description",
+        "type": "java.lang.String",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "",
+        "array": false,
+        "kind": "string"
+      },
+      {
+        "name": "implementation",
+        "type": "java.lang.Class",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": "java.lang.Void",
+        "array": false,
+        "kind": "class"
+      },
+      {
+        "name": "required",
+        "type": "boolean",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": true,
+        "array": false,
+        "kind": "boolean"
+      },
+      {
+        "name": "value",
+        "type": "java.lang.String",
+        "required": true,
+        "annotations": [ ],
+        "defaultValue": null,
+        "array": false,
+        "kind": "string"
+      }
+    ]
+  },
+  {
+    "annotation": "dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping",
+    "simpleName": "McpConfigureMapping",
+    "elements": [
+      {
+        "name": "audit",
+        "type": "boolean",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": false,
+        "array": false,
+        "kind": "boolean"
+      },
+      {
+        "name": "availabilityMode",
+        "type": "dev.mrk.meshingress.api.tools.annotation.McpAvailabilityMode",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": {
+          "enumType": "dev.mrk.meshingress.api.tools.annotation.McpAvailabilityMode",
+          "name": "ALL"
+        },
+        "array": false,
+        "kind": "enum",
+        "enumValues": [
+          {
+            "name": "ALL",
+            "ordinal": 0,
+            "fields": { }
+          },
+          {
+            "name": "ANY",
+            "ordinal": 1,
+            "fields": { }
+          }
+        ]
+      },
+      {
+        "name": "debugTrace",
+        "type": "boolean",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": false,
+        "array": false,
+        "kind": "boolean"
+      },
+      {
+        "name": "secrets",
+        "type": "[Ldev.mrk.meshingress.api.tools.annotation.McpSecret;",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": [ ],
+        "array": true,
+        "componentType": "dev.mrk.meshingress.api.tools.annotation.McpSecret",
+        "componentKind": "annotation",
+        "annotationSchema": {
+          "annotation": "dev.mrk.meshingress.api.tools.annotation.McpSecret",
+          "simpleName": "McpSecret",
+          "elements": [
+            {
+              "name": "name",
+              "type": "java.lang.String",
+              "required": true,
+              "annotations": [ ],
+              "defaultValue": null,
+              "array": false,
+              "kind": "string"
+            },
+            {
+              "name": "ref",
+              "type": "java.lang.String",
+              "required": true,
+              "annotations": [ ],
+              "defaultValue": null,
+              "array": false,
+              "kind": "string"
+            }
+          ]
+        }
+      },
+      {
+        "name": "timeoutMs",
+        "type": "long",
+        "required": false,
+        "annotations": [ ],
+        "defaultValue": 0,
+        "array": false,
+        "kind": "number"
+      }
+    ]
+  }
+]

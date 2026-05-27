@@ -35,6 +35,8 @@ public class InMemoryToolRegistry implements ToolRegistry {
     private final Map<String, McpToolDescriptor> descriptors = new LinkedHashMap<>();
     private final Map<String, McpFunctionDescriptor> functions = new LinkedHashMap<>();
     private final Map<String, McpToolHandler> handlers = new LinkedHashMap<>();
+    private final Map<String, List<String>> runtimeOwnerFunctions = new LinkedHashMap<>();
+    private final Map<String, List<String>> runtimeOwnerTools = new LinkedHashMap<>();
     private final List<ToolAuditEvent> auditEvents = new ArrayList<>();
     private long registryVersion = 1;
 
@@ -48,17 +50,17 @@ public class InMemoryToolRegistry implements ToolRegistry {
         this.properties = properties;
         if (properties.tools().registry().scanOnStartup()) {
             for (McpToolHandler handler : toolHandlers) {
-                registerHandler(handler);
+                registerHandler(handler, null);
             }
             for (McpToolHandler handler : annotatedToolHandlerProvider.handlers()) {
-                registerHandler(handler);
+                registerHandler(handler, null);
             }
         } else {
             LOGGER.info("MCP tool registry startup scan disabled by meshingress.tools.registry.scan-on-startup=false");
         }
     }
 
-    private void registerHandler(McpToolHandler handler) {
+    private void registerHandler(McpToolHandler handler, String runtimeOwner) {
         McpToolDescriptor descriptor = handler.descriptor();
         ToolCheckResult check = checkDescriptorShape(descriptor, true, false);
         if (!check.valid()) {
@@ -76,6 +78,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
             mergedFunctions.addAll(descriptor.functions());
             descriptors.put(descriptor.name(), existing.withFunctions(mergedFunctions));
         }
+        List<String> registeredFunctionNames = new ArrayList<>();
         for (McpFunctionDescriptor function : descriptor.functions()) {
             if (functions.containsKey(function.name())) {
                 handleDuplicate("Duplicate MCP function descriptor name: " + function.name());
@@ -87,6 +90,11 @@ public class InMemoryToolRegistry implements ToolRegistry {
             }
             functions.put(function.name(), function);
             handlers.put(function.handlerKey(), handler);
+            registeredFunctionNames.add(function.name());
+        }
+        if (runtimeOwner != null && !registeredFunctionNames.isEmpty()) {
+            runtimeOwnerFunctions.computeIfAbsent(runtimeOwner, ignored -> new ArrayList<>()).addAll(registeredFunctionNames);
+            runtimeOwnerTools.computeIfAbsent(runtimeOwner, ignored -> new ArrayList<>()).add(descriptor.name());
         }
     }
 
@@ -202,6 +210,52 @@ public class InMemoryToolRegistry implements ToolRegistry {
         registryVersion++;
         audit("register", registered.name(), 0, registered.version(), context);
         return registered;
+    }
+
+    @Override
+    public synchronized McpToolDescriptor registerRuntimeHandler(McpToolHandler handler, String owner) {
+        if (owner == null || owner.isBlank()) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Runtime tool owner is required.");
+        }
+        registerHandler(handler, owner);
+        registryVersion++;
+        return handler.descriptor();
+    }
+
+    @Override
+    public synchronized void unregisterRuntimeOwner(String owner) {
+        if (owner == null || owner.isBlank()) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Runtime tool owner is required.");
+        }
+        List<String> ownedFunctions = runtimeOwnerFunctions.remove(owner);
+        List<String> ownedTools = runtimeOwnerTools.remove(owner);
+        if (ownedFunctions == null || ownedFunctions.isEmpty()) {
+            return;
+        }
+
+        for (String functionName : ownedFunctions) {
+            McpFunctionDescriptor function = functions.remove(functionName);
+            if (function != null) {
+                handlers.remove(function.handlerKey());
+            }
+        }
+        if (ownedTools != null) {
+            for (String toolName : ownedTools) {
+                McpToolDescriptor descriptor = descriptors.get(toolName);
+                if (descriptor == null) {
+                    continue;
+                }
+                List<McpFunctionDescriptor> remainingFunctions = descriptor.functions().stream()
+                        .filter(function -> !ownedFunctions.contains(function.name()))
+                        .toList();
+                if (remainingFunctions.isEmpty()) {
+                    descriptors.remove(toolName);
+                } else {
+                    descriptors.put(toolName, descriptor.withFunctions(remainingFunctions));
+                }
+            }
+        }
+        registryVersion++;
     }
 
     @Override

@@ -41,6 +41,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-runtime-loader</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>

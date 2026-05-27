@@ -1,4 +1,4 @@
-package dev.mrk.meshingress.framework.scanner;
+package dev.mrk.meshingress.framework.scanning;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
@@ -10,7 +10,7 @@ import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
 import dev.mrk.meshingress.scopes.McpToolScope;
-import dev.mrk.meshingress.tools.framework.scanner.McpToolAnnotationScanner;
+import dev.mrk.meshingress.tools.framework.scanning.McpToolAnnotationScanner;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;

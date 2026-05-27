@@ -28,6 +28,7 @@
         <module>lib/meshingress-tool-api</module>
         <module>lib/meshingress-tool-annotations</module>
         <module>lib/meshingress-tool-framework</module>
+        <module>lib/meshingress-tool-runtime-loader</module>
 
         <module>toolspace/helloworld</module>
         <module>toolspace/instagram-api</module>

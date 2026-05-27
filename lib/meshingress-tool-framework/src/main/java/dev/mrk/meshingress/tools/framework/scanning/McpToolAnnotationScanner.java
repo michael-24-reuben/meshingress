@@ -1,4 +1,4 @@
-package dev.mrk.meshingress.tools.framework.scanner;
+package dev.mrk.meshingress.tools.framework.scanning;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;

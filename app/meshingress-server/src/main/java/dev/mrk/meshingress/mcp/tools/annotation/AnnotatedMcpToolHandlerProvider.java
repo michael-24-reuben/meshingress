@@ -5,7 +5,7 @@ import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
 import dev.mrk.meshingress.mcp.tools.cache.McpCacheManager;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
-import dev.mrk.meshingress.tools.framework.scanner.McpToolAnnotationScanner;
+import dev.mrk.meshingress.tools.framework.scanning.McpToolAnnotationScanner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;

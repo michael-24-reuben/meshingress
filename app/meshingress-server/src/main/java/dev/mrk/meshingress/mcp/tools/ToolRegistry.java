@@ -29,6 +29,10 @@ public interface ToolRegistry {
 
     McpToolDescriptor register(McpToolDescriptor descriptor, McpCallContext context);
 
+    McpToolDescriptor registerRuntimeHandler(McpToolHandler handler, String owner);
+
+    void unregisterRuntimeOwner(String owner);
+
     McpToolDescriptor update(String name, McpToolPatch patch, McpCallContext context);
 
     McpToolDescriptor disable(String name, McpCallContext context);
