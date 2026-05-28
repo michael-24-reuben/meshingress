@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.mcp.tools.runtime;
 
-import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarArtifactResolver;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarSource;
 import dev.mrk.meshingress.runtime.artifacts.LocalMavenRepositoryArtifactResolver;
@@ -17,6 +17,7 @@ import dev.mrk.meshingress.runtime.loader.DefaultToolRuntimeLoader;
 import dev.mrk.meshingress.runtime.loader.ToolModuleHandlerFactory;
 import dev.mrk.meshingress.runtime.loader.ToolRuntimeLoader;
 import dev.mrk.meshingress.runtime.registry.ToolRegistrationBridge;
+import dev.mrk.meshingress.runtime.registry.ToolModuleRegistration;
 import dev.mrk.meshingress.runtime.spring.SpringToolModuleApplicationContextFactory;
 import dev.mrk.meshingress.runtime.spring.UrlToolModuleClassLoaderFactory;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -54,12 +56,6 @@ class ToolRuntimeLoaderSmokeTests {
     @Autowired
     private ToolModuleHandlerFactory handlerFactory;
 
-    @Autowired
-    private ToolRegistrationBridge registrationBridge;
-
-    @Autowired
-    private ToolRegistry toolRegistry;
-
     @Test
     void loadsSampleJarThroughEveryRuntimeLoaderEntryPoint() throws Exception {
         Path sampleJar = sampleJar();
@@ -82,24 +78,25 @@ class ToolRuntimeLoaderSmokeTests {
         );
 
         for (ActivationCase activationCase : activationCases) {
-            ToolRuntimeLoader loader = newLoader();
+            RuntimeLoaderFixture fixture = newLoader();
             ToolModuleHandle handle = null;
             try {
-                handle = activationCase.activate(loader);
-                assertActivated(loader, handle, activationCase.name());
+                handle = activationCase.activate(fixture.loader());
+                assertActivated(fixture, handle, activationCase.name());
             } finally {
-                deactivateIfActive(loader, handle);
+                deactivateIfActive(fixture.loader(), handle);
             }
-            assertUnloaded(loader, handle, activationCase.name());
+            assertUnloaded(fixture, handle, activationCase.name());
         }
     }
 
-    private ToolRuntimeLoader newLoader() {
+    private RuntimeLoaderFixture newLoader() {
         ToolArtifactResolver resolver = new ToolArtifactResolverChain(List.of(
                 new LocalMavenRepositoryArtifactResolver(),
                 new LocalJarArtifactResolver()
         ));
-        return new DefaultToolRuntimeLoader(
+        RecordingToolRegistrationBridge registrationBridge = new RecordingToolRegistrationBridge();
+        ToolRuntimeLoader loader = new DefaultToolRuntimeLoader(
                 resolver,
                 new ToolArtifactResolutionContext(localRepository, null, false, List.of()),
                 new UrlToolModuleClassLoaderFactory(),
@@ -108,25 +105,26 @@ class ToolRuntimeLoaderSmokeTests {
                 registrationBridge,
                 applicationContext
         );
+        return new RuntimeLoaderFixture(loader, registrationBridge);
     }
 
-    private void assertActivated(ToolRuntimeLoader loader, ToolModuleHandle handle, String caseName) {
+    private void assertActivated(RuntimeLoaderFixture fixture, ToolModuleHandle handle, String caseName) {
         assertThat(handle.state())
                 .as(caseName + " handle state")
                 .isEqualTo(ToolModuleState.ACTIVE);
         assertThat(handle.registeredFunctions())
                 .as(caseName + " registered functions")
                 .contains(SAMPLE_FUNCTION);
-        assertThat(toolRegistry.findEnabledFunction(SAMPLE_FUNCTION))
-                .as(caseName + " registry function")
-                .isPresent();
-        assertThat(loader.status(handle.moduleId()))
+        assertThat(fixture.registrationBridge().registeredFunctions(handle.moduleId()))
+                .as(caseName + " bridge registry function")
+                .contains(SAMPLE_FUNCTION);
+        assertThat(fixture.loader().status(handle.moduleId()))
                 .as(caseName + " runtime status")
                 .hasValueSatisfying(status -> {
                     assertThat(status.state()).isEqualTo(ToolModuleState.ACTIVE);
                     assertThat(status.registeredFunctions()).contains(SAMPLE_FUNCTION);
                 });
-        assertThat(loader.list())
+        assertThat(fixture.loader().list())
                 .as(caseName + " runtime list")
                 .anySatisfy(status -> assertThat(status.moduleId()).isEqualTo(handle.moduleId()));
     }
@@ -141,15 +139,15 @@ class ToolRuntimeLoaderSmokeTests {
         }
     }
 
-    private void assertUnloaded(ToolRuntimeLoader loader, ToolModuleHandle handle, String caseName) {
+    private void assertUnloaded(RuntimeLoaderFixture fixture, ToolModuleHandle handle, String caseName) {
         if (handle == null) {
             return;
         }
-        assertThat(loader.status(handle.moduleId()))
+        assertThat(fixture.loader().status(handle.moduleId()))
                 .as(caseName + " unloaded status")
                 .hasValueSatisfying(status -> assertThat(status.state()).isEqualTo(ToolModuleState.UNLOADED));
-        assertThat(toolRegistry.findEnabledFunction(SAMPLE_FUNCTION))
-                .as(caseName + " registry cleanup")
+        assertThat(fixture.registrationBridge().registeredFunctions(handle.moduleId()))
+                .as(caseName + " bridge registry cleanup")
                 .isEmpty();
     }
 
@@ -217,5 +215,35 @@ class ToolRuntimeLoaderSmokeTests {
     @FunctionalInterface
     private interface Activation {
         ToolModuleHandle activate(ToolRuntimeLoader loader) throws Exception;
+    }
+
+    private record RuntimeLoaderFixture(
+            ToolRuntimeLoader loader,
+            RecordingToolRegistrationBridge registrationBridge
+    ) {
+    }
+
+    private static final class RecordingToolRegistrationBridge implements ToolRegistrationBridge {
+
+        private final Map<ToolModuleId, List<String>> registeredFunctions = new LinkedHashMap<>();
+
+        @Override
+        public ToolModuleRegistration register(ToolModuleId moduleId, List<McpToolHandler> handlers) {
+            List<String> functions = handlers.stream()
+                    .flatMap(handler -> handler.descriptor().functions().stream())
+                    .map(function -> function.name())
+                    .toList();
+            registeredFunctions.put(moduleId, functions);
+            return new ToolModuleRegistration(functions);
+        }
+
+        @Override
+        public void unregister(ToolModuleId moduleId) {
+            registeredFunctions.remove(moduleId);
+        }
+
+        List<String> registeredFunctions(ToolModuleId moduleId) {
+            return registeredFunctions.getOrDefault(moduleId, List.of());
+        }
     }
 }

@@ -1,8 +1,10 @@
-package dev.mrk.meshingress.mcp.tools;
+package dev.mrk.meshingress.mcp.tools.registry;
 
 import dev.mrk.meshingress.api.tools.*;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.config.MeshingressProperties;
+import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
+import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -23,17 +25,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+/**
+ * In-memory registry for MCP tool descriptors, functions, and handlers.
+ *
+ * <p>Tracks visibility, enablement, runtime ownership, and audit events while
+ * enforcing naming and schema constraints for registered tools.</p>
+ */
 @Service
 public class InMemoryToolRegistry implements ToolRegistry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryToolRegistry.class);
-    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$");
-    private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$");
+    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]*(\\.[a-z][a-z0-9-_]*)*$");
+    private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]*(\\.[a-z][a-z0-9-_]*)+$");
 
     private final ObjectMapper objectMapper;
     private final MeshingressProperties properties;
     private final Map<String, McpToolDescriptor> descriptors = new LinkedHashMap<>();
     private final Map<String, McpFunctionDescriptor> functions = new LinkedHashMap<>();
+    private final Map<String, String> functionOwners = new LinkedHashMap<>();
     private final Map<String, McpToolHandler> handlers = new LinkedHashMap<>();
     private final Map<String, List<String>> runtimeOwnerFunctions = new LinkedHashMap<>();
     private final Map<String, List<String>> runtimeOwnerTools = new LinkedHashMap<>();
@@ -60,6 +69,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         }
     }
 
+    /**
+     * Register a handler and merge its descriptor into the registry.
+     */
     private void registerHandler(McpToolHandler handler, String runtimeOwner) {
         McpToolDescriptor descriptor = handler.descriptor();
         ToolCheckResult check = checkDescriptorShape(descriptor, true, false);
@@ -89,6 +101,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
                 continue;
             }
             functions.put(function.name(), function);
+            functionOwners.put(function.name(), descriptor.name());
             handlers.put(function.handlerKey(), handler);
             registeredFunctionNames.add(function.name());
         }
@@ -98,6 +111,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         }
     }
 
+    /**
+     * List public-facing enabled tools, honoring visibility and allow/deny lists.
+     */
     @Override
     public synchronized List<McpToolDescriptor> listPublicEnabledTools() {
         if (!registryEnabled()) {
@@ -109,6 +125,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
                 .toList();
     }
 
+    /**
+     * List public-facing enabled functions, honoring visibility and allow/deny lists.
+     */
     @Override
     public synchronized List<McpFunctionDescriptor> listPublicEnabledFunctions() {
         if (!registryEnabled()) {
@@ -122,6 +141,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
                 .toList();
     }
 
+    /**
+     * List tools visible to role-gated callers with optional disabled/private inclusion.
+     */
     @Override
     public synchronized List<McpToolDescriptor> listRoleVisibleTools(boolean includeDisabled, boolean includePrivate) {
         return descriptors.values().stream()
@@ -131,6 +153,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
                 .toList();
     }
 
+    /**
+     * Find a tool that is enabled and allowed for external calls.
+     */
     @Override
     public synchronized Optional<McpToolDescriptor> findEnabledTool(String name) {
         if (!registryEnabled()) {
@@ -141,6 +166,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
                 .filter(this::toolAllowedForCall);
     }
 
+    /**
+     * Find a function that is enabled, allowed, and whose owning tool is callable.
+     */
     @Override
     public synchronized Optional<McpFunctionDescriptor> findEnabledFunction(String name) {
         if (!registryEnabled()) {
@@ -154,21 +182,33 @@ public class InMemoryToolRegistry implements ToolRegistry {
                         .orElse(false));
     }
 
+    /**
+     * Find a tool regardless of enablement or visibility.
+     */
     @Override
     public synchronized Optional<McpToolDescriptor> findTool(String name) {
         return Optional.ofNullable(descriptors.get(name));
     }
 
+    /**
+     * Find a handler by its handler key.
+     */
     @Override
     public synchronized Optional<McpToolHandler> findHandler(String handlerKey) {
         return Optional.ofNullable(handlers.get(handlerKey));
     }
 
+    /**
+     * Validate a descriptor and return normalized JSON plus errors/warnings.
+     */
     @Override
     public synchronized ToolCheckResult check(McpToolDescriptor descriptor, boolean updateMode) {
         return checkDescriptorShape(descriptor, updateMode, true);
     }
 
+    /**
+     * Build validation results and normalized JSON for a descriptor.
+     */
     private ToolCheckResult checkDescriptorShape(McpToolDescriptor descriptor, boolean updateMode, boolean validateHandlerKey) {
         List<String> errors = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
@@ -195,6 +235,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         return new ToolCheckResult(errors.isEmpty(), errors, warnings, normalized);
     }
 
+    /**
+     * Register a tool descriptor and initialize versioning and audit trail.
+     */
     @Override
     public synchronized McpToolDescriptor register(McpToolDescriptor descriptor, McpCallContext context) {
         ToolCheckResult check = check(descriptor, false);
@@ -206,12 +249,16 @@ public class InMemoryToolRegistry implements ToolRegistry {
         descriptors.put(registered.name(), registered);
         for (McpFunctionDescriptor function : registered.functions()) {
             functions.put(function.name(), function.withVersion(registered.version()));
+            functionOwners.put(function.name(), registered.name());
         }
         registryVersion++;
         audit("register", registered.name(), 0, registered.version(), context);
         return registered;
     }
 
+    /**
+     * Register a runtime handler and associate it with an owner for later cleanup.
+     */
     @Override
     public synchronized McpToolDescriptor registerRuntimeHandler(McpToolHandler handler, String owner) {
         if (owner == null || owner.isBlank()) {
@@ -222,6 +269,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         return handler.descriptor();
     }
 
+    /**
+     * Unregister all runtime tools/functions associated with an owner.
+     */
     @Override
     public synchronized void unregisterRuntimeOwner(String owner) {
         if (owner == null || owner.isBlank()) {
@@ -235,6 +285,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
 
         for (String functionName : ownedFunctions) {
             McpFunctionDescriptor function = functions.remove(functionName);
+            functionOwners.remove(functionName);
             if (function != null) {
                 handlers.remove(function.handlerKey());
             }
@@ -258,6 +309,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         registryVersion++;
     }
 
+    /**
+     * Apply a patch to a tool and its first function and bump versions.
+     */
     @Override
     public synchronized McpToolDescriptor update(String name, McpToolPatch patch, McpCallContext context) {
         McpToolDescriptor current = descriptors.get(name);
@@ -274,12 +328,16 @@ public class InMemoryToolRegistry implements ToolRegistry {
         descriptors.put(name, updated);
         for (McpFunctionDescriptor function : updated.functions()) {
             functions.put(function.name(), function);
+            functionOwners.put(function.name(), name);
         }
         registryVersion++;
         audit("update", name, current.version(), updated.version(), context);
         return updated;
     }
 
+    /**
+     * Disable a tool and record the change in the audit log.
+     */
     @Override
     public synchronized McpToolDescriptor disable(String name, McpCallContext context) {
         McpToolDescriptor current = descriptors.get(name);
@@ -294,16 +352,25 @@ public class InMemoryToolRegistry implements ToolRegistry {
         return updated;
     }
 
+    /**
+     * Current registry version used for list change detection.
+     */
     @Override
     public synchronized long registryVersion() {
         return registryVersion;
     }
 
+    /**
+     * Return a snapshot of audit events.
+     */
     @Override
     public synchronized List<ToolAuditEvent> auditEvents() {
         return List.copyOf(auditEvents);
     }
 
+    /**
+     * Build a JSON-RPC exception for invalid descriptors.
+     */
     private JsonRpcException invalidDescriptor(ToolCheckResult check) {
         ObjectNode data = objectMapper.createObjectNode();
         ArrayNode errors = objectMapper.createArrayNode();
@@ -312,6 +379,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         return new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Tool descriptor is invalid.", data);
     }
 
+    /**
+     * Validate a single function descriptor and add findings.
+     */
     private void checkFunction(McpFunctionDescriptor function, List<String> errors, List<String> warnings, boolean validateHandlerKey) {
         if (function.name() == null || !FUNCTION_NAME_PATTERN.matcher(function.name()).matches()) {
             errors.add("Function name must join tool and function names with a period.");
@@ -331,40 +401,66 @@ public class InMemoryToolRegistry implements ToolRegistry {
         }
     }
 
+    /**
+     * Whether registry operations are enabled by configuration.
+     */
     private boolean registryEnabled() {
         return properties.tools().registry().enabled();
     }
 
+    /**
+     * Public visibility rules for tools.
+     */
     private boolean toolVisibleToPublic(McpToolDescriptor descriptor) {
-        return (properties.tools().registry().includeDisabled() || descriptor.enabled())
-                && visibilityAllowed(descriptor.visibility())
-                && allowedByLists(descriptor.name());
+        return allowedByPolicy(descriptor.enabled(), descriptor.visibility(), descriptor.name(), properties.tools().registry().includeDisabled());
     }
 
+    /**
+     * Public visibility rules for functions.
+     */
     private boolean functionVisibleToPublic(McpFunctionDescriptor function) {
-        return (properties.tools().registry().includeDisabled() || function.enabled())
-                && visibilityAllowed(function.visibility())
-                && allowedByLists(function.name());
+        return allowedByPolicy(function.enabled(), function.visibility(), function.name(), properties.tools().registry().includeDisabled());
     }
 
+    /**
+     * Call-eligibility rules for tools.
+     */
     private boolean toolAllowedForCall(McpToolDescriptor descriptor) {
-        return visibilityAllowed(descriptor.visibility()) && allowedByLists(descriptor.name());
+        return allowedByPolicy(descriptor.enabled(), descriptor.visibility(), descriptor.name(), true);
     }
 
+    /**
+     * Call-eligibility rules for functions.
+     */
     private boolean functionAllowedForCall(McpFunctionDescriptor function) {
-        return visibilityAllowed(function.visibility()) && allowedByLists(function.name());
+        return allowedByPolicy(function.enabled(), function.visibility(), function.name(), true);
     }
 
+    private boolean allowedByPolicy(boolean enabled, ToolVisibility visibility, String name, boolean includeDisabled) {
+        return (includeDisabled || enabled)
+                && visibilityAllowed(visibility)
+                && allowedByLists(name);
+    }
+
+    /**
+     * Whether a visibility level is permitted by configuration.
+     */
     private boolean visibilityAllowed(ToolVisibility visibility) {
         return visibility == ToolVisibility.PUBLIC || properties.tools().registry().exposePrivateTools();
     }
 
+    /**
+     * Apply allow/deny list checks to a tool or function name.
+     */
     private boolean allowedByLists(String name) {
         List<String> allowList = properties.tools().allowList();
         List<String> denyList = properties.tools().denyList();
         return (allowList.isEmpty() || allowList.contains(name)) && !denyList.contains(name);
     }
 
+    /**
+     * Handle invalid startup descriptors based on configured strictness.
+     */
     private void handleInvalidStartupDescriptor(McpToolDescriptor descriptor, ToolCheckResult check) {
         String message = "Invalid MCP tool descriptor %s: %s".formatted(descriptor.name(), String.join("; ", check.errors()));
         if (properties.tools().registry().failOnInvalidToolId()) {
@@ -373,6 +469,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         LOGGER.warn("{}; skipping because meshingress.tools.registry.fail-on-invalid-tool-id=false", message);
     }
 
+    /**
+     * Handle duplicate registrations based on configured strictness.
+     */
     private void handleDuplicate(String message) {
         if (properties.tools().registry().failOnDuplicateToolId()) {
             throw new IllegalStateException(message);
@@ -380,13 +479,17 @@ public class InMemoryToolRegistry implements ToolRegistry {
         LOGGER.warn("{}; keeping first registration because meshingress.tools.registry.fail-on-duplicate-tool-id=false", message);
     }
 
+    /**
+     * Find the tool descriptor that owns a given function name.
+     */
     private Optional<McpToolDescriptor> owningTool(String functionName) {
-        return descriptors.values().stream()
-                .filter(descriptor -> descriptor.functions().stream()
-                        .anyMatch(function -> function.name().equals(functionName)))
-                .findFirst();
+        return Optional.ofNullable(functionOwners.get(functionName))
+                .map(descriptors::get);
     }
 
+    /**
+     * Apply patch fields to the first function descriptor when requested.
+     */
     private List<McpFunctionDescriptor> patchedFunctions(List<McpFunctionDescriptor> current, McpToolPatch patch, int nextVersion) {
         boolean patchesFunction = patch.handlerKey() != null
                 || patch.inputSchema() != null
@@ -402,6 +505,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
         return List.copyOf(next);
     }
 
+    /**
+     * Append an audit event for a registry mutation.
+     */
     private void audit(String action, String toolName, int previousVersion, int newVersion, McpCallContext context) {
         auditEvents.add(new ToolAuditEvent(
                 OffsetDateTime.now(),

@@ -28,6 +28,7 @@ public class ServerToolModuleHandlerFactory implements ToolModuleHandlerFactory 
         this.cacheManager = cacheManager;
     }
 
+    // Used during the staging and experimental strategies phase
     @Override
     public List<McpToolHandler> handlers(ConfigurableApplicationContext moduleContext) {
         List<McpToolHandler> handlers = new ArrayList<>(moduleContext.getBeanFactory()

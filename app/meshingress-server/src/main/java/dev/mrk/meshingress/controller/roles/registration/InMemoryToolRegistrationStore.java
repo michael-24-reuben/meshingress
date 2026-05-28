@@ -18,7 +18,7 @@ class InMemoryToolRegistrationStore implements ToolRegistrationStore {
         return records.values().stream()
                 .filter(record -> record.toolId().equals(toolId))
                 .filter(record -> record.phase() == phase)
-                .filter(record -> "active".equals(record.status()) || "reconciled".equals(record.status()))
+                .filter(this::isActive)
                 .findFirst();
     }
 
@@ -26,7 +26,7 @@ class InMemoryToolRegistrationStore implements ToolRegistrationStore {
     public synchronized List<ToolRegistrationRecord> findActive(String toolId) {
         return records.values().stream()
                 .filter(record -> record.toolId().equals(toolId))
-                .filter(record -> "active".equals(record.status()) || "reconciled".equals(record.status()))
+                .filter(this::isActive)
                 .toList();
     }
 
@@ -38,14 +38,32 @@ class InMemoryToolRegistrationStore implements ToolRegistrationStore {
 
     @Override
     public synchronized void markReplaced(String registrationId) {
+        markStatus(registrationId, "replaced");
+    }
+
+    @Override
+    public synchronized ToolRegistrationRecord markStatus(String registrationId, String status) {
         ToolRegistrationRecord current = records.get(registrationId);
         if (current != null) {
-            records.put(registrationId, current.replace("replaced"));
+            ToolRegistrationRecord updated = current.replace(status);
+            records.put(registrationId, updated);
+            return updated;
         }
+        throw ToolRegistrationErrors.invalidParams(
+                "Tool registration record does not exist.",
+                "TOOL_REGISTRATION_RECORD_NOT_FOUND"
+        );
     }
 
     @Override
     public synchronized List<ToolRegistrationRecord> list() {
         return List.copyOf(new ArrayList<>(records.values()));
+    }
+
+    private boolean isActive(ToolRegistrationRecord record) {
+        return switch (record.status()) {
+            case "active", "reconciled", "installed-restart-required", "already-installed-restart-required" -> true;
+            default -> false;
+        };
     }
 }

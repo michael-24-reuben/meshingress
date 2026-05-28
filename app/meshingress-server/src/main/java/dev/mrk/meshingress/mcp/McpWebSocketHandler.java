@@ -2,13 +2,11 @@ package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.config.MeshingressProperties;
-import dev.mrk.meshingress.controller.McpDispatcher;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcResponses;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
@@ -26,13 +24,13 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
     private final MeshingressProperties properties;
 
     private final ObjectMapper objectMapper;
-    private final McpDispatcher dispatcher;
+    private final McpTransportDispatcher transportDispatcher;
     private final JsonRpcResponses responses;
 
-    public McpWebSocketHandler(MeshingressProperties properties, ObjectMapper objectMapper, McpDispatcher dispatcher, JsonRpcResponses responses) {
+    public McpWebSocketHandler(MeshingressProperties properties, ObjectMapper objectMapper, McpTransportDispatcher transportDispatcher, JsonRpcResponses responses) {
         this.properties = properties;
         this.objectMapper = objectMapper;
-        this.dispatcher = dispatcher;
+        this.transportDispatcher = transportDispatcher;
         this.responses = responses;
     }
 
@@ -59,19 +57,8 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
         }
 
         LOGGER.info("=== MCP REQUEST START [ws] requestId={} sessionId={} wsSession={} ===", requestId, sessionId, session.getId());
-        JsonNode request;
-        try {
-            request = objectMapper.readTree(message.getPayload());
-        } catch (JacksonException exception) {
-            LOGGER.warn("MCP ws parse error: requestId={} sessionId={} payloadLength={}", requestId, sessionId, message.getPayloadLength(), exception);
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(
-                    responses.error(null, JsonRpcErrorCodes.PARSE_ERROR, "Parse error")
-            )));
-            return;
-        }
-
         McpCallContext context = contextFrom(session.getAttributes());
-        Optional<JsonNode> response = dispatcher.dispatch(request, context);
+        Optional<JsonNode> response = transportDispatcher.dispatch(message.getPayload(), context);
         if (response.isPresent()) {
             session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response.get())));
         }

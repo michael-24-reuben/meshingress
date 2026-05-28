@@ -1,0 +1,37 @@
+{
+  "id": "2026-05-28-transport-parsing-consolidation",
+  "title": "Transport Parsing Consolidation",
+  "status": "resolved",
+  "createdAt": "2026-05-28T17:30:00-04:00",
+  "activatedAt": null,
+  "resolvedAt": "2026-05-28T18:26:00-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-05-28T18:26:00-04:00",
+  "tags": [
+    "mcp",
+    "transport",
+    "refactor",
+    "json-rpc"
+  ],
+  "related": [],
+  "sourceReports": [
+    "redundant-code-inspection-2026-05-28-171500"
+  ],
+  "origin": {
+    "source": "report",
+    "summary": "Consolidate duplicated JSON parse and error handling between HTTP and WebSocket MCP transports."
+  },
+  "events": [
+    {
+      "at": "2026-05-28T17:30:00-04:00",
+      "type": "CREATED",
+      "note": "Created from redundant code inspection report."
+    },
+    {
+      "at": "2026-05-28T18:26:00-04:00",
+      "type": "RESOLVED",
+      "note": "Introduced shared MCP transport dispatch parsing for HTTP and WebSocket transports."
+    }
+  ]
+}
+

@@ -13,5 +13,7 @@ public interface ToolRegistrationStore {
 
     void markReplaced(String registrationId);
 
+    ToolRegistrationRecord markStatus(String registrationId, String status);
+
     List<ToolRegistrationRecord> list();
 }

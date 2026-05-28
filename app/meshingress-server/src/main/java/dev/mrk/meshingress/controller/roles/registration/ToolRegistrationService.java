@@ -2,51 +2,72 @@ package dev.mrk.meshingress.controller.roles.registration;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.config.MeshingressProperties;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
+import dev.mrk.meshingress.runtime.lifecycle.ToolModuleId;
+import dev.mrk.meshingress.runtime.lifecycle.ToolModuleStatus;
+import dev.mrk.meshingress.runtime.loader.ToolRuntimeLoader;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ToolRegistrationService {
 
     private final ObjectMapper objectMapper;
     private final MeshingressProperties properties;
+    private final ToolRegistrationStore store;
+    private final ToolRuntimeLoader runtimeLoader;
+    private final ToolRegistry toolRegistry;
     private final Map<ToolRegistrationPhase, ToolRegistrationStrategy> strategies;
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
 
     public ToolRegistrationService(
             ObjectMapper objectMapper,
             MeshingressProperties properties,
+            ToolRegistrationStore store,
+            ToolRuntimeLoader runtimeLoader,
+            ToolRegistry toolRegistry,
             List<ToolRegistrationStrategy> strategies
     ) {
         this.objectMapper = objectMapper;
         this.properties = properties;
+        this.store = store;
+        this.runtimeLoader = runtimeLoader;
+        this.toolRegistry = toolRegistry;
         this.strategies = new EnumMap<>(ToolRegistrationPhase.class);
         for (ToolRegistrationStrategy strategy : strategies) {
             this.strategies.put(strategy.phase(), strategy);
         }
     }
 
-    public boolean isPhaseRegistration(JsonNode params) {
+    public boolean isPhaseRegistration(ToolRegistrationParams params) {
         return params != null
-                && params.isObject()
-                && (params.has("phase")
-                || params.has("toolId")
-                || params.has("localJar")
-                || params.has("maven")
-                || params.has("bundle")
-                || params.has("nativeTool"));
+                && (hasText(params.phase())
+                || hasText(params.toolId())
+                || params.localJar() != null
+                || params.maven() != null
+                || params.bundle() != null
+                || params.nativeTool() != null);
     }
 
-    public ObjectNode register(McpCallContext callContext, JsonNode params) {
+    public boolean hasActiveRegistration(String toolId) {
+        return !store.findActive(toolId).isEmpty();
+    }
+
+    public ObjectNode register(McpCallContext callContext, ToolRegistrationParams params) {
         ToolRegistrationRequest request = requestFromParams(params);
         validatePhaseEnabled(request.phase());
         ToolRegistrationStrategy strategy = strategies.get(request.phase());
@@ -63,34 +84,246 @@ public class ToolRegistrationService {
         }
     }
 
-    private ToolRegistrationRequest requestFromParams(JsonNode params) {
-        if (params == null || !params.isObject()) {
+    public ObjectNode delete(McpCallContext callContext, String toolId, String mode) {
+        List<ToolRegistrationRecord> activeRecords = store.findActive(toolId);
+        if (activeRecords.isEmpty()) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Tool has no active phase registration.",
+                    "TOOL_REGISTRATION_NOT_ACTIVE"
+            );
+        }
+
+        Object lock = locks.computeIfAbsent(toolId, ignored -> new Object());
+        synchronized (lock) {
+            ObjectNode result = objectMapper.createObjectNode();
+            result.put("deleted", true);
+            result.put("disabled", false);
+            result.put("toolId", toolId);
+            result.put("mode", mode);
+
+            ArrayNode registrations = objectMapper.createArrayNode();
+            boolean restartRequired = false;
+            int runtimeDeactivated = 0;
+            int bundleDependenciesRemoved = 0;
+            for (ToolRegistrationRecord record : activeRecords) {
+                DeleteOutcome outcome = deleteRecord(record);
+                if (outcome.runtimeDeactivated()) {
+                    runtimeDeactivated++;
+                }
+                if (outcome.bundleDependencyRemoved()) {
+                    bundleDependenciesRemoved++;
+                }
+                restartRequired = restartRequired || outcome.restartRequired();
+
+                ToolRegistrationRecord updated = store.markStatus(record.registrationId(), outcome.status());
+                ObjectNode recordJson = recordToJson(updated);
+                recordJson.put("runtimeDeactivated", outcome.runtimeDeactivated());
+                recordJson.put("bundleDependencyRemoved", outcome.bundleDependencyRemoved());
+                recordJson.put("restartRequired", outcome.restartRequired());
+                if (hasText(outcome.message())) {
+                    recordJson.put("message", outcome.message());
+                }
+                registrations.add(recordJson);
+            }
+
+            result.put("runtimeDeactivated", runtimeDeactivated);
+            result.put("bundleDependenciesRemoved", bundleDependenciesRemoved);
+            result.put("restartRequired", restartRequired);
+            result.put("registryVersion", toolRegistry.registryVersion());
+            result.set("registrations", registrations);
+            return result;
+        }
+    }
+
+    public ArrayNode registrationsToJson() {
+        ArrayNode registrations = objectMapper.createArrayNode();
+        for (ToolRegistrationRecord record : store.list()) {
+            registrations.add(recordToJson(record));
+        }
+        return registrations;
+    }
+
+    public ObjectNode reloadStatus() {
+        ObjectNode result = objectMapper.createObjectNode();
+        result.put("reloaded", false);
+        result.put("supported", false);
+        result.put("registryVersion", toolRegistry.registryVersion());
+        result.put("message", "Runtime reload is not supported; bundle and native changes require rebuild/restart.");
+
+        ArrayNode runtimeModules = objectMapper.createArrayNode();
+        for (ToolModuleStatus status : runtimeLoader.list()) {
+            ObjectNode statusJson = objectMapper.createObjectNode();
+            statusJson.put("moduleId", status.moduleId().value());
+            statusJson.put("state", status.state().name());
+            if (status.activatedAt() != null) {
+                statusJson.put("activatedAt", status.activatedAt().toString());
+            }
+            statusJson.put("updatedAt", status.updatedAt().toString());
+            if (status.message() != null) {
+                statusJson.put("message", status.message());
+            }
+            ArrayNode functions = objectMapper.createArrayNode();
+            status.registeredFunctions().forEach(functions::add);
+            statusJson.set("registeredFunctions", functions);
+            runtimeModules.add(statusJson);
+        }
+        result.set("runtimeModules", runtimeModules);
+        result.set("registrations", registrationsToJson());
+        return result;
+    }
+
+    private DeleteOutcome deleteRecord(ToolRegistrationRecord record) {
+        if (record.runtimeModuleId() != null && !record.runtimeModuleId().isBlank()) {
+            runtimeLoader.deactivate(new ToolModuleId(record.runtimeModuleId()));
+            return new DeleteOutcome("deleted", true, false, false, "Runtime module deactivated.");
+        }
+
+        return switch (record.sourceKind()) {
+            case MAVEN_BUNDLE -> deleteMavenBundleRecord(record);
+            case CLASSPATH_BUNDLE -> new DeleteOutcome(
+                    "reconciled-deleted",
+                    false,
+                    false,
+                    true,
+                    "Classpath bundle tool remains available until the server is rebuilt/restarted without it."
+            );
+            case SERVER_NATIVE -> new DeleteOutcome(
+                    "reconciled-deleted",
+                    false,
+                    false,
+                    true,
+                    "Native server tool cannot be removed from the current JVM; rebuild/restart is required."
+            );
+            case LOCAL_JAR, MAVEN_COORDINATES -> new DeleteOutcome(
+                    "deleted",
+                    false,
+                    false,
+                    false,
+                    "Registration record deleted; no active runtime module was attached."
+            );
+        };
+    }
+
+    private DeleteOutcome deleteMavenBundleRecord(ToolRegistrationRecord record) {
+        Map<String, String> source = record.source();
+        boolean dependencyAdded = Boolean.parseBoolean(source.getOrDefault("dependencyAdded", "false"));
+        if (!dependencyAdded) {
+            return new DeleteOutcome(
+                    "deleted-restart-required",
+                    false,
+                    false,
+                    true,
+                    "Bundle dependency was not removed because it was already present before registration."
+            );
+        }
+
+        String bundlePomPath = source.getOrDefault("bundlePomPath", properties.tools().registration().bundlePomPath());
+        String groupId = source.getOrDefault("groupId", "");
+        String artifactId = source.getOrDefault("artifactId", "");
+        String version = source.getOrDefault("version", "");
+        boolean removed = removeBundleDependency(Path.of(bundlePomPath).toAbsolutePath().normalize(), groupId, artifactId, version);
+        return new DeleteOutcome(
+                "deleted-restart-required",
+                false,
+                removed,
+                true,
+                removed
+                        ? "Bundle dependency removed from the bundle POM; rebuild/restart is required."
+                        : "Bundle dependency was not found in the bundle POM; rebuild/restart may still be required."
+        );
+    }
+
+    private boolean removeBundleDependency(Path bundlePom, String groupId, String artifactId, String version) {
+        if (groupId.isBlank() || artifactId.isBlank() || version.isBlank()) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Bundle registration record is missing Maven coordinates.",
+                    "BUNDLE_REGISTRATION_COORDINATES_MISSING"
+            );
+        }
+        if (!Files.isRegularFile(bundlePom)) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Bundle POM does not exist.",
+                    "BUNDLE_POM_NOT_FOUND"
+            );
+        }
+        try {
+            String content = Files.readString(bundlePom, StandardCharsets.UTF_8);
+            String dependencyPattern = "(?s)\\R?[ \\t]*<dependency>\\s*\\R"
+                    + "\\s*<groupId>" + Pattern.quote(groupId) + "</groupId>\\s*\\R"
+                    + "\\s*<artifactId>" + Pattern.quote(artifactId) + "</artifactId>\\s*\\R"
+                    + "\\s*<version>" + Pattern.quote(version) + "</version>\\s*\\R"
+                    + "\\s*</dependency>\\s*\\R?";
+            Matcher matcher = Pattern.compile(dependencyPattern).matcher(content);
+            if (!matcher.find()) {
+                return false;
+            }
+            Files.writeString(bundlePom, matcher.replaceFirst(System.lineSeparator()), StandardCharsets.UTF_8);
+            return true;
+        } catch (Exception exception) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Unable to remove dependency from bundle POM: " + exception.getMessage(),
+                    "BUNDLE_POM_UPDATE_FAILED"
+            );
+        }
+    }
+
+    private ObjectNode recordToJson(ToolRegistrationRecord record) {
+        ObjectNode recordJson = objectMapper.createObjectNode();
+        recordJson.put("registrationId", record.registrationId());
+        recordJson.put("toolId", record.toolId());
+        recordJson.put("phase", record.phase().wireName());
+        recordJson.put("sourceKind", record.sourceKind().name());
+        recordJson.put("status", record.status());
+        recordJson.put("actor", record.actor());
+        recordJson.put("registeredAt", record.registeredAt().toString());
+        if (record.requestId() != null) {
+            recordJson.put("requestId", record.requestId());
+        }
+        if (record.replacedRegistrationId() != null) {
+            recordJson.put("replacedRegistrationId", record.replacedRegistrationId());
+        }
+        if (record.runtimeModuleId() != null) {
+            recordJson.put("runtimeModuleId", record.runtimeModuleId());
+        }
+
+        ObjectNode source = objectMapper.createObjectNode();
+        record.source().forEach(source::put);
+        recordJson.set("source", source);
+
+        ArrayNode functions = objectMapper.createArrayNode();
+        record.registeredFunctions().forEach(functions::add);
+        recordJson.set("registeredFunctions", functions);
+        return recordJson;
+    }
+
+    private ToolRegistrationRequest requestFromParams(ToolRegistrationParams params) {
+        if (params == null) {
             throw ToolRegistrationErrors.invalidParams(
                     "roles/tools/register params must be an object.",
                     "TOOL_REGISTRATION_PARAMS_REQUIRED"
             );
         }
-        if (!params.has("phase")) {
+        if (!hasText(params.phase())) {
             throw ToolRegistrationErrors.invalidParams(
                     "roles/tools/register params.phase is required for phase-aware registration.",
                     "TOOL_REGISTRATION_PHASE_REQUIRED"
             );
         }
 
-        ToolRegistrationPhase phase = ToolRegistrationPhase.fromWire(params.path("phase").asString(""));
+        ToolRegistrationPhase phase = ToolRegistrationPhase.fromWire(textOrEmpty(params.phase()));
         String toolId = ToolRegistrationIds.canonicalToolId(firstText(
-                params.path("toolId"),
-                params.path("name"),
-                params.path("tool").path("name")
+                params.toolId(),
+                params.name(),
+                params.tool() == null ? null : params.tool().name()
         ));
         return new ToolRegistrationRequest(
                 toolId,
                 phase,
-                localJarFrom(params.path("localJar")),
-                mavenFrom(params.path("maven")),
-                bundleFrom(params.path("bundle")),
-                nativeFrom(params.path("nativeTool"), toolId),
-                params.path("replace").asBoolean(defaultReplace(phase))
+                localJarFrom(params.localJar()),
+                mavenFrom(params.maven()),
+                bundleFrom(params.bundle()),
+                nativeFrom(params.nativeTool(), toolId),
+                params.replace() == null ? defaultReplace(phase) : params.replace()
         );
     }
 
@@ -125,60 +358,50 @@ public class ToolRegistrationService {
         };
     }
 
-    private LocalJarSpec localJarFrom(JsonNode localJar) {
-        if (localJar == null || localJar.isMissingNode() || localJar.isNull()) {
+    private LocalJarSpec localJarFrom(ToolRegistrationLocalJarParams localJar) {
+        if (localJar == null) {
             return null;
         }
-        if (!localJar.isObject()) {
-            throw ToolRegistrationErrors.invalidParams("localJar must be an object.", "TOOL_REGISTRATION_LOCAL_JAR_INVALID");
-        }
         return new LocalJarSpec(
-                firstText(localJar.path("path"), localJar.path("jarPath")),
-                firstText(localJar.path("checksumSha256"), localJar.path("sha256"))
+                firstText(localJar.path(), localJar.jarPath()),
+                firstText(localJar.checksumSha256(), localJar.sha256())
         );
     }
 
-    private MavenCoordinatesSpec mavenFrom(JsonNode maven) {
-        if (maven == null || maven.isMissingNode() || maven.isNull()) {
+    private MavenCoordinatesSpec mavenFrom(ToolRegistrationMavenParams maven) {
+        if (maven == null) {
             return null;
         }
-        if (!maven.isObject()) {
-            throw ToolRegistrationErrors.invalidParams("maven must be an object.", "TOOL_REGISTRATION_MAVEN_INVALID");
-        }
         List<URI> repositories = new ArrayList<>();
-        JsonNode repositoriesNode = maven.path("repositories");
-        if (repositoriesNode.isArray()) {
-            for (JsonNode repository : repositoriesNode) {
-                repositories.add(URI.create(repository.asString()));
+        List<String> repositoryValues = maven.repositories();
+        if (repositoryValues != null) {
+            for (String repository : repositoryValues) {
+                if (repository != null && !repository.isBlank()) {
+                    repositories.add(URI.create(repository));
+                }
             }
         }
         return new MavenCoordinatesSpec(
-                maven.path("groupId").asString(""),
-                maven.path("artifactId").asString(""),
-                maven.path("version").asString(""),
+                textOrEmpty(maven.groupId()),
+                textOrEmpty(maven.artifactId()),
+                textOrEmpty(maven.version()),
                 repositories
         );
     }
 
-    private BundleSpec bundleFrom(JsonNode bundle) {
-        if (bundle == null || bundle.isMissingNode() || bundle.isNull()) {
+    private BundleSpec bundleFrom(ToolRegistrationBundleParams bundle) {
+        if (bundle == null) {
             return new BundleSpec("meshingress-tool-bundle");
         }
-        if (!bundle.isObject()) {
-            throw ToolRegistrationErrors.invalidParams("bundle must be an object.", "TOOL_REGISTRATION_BUNDLE_INVALID");
-        }
-        String bundleId = firstText(bundle.path("bundleId"), bundle.path("artifactId"));
+        String bundleId = firstText(bundle.bundleId(), bundle.artifactId());
         return new BundleSpec(bundleId == null || bundleId.isBlank() ? "meshingress-tool-bundle" : bundleId);
     }
 
-    private NativeSpec nativeFrom(JsonNode nativeTool, String toolId) {
-        if (nativeTool == null || nativeTool.isMissingNode() || nativeTool.isNull()) {
+    private NativeSpec nativeFrom(ToolRegistrationNativeParams nativeTool, String toolId) {
+        if (nativeTool == null) {
             return new NativeSpec(inferNamespace(toolId));
         }
-        if (!nativeTool.isObject()) {
-            throw ToolRegistrationErrors.invalidParams("nativeTool must be an object.", "TOOL_REGISTRATION_NATIVE_INVALID");
-        }
-        String namespace = nativeTool.path("namespace").asString("");
+        String namespace = textOrEmpty(nativeTool.namespace());
         return new NativeSpec(namespace.isBlank() ? inferNamespace(toolId) : namespace);
     }
 
@@ -187,15 +410,29 @@ public class ToolRegistrationService {
         return dot < 0 ? toolId : toolId.substring(0, dot);
     }
 
-    private String firstText(JsonNode... values) {
-        for (JsonNode value : values) {
-            if (value != null && !value.isMissingNode() && !value.isNull()) {
-                String text = value.asString("");
-                if (!text.isBlank()) {
-                    return text;
-                }
+    private String firstText(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
             }
         }
         return "";
+    }
+
+    private String textOrEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private record DeleteOutcome(
+            String status,
+            boolean runtimeDeactivated,
+            boolean bundleDependencyRemoved,
+            boolean restartRequired,
+            String message
+    ) {
     }
 }

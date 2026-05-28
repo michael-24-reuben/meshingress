@@ -38,131 +38,6 @@ What remains unresolved?
 
 ---
 
-## Repository Safety and Sensitive Data
-
-The `architect/` directory is intended to be safe to push to GitHub, but only when entries use references and placeholders instead of raw private values. Treat architect records as durable project documentation, not as an unfiltered scratchpad.
-
-Architect entries must not contain:
-
-* raw secrets, tokens, API keys, session cookies, private keys, or signing material
-* real passwords, connection strings, database URLs, or bearer tokens
-* private local paths that identify a user, machine, or workspace
-* internal-only hostnames, private IPs, tailnet addresses, or deployment URLs unless they are intentionally public
-* unredacted logs, command output, stack traces, request payloads, response payloads, screenshots, or captures
-* private user data, customer data, production identifiers, or third-party account material
-* exploit-ready security details that are not required for project handoff
-
-Use placeholders and aliases when an entry needs to refer to sensitive or environment-specific values.
-
-Recommended placeholder forms:
-
-```txt
-{{env:NAME}}
-{{secret:name}}
-{{config:path.to.value}}
-{{local:path.name}}
-{{private:short-purpose}}
-```
-
-Examples:
-
-```md
-The MCP WebSocket URL is {{config:meshingress.mcp.websocket.url}}.
-The Instagram API key is {{secret:instagram.apiKey}}.
-The process scan fixture path is {{local:path.processScanFixtures}}.
-The deployment host is {{env:MESHINGRESS_PUBLIC_BASE_URL}}.
-```
-
-Do not resolve placeholders inside committed Markdown files. Real values belong in ignored local files, a developer environment, or a proper secret manager.
-
-### Local Environment Files
-
-Use a local environment file when an architect entry needs repeatable aliases for private data. Prefer YAML for readability, but JSON is acceptable when tooling needs it.
-
-Recommended local file names:
-
-```txt
-architect/env.yaml
-architect/env.local.yaml
-architect/**/*.env.yaml
-architect/**/*.env.local.yaml
-architect/**/secrets.json
-```
-
-These files must stay out of Git. Commit only an example file with placeholders.
-
-Recommended committed example:
-
-```yaml
-# architect/env.example.yaml
-meshingress:
-  identity:
-    publicBaseUrl: "{{set locally}}"
-
-secret:
-  instagram:
-    apiKey: "{{secret ref only, never raw value}}"
-
-local:
-  path:
-    processScanFixtures: "{{local fixture path}}"
-```
-
-Recommended `.gitignore` entries:
-
-```gitignore
-# architect-local configuration and sensitive artifacts
-architect/env.yaml
-architect/env.local.yaml
-architect/**/*.env.yaml
-architect/**/*.env.local.yaml
-architect/**/secrets.json
-architect/**/private.*
-architect/**/raw-logs/
-architect/**/captures/
-architect/**/screenshots/private/
-```
-
-### Pre-Push Safety Check
-
-Before pushing architect drafts to GitHub:
-
-1. Search for obvious secret markers such as `api_key`, `apikey`, `token`, `secret`, `password`, `bearer`, `private_key`, `.pem`, and `.p12`.
-2. Search for local path markers such as `/Users/`, `/home/`, `C:\Users\`, and workspace-specific absolute paths.
-3. Search for private network indicators such as `127.0.0.1`, `localhost`, `10.`, `172.16.`, `192.168.`, and tailnet-specific addresses when they are not meant to be public.
-4. Review any logs, captures, stack traces, payload samples, or screenshots before committing them.
-5. Prefer summaries over raw dumps. If raw evidence is necessary, redact it first and document what was redacted.
-
-### Redaction Rules
-
-When sensitive information is relevant to an entry, preserve the design meaning without preserving the value.
-
-Good:
-
-```md
-The request failed because {{secret:github.token}} did not include the required repository scope.
-```
-
-Bad:
-
-```md
-The request failed because ghp_exampleRawToken123 did not include the required repository scope.
-```
-
-Good:
-
-```md
-The local fixture directory is {{local:path.processScanFixtures}}.
-```
-
-Bad:
-
-```md
-The local fixture directory is C:\Users\alex\Desktop\private-client-dump.
-```
-
----
-
 ## Naming Convention
 
 Each entry folder should use:
@@ -194,7 +69,6 @@ Rules:
 ```txt
 architect/
 ├─ README.md
-├─ env.example.yaml
 │
 ├─ pending/
 │  └─ 2026-05-07-process-scan-log-storage-and-rotation/
@@ -234,6 +108,135 @@ architect/
 ---
 
 # Status Folders
+
+## `reports/`
+
+Use `reports/` for inspection outputs, audits, scans, and structured findings that have not necessarily become implementation work yet. Reports are evidence records. Pending, active, and resolved architect entries are execution records.
+
+Good candidates:
+
+* redundant-code inspections
+* security audits
+* configuration drift reports
+* dependency scans
+* architecture consistency checks
+* generated findings that may later become pending or active work
+
+A report file should be timestamped so multiple reports can describe the same area at different times:
+
+```txt
+architect/reports/redundant-code-inspection-YYYY-MM-DD-HHmmss.md
+```
+
+Example:
+
+```txt
+architect/reports/redundant-code-inspection-2026-05-28-160820.md
+```
+
+The report should keep its own date-time even when it later feeds a broader architect entry. Multiple reports may lead to the same pending or active entry, and one report may split into multiple entries.
+
+Root report files are live evidence while any related architect entry is still `pending/`, `active/`, or blocked. After every related execution entry has reached a terminal lifecycle state such as `resolved/`, `discontinued/`, or `archived/`, preserve the report inside each terminal entry and then move the root report file to the report cache:
+
+```txt
+architect/reports/.cache/redundant-code-inspection-YYYY-MM-DD-HHmmss.md
+```
+
+The cache copy is an archival fallback only. Do not keep finalized root report files in `architect/reports/`, and do not keep finalized report nodes in `reports.registry.json`.
+
+The `reports/` directory should include a machine-readable registry:
+
+```txt
+architect/reports/reports.registry.json
+```
+
+The registry tracks:
+
+* report IDs
+* report paths
+* report statuses
+* summary counts
+* related pending/active/resolved architect entries
+* supersession relationships
+* lifecycle events
+
+Allowed report status values:
+
+```txt
+reported
+triaged
+promoted_pending
+promoted_active
+linked_existing
+blocked
+resolved
+archived
+superseded
+```
+
+Recommended report event types:
+
+```txt
+REPORT_CREATED
+REPORT_UPDATED
+REPORT_TRIAGED
+REPORT_SUPERSEDED
+REPORT_ARCHIVED
+REPORT_PROMOTED_TO_PENDING
+REPORT_PROMOTED_TO_ACTIVE
+REPORT_LINKED_TO_EXISTING_ARCHITECT
+ARCHITECT_CREATED_PENDING
+ARCHITECT_CREATED_ACTIVE
+ARCHITECT_MOVED_TO_ACTIVE
+ARCHITECT_BLOCKED
+ARCHITECT_RESOLVED
+REPORT_COPIED_TO_RESOLUTION
+REGISTRY_AUDITED
+```
+
+Example `reports.registry.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-05-28T16:08:20-04:00",
+  "reports": [
+    {
+      "id": "redundant-code-inspection-2026-05-28-160820",
+      "kind": "redundant-code-inspection",
+      "title": "Redundant Code / Lookup Inspection Report",
+      "path": "architect/reports/redundant-code-inspection-2026-05-28-160820.md",
+      "status": "reported",
+      "createdAt": "2026-05-28T16:08:20-04:00",
+      "updatedAt": "2026-05-28T16:08:20-04:00",
+      "summary": {
+        "totalFindings": 11,
+        "safeRemovals": 0,
+        "consolidationCandidates": 2,
+        "lookupCacheCandidates": 3,
+        "refactorCandidates": 3,
+        "unknownRiskFindings": 6
+      },
+      "relatedArchitectEntries": [],
+      "supersedes": [],
+      "supersededBy": null,
+      "events": [
+        {
+          "at": "2026-05-28T16:08:20-04:00",
+          "type": "REPORT_CREATED",
+          "note": "Initial redundant code inspection report created."
+        }
+      ]
+    }
+  ]
+}
+```
+
+Keep the registry valid JSON. Do not add comments or Markdown inside `reports.registry.json`.
+
+The registry tracks live report workflow only. When a report is finalized into terminal architect entries and moved to `architect/reports/.cache/`, remove that report object from `reports.registry.json` and refresh `updatedAt`.
+
+---
 
 ## `pending/`
 
@@ -339,6 +342,43 @@ Use `archived/` only when the entry is no longer relevant but should still be pr
 
 # File Roles
 
+## `reports/*.md`
+
+A report Markdown file is an evidence snapshot. It should capture findings, counts, affected files, risk, evidence strength, recommendations, and proposed architect entries.
+
+Reports should answer:
+
+```txt
+What was inspected?
+When was it inspected?
+What was found?
+What evidence supports each finding?
+What should become pending or active architect work?
+What should not be changed without a design decision?
+How should follow-up work be verified?
+```
+
+Reports should not directly replace `brief.md`, `assessment.md`, or `plan.md`. Instead, they feed those files when an architect entry is created.
+
+## `reports.registry.json`
+
+Machine-readable report lifecycle registry.
+
+Use this file for:
+
+* report IDs and paths
+* report status
+* timestamps
+* summary counters
+* links from reports to architect entries
+* report supersession
+* report-to-architect promotion events
+* resolution-copy events
+
+Do not put full report bodies in `reports.registry.json`. Store live report bodies in `architect/reports/*.md`, finalized fallback copies in `architect/reports/.cache/*.md`, and terminal-entry report copies in the terminal entry folder.
+
+---
+
 ## `meta.json`
 
 Machine-readable lifecycle and indexing metadata.
@@ -377,6 +417,7 @@ Example:
   "related": [
     "2026-05-07-policy-action-package-contract"
   ],
+  "sourceReports": [],
   "origin": {
     "source": "chat",
     "summary": "Discussion about storing raw PolicyEvaluationResult output over time for audit, debugging, and action-package use."
@@ -692,16 +733,93 @@ resolved -> active
 resolved -> archived
 ```
 
+Report-backed flow:
+
+```txt
+reports/report.md
+  -> reports.registry.json status: reported
+  -> pending entry created, or active entry created
+  -> reports.registry.json status: promoted_pending or promoted_active
+  -> architect entry implemented
+  -> terminal entry created under resolved/, discontinued/, archived/, or another final folder
+  -> source report copied into the terminal entry as report-YYYY-MM-DD-HHmmss.md
+  -> when all related entries are terminal, move root report to reports/.cache/
+  -> remove the finalized report node from reports.registry.json
+```
+
+## Creating a Report
+
+When an inspection, audit, or scan produces findings:
+
+1. Create a timestamped Markdown report under `architect/reports/`.
+2. Create or update `architect/reports/reports.registry.json`.
+3. Add a `REPORT_CREATED` or `REPORT_UPDATED` event.
+4. Keep the report sanitized according to the repository safety rules.
+5. Do not create implementation changes from the report in the same pass unless explicitly requested.
+
+## Promoting a Report to an Architect Entry
+
+When a report finding becomes planned work:
+
+1. Create the folder under `pending/` unless work begins immediately.
+2. Create the folder under `active/` if implementation begins immediately.
+3. Add normal architect files such as `meta.json`, `brief.md`, `todo.md`, and `context.md`.
+4. Add `plan.md` when staged implementation is needed.
+5. Add the report ID to the architect entry `meta.json` under `sourceReports`.
+6. Add the architect entry ID to the report registry item under `relatedArchitectEntries`.
+7. Append registry events such as `REPORT_PROMOTED_TO_PENDING`, `ARCHITECT_CREATED_PENDING`, `REPORT_PROMOTED_TO_ACTIVE`, or `ARCHITECT_CREATED_ACTIVE`.
+
+Example architect `meta.json` report link:
+
+```json
+{
+  "sourceReports": [
+    "redundant-code-inspection-2026-05-28-160820"
+  ]
+}
+```
+
+## Resolving Report-Backed Work
+
+When work from a report is resolved:
+
+1. Move the architect entry to `resolved/` or another documented terminal folder.
+2. Finalize `assessment.md`, `fixes.md`, `verification.md`, and `summary.md`.
+3. Copy the source report into the terminal entry folder.
+4. Name the copied report using the report timestamp:
+
+```txt
+architect/resolved/YYYY-MM-DD-short-title/report-YYYY-MM-DD-HHmmss.md
+```
+
+Example:
+
+```txt
+architect/resolved/2026-05-28-transport-parsing-consolidation/report-2026-05-28-160820.md
+```
+
+5. Append `ARCHITECT_RESOLVED` and `REPORT_COPIED_TO_RESOLUTION` while the report remains live in `architect/reports/`.
+6. If any related architect entry is still `pending/`, `active/`, or blocked, keep the root report file and registry node in place.
+7. If every related architect entry is terminal, finalize the source report:
+   * verify the report has been copied into each terminal entry that needs the evidence
+   * move `architect/reports/<report-id>.md` to `architect/reports/.cache/<report-id>.md`
+   * remove that report object from `architect/reports/reports.registry.json`
+   * refresh the registry `updatedAt` timestamp and keep the JSON valid
+8. Do not leave duplicate finalized report files in `architect/reports/`.
+
+The terminal entry copy is the primary historical record. The `.cache/` file is only a fallback for the original root report after the live workflow is complete.
+
 ## Creating an Entry
 
 When creating a new entry:
 
 1. Create the folder under `pending/` unless work begins immediately.
 2. Add `meta.json`.
-3. Add `brief.md`.
-4. Add `todo.md`.
-5. Add `context.md` if there is meaningful background.
-6. Add `prd.md` or `plan.md` when needed.
+3. If created from a report, include `sourceReports` in `meta.json`.
+4. Add `brief.md`.
+5. Add `todo.md`.
+6. Add `context.md` if there is meaningful background.
+7. Add `prd.md` or `plan.md` when needed.
 
 ## Activating an Entry
 
@@ -737,13 +855,14 @@ When work cannot continue:
 When work is complete:
 
 1. Move the folder to `resolved/`.
-2. Update `meta.json`:
+2. If the entry came from one or more reports, copy each source report into the resolved folder as `report-YYYY-MM-DD-HHmmss.md`.
+3. Update `meta.json`:
 
     * `status: "resolved"`
     * `resolvedAt`
     * `updatedAt`
     * append `RESOLVED` event
-3. Add or finalize:
+4. Add or finalize:
 
     * `assessment.md`
     * `fixes.md`
@@ -860,6 +979,28 @@ Use relationships for:
 
 # Entry Templates
 
+## Report Template
+
+```txt
+architect/reports/
+├─ reports.registry.json
+└─ redundant-code-inspection-YYYY-MM-DD-HHmmss.md
+```
+
+A report may later be copied into one or more terminal entries:
+
+```txt
+architect/resolved/YYYY-MM-DD-short-title/
+└─ report-YYYY-MM-DD-HHmmss.md
+```
+
+After all work sourced from the report reaches a terminal lifecycle state, move the root report file into the cache and remove its registry node:
+
+```txt
+architect/reports/.cache/
+└─ redundant-code-inspection-YYYY-MM-DD-HHmmss.md
+```
+
 ## Pending PRD Template
 
 ```txt
@@ -904,7 +1045,8 @@ architect/resolved/YYYY-MM-DD-short-title/
 ├─ assessment.md
 ├─ fixes.md
 ├─ verification.md
-└─ summary.md
+├─ summary.md
+└─ report-YYYY-MM-DD-HHmmss.md
 ```
 
 ## Archived Entry Template
@@ -952,6 +1094,7 @@ architect/pending/2026-05-07-process-scan-log-storage-and-rotation/
   "related": [
     "2026-05-07-policy-action-package-contract"
   ],
+  "sourceReports": [],
   "origin": {
     "source": "chat",
     "summary": "Discussion about storing raw process evaluation logs over time for debugging, audit, bot review, and future action-package execution."
@@ -970,11 +1113,19 @@ architect/pending/2026-05-07-process-scan-log-storage-and-rotation/
 
 # Rules
 
-## Keep Architect Entries GitHub-Safe
+## Keep Reports Separate From Execution Entries
 
-Architect entries may be committed and pushed when they follow the repository safety rules above. Use placeholders for private values, keep real values in ignored local files, and commit only sanitized examples.
+Reports are evidence snapshots. Pending and active architect entries are execution plans. Do not treat a report as implementation approval by itself. Promote the relevant finding into `pending/` or `active/`, link it in `reports.registry.json`, and keep the report available for audit.
 
-Do not commit raw local environment files, private captures, raw logs, or unredacted payloads.
+## Keep the Report Registry Auditable
+
+Whenever a report is created, triaged, promoted, linked, superseded, archived, copied to resolution, or resolved, append an event to `architect/reports/reports.registry.json`. Use the event enum values documented in the `reports/` section.
+
+When a report's related execution entries are all terminal, finish the registry audit before deletion: confirm the terminal-entry report copies exist, move the root report to `architect/reports/.cache/`, remove the report node, and refresh `updatedAt`. Do not keep a finalized report node solely to preserve event history.
+
+## Use ISO Date Order
+
+Use `YYYY-MM-DD` for folder and report dates. Avoid `YYYY-DD-MM`; for example, use `2026-05-28`, not `2026-28-05`.
 
 ## Keep Entries Focused
 
@@ -1050,12 +1201,19 @@ task-sentinel architect open 2026-05-07-process-scan-log-storage-and-rotation
 task-sentinel architect related 2026-05-07-policy-action-package-contract
 task-sentinel architect move --to active 2026-05-07-process-scan-log-storage-and-rotation
 task-sentinel architect summarize --status resolved
-task-sentinel architect scan-secrets
-task-sentinel architect render --entry 2026-05-07-process-scan-log-storage-and-rotation --env architect/env.local.yaml
+task-sentinel architect reports list
+task-sentinel architect reports audit-registry
+task-sentinel architect reports promote redundant-code-inspection-2026-05-28-160820 --to pending
+task-sentinel architect reports copy-to-resolution redundant-code-inspection-2026-05-28-160820 2026-05-28-transport-parsing-consolidation
+task-sentinel architect reports finalize redundant-code-inspection-2026-05-28-160820
 ```
 
 Potential future uses:
 
+* track report-to-architect promotion
+* audit unresolved reports
+* preserve source reports inside terminal entries
+* move finalized source reports into `reports/.cache/`
 * generate changelogs
 * find related bugs
 * group similar failures
@@ -1068,6 +1226,13 @@ Potential future uses:
 ---
 
 # Recommended Minimum Entry
+
+For most new reports, start with:
+
+```txt
+architect/reports/reports.registry.json
+architect/reports/<kind>-YYYY-MM-DD-HHmmss.md
+```
 
 For most new entries, start with:
 

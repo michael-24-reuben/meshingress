@@ -7,10 +7,15 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 public final class AnnotationSchemaIntrospector {
 
@@ -26,6 +31,17 @@ public final class AnnotationSchemaIntrospector {
         root.put("annotation", annotationType.getName());
         root.put("simpleName", annotationType.getSimpleName());
 
+        ArrayNode targets = objectMapper.createArrayNode();
+
+        Target target = annotationType.getAnnotation(Target.class);
+        if (target != null) {
+            Arrays.stream(target.value())
+                    .map(ElementType::name)
+                    .forEach(targets::add);
+        }
+
+        root.set("targets", targets);
+
         ArrayNode elements = objectMapper.createArrayNode();
 
         Arrays.stream(annotationType.getDeclaredMethods())
@@ -33,6 +49,7 @@ public final class AnnotationSchemaIntrospector {
                 .forEach(method -> elements.add(describeElement(method)));
 
         root.set("elements", elements);
+
         return root;
     }
 
@@ -282,7 +299,7 @@ public final class AnnotationSchemaIntrospector {
         return node;
     }
 
-     private ArrayNode describeAnnotations(Annotation[] annotations) {
+    private ArrayNode describeAnnotations(Annotation[] annotations) {
         ArrayNode array = objectMapper.createArrayNode();
 
         Arrays.stream(annotations)

@@ -5,6 +5,7 @@ import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.McpInputField;
+import dev.mrk.meshingress.api.tools.annotation.McpInputSchema;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
@@ -64,6 +65,16 @@ class McpToolAnnotationScannerTests {
         assertEquals("name", tool.functions().getFirst().descriptor().inputSchema().path("required").get(0).asString());
     }
 
+    @Test
+    void usesMethodInputSchemaDescriptionForDefaultProvider() {
+        AnnotatedMcpTool tool = scanner.scan(MethodSchemaDescriptionAnnotatedTool.class);
+
+        assertEquals(
+                "Method-level input schema description.",
+                tool.functions().getFirst().descriptor().inputSchema().path("description").asString()
+        );
+    }
+
     @McpTool(
             value = "helloworld",
             title = "Hello World",
@@ -109,6 +120,16 @@ class McpToolAnnotationScannerTests {
 
         @McpFunction("call")
         ObjectNode call(HelloWorldGreetArgs arguments, McpCallContext context) {
+            return null;
+        }
+    }
+
+    @McpTool(value = "helloworld.schema")
+    static class MethodSchemaDescriptionAnnotatedTool {
+
+        @McpFunction(value = "call", description = "Function fallback description.")
+        @McpInputSchema(description = "Method-level input schema description.")
+        ObjectNode call(@McpFunctionParam("name") String name) {
             return null;
         }
     }

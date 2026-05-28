@@ -159,6 +159,33 @@ class McpControllerTests {
     }
 
     @Test
+    void invalidJsonReturnsParseError() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.PARSE_ERROR)));
+    }
+
+    @Test
+    void publicToolsRegisterMethodIsNotExposed() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 40,
+                                  "method": "tools/register",
+                                  "params": {
+                                    "artifactId": "sample"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.METHOD_NOT_FOUND)));
+    }
+
+    @Test
     void roleMethodsRequireAdminAuthorization() throws Exception {
         mockMvc.perform(post("/mcp")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -179,7 +206,7 @@ class McpControllerTests {
     }
 
     @Test
-    void roleAdminCanCheckRegisterUpdateAndDisableTool() throws Exception {
+    void roleAdminCanCheckAliasUpdateAndDisableTool() throws Exception {
         mockMvc.perform(post("/mcp")
                         .header("Authorization", "Bearer dev-admin")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -190,9 +217,9 @@ class McpControllerTests {
         mockMvc.perform(post("/mcp")
                         .header("Authorization", "Bearer dev-admin")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toolRequest(7, "roles/tools/register")))
+                        .content(toolRequest(7, "roles/tools/alias")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.registered", is(true)))
+                .andExpect(jsonPath("$.result.aliased", is(true)))
                 .andExpect(jsonPath("$.result.version", is(1)));
 
         mockMvc.perform(post("/mcp")
@@ -237,6 +264,17 @@ class McpControllerTests {
     }
 
     @Test
+    void roleRegisterRejectsDescriptorOnlyPayload() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toolRequest(33, "roles/tools/register")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.INVALID_PARAMS)))
+                .andExpect(jsonPath("$.error.message", is("roles/tools/register requires phase-aware registration params.")));
+    }
+
+    @Test
     void roleAdminCanReconcileBundledToolRegistrationPhase() throws Exception {
         mockMvc.perform(post("/mcp")
                         .header("Authorization", "Bearer dev-admin")
@@ -261,6 +299,100 @@ class McpControllerTests {
                 .andExpect(jsonPath("$.result.sourceKind", is("CLASSPATH_BUNDLE")))
                 .andExpect(jsonPath("$.result.status", is("reconciled")))
                 .andExpect(jsonPath("$.result.registeredFunctions[0]", is("helloworld.greet")));
+    }
+
+    @Test
+    void roleAdminListIncludesPhaseRegistrationRecords() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 34,
+                                  "method": "roles/tools/register",
+                                  "params": {
+                                    "phase": "bundle",
+                                    "toolId": "helloworld.greet"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.registered", is(true)));
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 35,
+                                  "method": "roles/tools/list",
+                                  "params": {
+                                    "includeDisabled": true,
+                                    "includePrivate": true
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.registrations[0].toolId", is("helloworld.greet")))
+                .andExpect(jsonPath("$.result.registrations[0].phase", is("bundle")));
+    }
+
+    @Test
+    void roleAdminDeleteHandlesPhaseRegistrationLifecycle() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 36,
+                                  "method": "roles/tools/register",
+                                  "params": {
+                                    "phase": "bundle",
+                                    "toolId": "helloworld.greet"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.registered", is(true)));
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 37,
+                                  "method": "roles/tools/delete",
+                                  "params": {
+                                    "name": "helloworld.greet",
+                                    "mode": "disable"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.deleted", is(true)))
+                .andExpect(jsonPath("$.result.restartRequired", is(true)))
+                .andExpect(jsonPath("$.result.registrations[0].status", is("reconciled-deleted")));
+    }
+
+    @Test
+    void roleAdminReloadReportsUnsupportedRuntimeReload() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 38,
+                                  "method": "roles/tools/reload"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.reloaded", is(false)))
+                .andExpect(jsonPath("$.result.supported", is(false)));
     }
 
     @Test

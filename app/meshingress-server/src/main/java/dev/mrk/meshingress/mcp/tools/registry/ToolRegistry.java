@@ -1,10 +1,12 @@
-package dev.mrk.meshingress.mcp.tools;
+package dev.mrk.meshingress.mcp.tools.registry;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolPatch;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
+import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
+import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 
 import java.util.List;
 import java.util.Optional;

@@ -5,12 +5,21 @@ import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolPatch;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
+import dev.mrk.meshingress.controller.roles.params.RolesToolAliasParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolCheckParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolDeleteParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolListParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolUpdateParams;
+import dev.mrk.meshingress.controller.roles.params.ToolDescriptorParams;
+import dev.mrk.meshingress.controller.roles.params.ToolFunctionParams;
+import dev.mrk.meshingress.controller.roles.params.ToolPatchParams;
+import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationParams;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationService;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
 import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
-import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.security.McpAccessPolicyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +28,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
+
+import java.util.List;
 
 @Service
 public class RoleToolService {
@@ -42,39 +53,48 @@ public class RoleToolService {
         this.toolRegistrationService = toolRegistrationService;
     }
 
-    public ObjectNode check(McpCallContext context, JsonNode params) {
+    public ObjectNode check(McpCallContext context, RolesToolCheckParams params) {
         accessPolicyService.requireAdmin(context);
-        McpToolDescriptor descriptor = descriptorFromParams(params.path("tool"), true);
-        boolean updateMode = params.path("mode").asString("").equals("update");
+        McpToolDescriptor descriptor = descriptorFromParams(required(params).tool(), true);
+        boolean updateMode = "update".equalsIgnoreCase(params.mode());
         return checkResultToJson(toolRegistry.check(descriptor, updateMode));
     }
 
-    public ObjectNode register(McpCallContext context, JsonNode params) {
+    public ObjectNode register(McpCallContext context, ToolRegistrationParams params) {
         accessPolicyService.requireAdmin(context);
         if (toolRegistrationService.isPhaseRegistration(params)) {
             return toolRegistrationService.register(context, params);
         }
-        McpToolDescriptor descriptor = descriptorFromParams(params.path("tool"), true);
+        throw new JsonRpcException(
+                JsonRpcErrorCodes.INVALID_PARAMS,
+                "roles/tools/register requires phase-aware registration params."
+        );
+    }
+
+    public ObjectNode alias(McpCallContext context, RolesToolAliasParams params) {
+        accessPolicyService.requireAdmin(context);
+        McpToolDescriptor descriptor = descriptorFromParams(required(params).tool(), true);
         McpToolDescriptor registered = toolRegistry.register(descriptor, context);
 
         ObjectNode result = objectMapper.createObjectNode();
-        result.put("registered", true);
+        result.put("aliased", true);
         result.put("toolName", registered.name());
         result.put("version", registered.version());
         result.put("registryVersion", toolRegistry.registryVersion());
         return result;
     }
 
-    public ObjectNode update(McpCallContext context, JsonNode params) {
+    public ObjectNode update(McpCallContext context, RolesToolUpdateParams params) {
         accessPolicyService.requireAdmin(context);
-        if (!params.isObject()) {
+        if (params == null) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/update params must be an object");
         }
-        String name = params.path("name").asString("");
+        String name = textOrEmpty(params.name());
         if (name.isBlank()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/update params.name is required");
         }
-        McpToolPatch patch = patchFromJson(params.path("patch"));
+
+        McpToolPatch patch = patchFromParams(params.patch());
         int previousVersion = toolRegistry.findTool(name)
                 .map(McpToolDescriptor::version)
                 .orElse(0);
@@ -89,18 +109,22 @@ public class RoleToolService {
         return result;
     }
 
-    public ObjectNode delete(McpCallContext context, JsonNode params) {
+    public ObjectNode delete(McpCallContext context, RolesToolDeleteParams params) {
         accessPolicyService.requireAdmin(context);
-        if (!params.isObject()) {
+        if (params == null) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/delete params must be an object");
         }
-        String name = params.path("name").asString("");
+        String name = textOrEmpty(params.name());
         if (name.isBlank()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/delete params.name is required");
         }
-        String mode = params.path("mode").asString("disable");
+        String mode = params.mode() == null ? "disable" : params.mode();
         if (!mode.equals("disable")) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Only disable mode is supported in the MVP");
+        }
+
+        if (toolRegistrationService.hasActiveRegistration(name)) {
+            return toolRegistrationService.delete(context, name, mode);
         }
 
         int previousVersion = toolRegistry.findTool(name)
@@ -118,10 +142,10 @@ public class RoleToolService {
         return result;
     }
 
-    public ObjectNode list(McpCallContext context, JsonNode params) {
+    public ObjectNode list(McpCallContext context, RolesToolListParams params) {
         accessPolicyService.requireAdmin(context);
-        boolean includeDisabled = params.path("includeDisabled").asBoolean(false);
-        boolean includePrivate = params.path("includePrivate").asBoolean(false);
+        boolean includeDisabled = params != null && Boolean.TRUE.equals(params.includeDisabled());
+        boolean includePrivate = params != null && Boolean.TRUE.equals(params.includePrivate());
 
         ObjectNode result = objectMapper.createObjectNode();
         result.put("registryVersion", toolRegistry.registryVersion());
@@ -151,15 +175,13 @@ public class RoleToolService {
             audit.add(eventJson);
         }
         result.set("auditEvents", audit);
+        result.set("registrations", toolRegistrationService.registrationsToJson());
         return result;
     }
 
     public ObjectNode reload(McpCallContext context) {
         accessPolicyService.requireAdmin(context);
-        ObjectNode result = objectMapper.createObjectNode();
-        result.put("reloaded", true);
-        result.put("registryVersion", toolRegistry.registryVersion());
-        return result;
+        return toolRegistrationService.reloadStatus();
     }
 
 
@@ -176,108 +198,143 @@ public class RoleToolService {
         return result;
     }
 
-    private McpToolDescriptor descriptorFromParams(JsonNode tool, boolean dynamic) {
-        if (!tool.isObject()) {
+    private McpToolDescriptor descriptorFromParams(ToolDescriptorParams tool, boolean dynamic) {
+        if (tool == null) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tool must be an object");
         }
         return new McpToolDescriptor(
-                tool.path("name").asString(""),
-                tool.path("title").asString(null),
-                tool.path("description").asString(""),
-                tool.path("version").asInt(1),
-                !tool.has("enabled") || tool.path("enabled").asBoolean(),
-                visibilityFromJson(tool.path("visibility")),
+                textOrEmpty(tool.name()),
+                blankToNull(tool.title()),
+                textOrEmpty(tool.description()),
+                intOrDefault(tool.version(), 1),
+                boolOrTrue(tool.enabled()),
+                visibilityFromParams(tool.visibility()),
                 functionsFromParams(tool, dynamic),
-                optionalObject(tool, "annotations"),
+                optionalObject(tool.annotations(), "annotations"),
                 dynamic
         );
     }
 
-    private java.util.List<McpFunctionDescriptor> functionsFromParams(JsonNode tool, boolean dynamic) {
-        JsonNode functions = tool.path("functions");
-        if (functions.isArray()) {
+    private java.util.List<McpFunctionDescriptor> functionsFromParams(ToolDescriptorParams tool, boolean dynamic) {
+        List<ToolFunctionParams> functions = tool.functions();
+        if (functions != null && !functions.isEmpty()) {
             java.util.List<McpFunctionDescriptor> descriptors = new java.util.ArrayList<>();
-            for (JsonNode function : functions) {
-                descriptors.add(functionFromJson(function, tool, dynamic));
+            for (ToolFunctionParams function : functions) {
+                descriptors.add(functionFromParams(function, tool, dynamic));
             }
             return java.util.List.copyOf(descriptors);
         }
 
         return java.util.List.of(new McpFunctionDescriptor(
-                tool.path("name").asString(""),
-                tool.path("title").asString(null),
-                tool.path("description").asString(""),
-                tool.path("version").asInt(1),
-                !tool.has("enabled") || tool.path("enabled").asBoolean(),
-                visibilityFromJson(tool.path("visibility")),
-                tool.path("handlerKey").asString(""),
-                requiredObject(tool, "inputSchema"),
-                optionalObject(tool, "outputSchema"),
-                optionalObject(tool, "annotations"),
+                textOrEmpty(tool.name()),
+                blankToNull(tool.title()),
+                textOrEmpty(tool.description()),
+                intOrDefault(tool.version(), 1),
+                boolOrTrue(tool.enabled()),
+                visibilityFromParams(tool.visibility()),
+                textOrEmpty(tool.handlerKey()),
+                requiredObject(tool.inputSchema(), "inputSchema"),
+                optionalObject(tool.outputSchema(), "outputSchema"),
+                optionalObject(tool.annotations(), "annotations"),
                 dynamic
         ));
     }
 
-    private McpFunctionDescriptor functionFromJson(JsonNode function, JsonNode parentTool, boolean dynamic) {
-        if (!function.isObject()) {
+    private McpFunctionDescriptor functionFromParams(ToolFunctionParams function, ToolDescriptorParams parentTool, boolean dynamic) {
+        if (function == null) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "function must be an object");
         }
         return new McpFunctionDescriptor(
-                function.path("name").asString(""),
-                function.path("title").asString(null),
-                function.path("description").asString(parentTool.path("description").asString("")),
-                function.path("version").asInt(parentTool.path("version").asInt(1)),
-                !function.has("enabled") || function.path("enabled").asBoolean(),
-                function.has("visibility") ? visibilityFromJson(function.path("visibility")) : visibilityFromJson(parentTool.path("visibility")),
-                function.path("handlerKey").asString(""),
-                requiredObject(function, "inputSchema"),
-                optionalObject(function, "outputSchema"),
-                optionalObject(function, "annotations"),
+                textOrEmpty(function.name()),
+                blankToNull(function.title()),
+                textOrEmpty(defaultText(function.description(), parentTool.description())),
+                intOrDefault(function.version(), intOrDefault(parentTool.version(), 1)),
+                boolOrTrue(function.enabled()),
+                function.visibility() == null || function.visibility().isBlank()
+                        ? visibilityFromParams(parentTool.visibility())
+                        : visibilityFromParams(function.visibility()),
+                textOrEmpty(function.handlerKey()),
+                requiredObject(function.inputSchema(), "inputSchema"),
+                optionalObject(function.outputSchema(), "outputSchema"),
+                optionalObject(function.annotations(), "annotations"),
                 dynamic
         );
     }
 
-    private McpToolPatch patchFromJson(JsonNode patch) {
-        if (!patch.isObject()) {
+    private McpToolPatch patchFromParams(ToolPatchParams patch) {
+        if (patch == null) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "patch must be an object");
         }
         return new McpToolPatch(
-                patch.has("title") ? patch.path("title").asString() : null,
-                patch.has("description") ? patch.path("description").asString() : null,
-                patch.has("enabled") ? patch.path("enabled").asBoolean() : null,
-                patch.has("visibility") ? visibilityFromJson(patch.path("visibility")) : null,
-                patch.has("handlerKey") ? patch.path("handlerKey").asString() : null,
-                optionalObject(patch, "inputSchema"),
-                optionalObject(patch, "outputSchema"),
-                optionalObject(patch, "annotations")
+                patch.title(),
+                patch.description(),
+                patch.enabled(),
+                patch.visibility() == null ? null : visibilityFromParams(patch.visibility()),
+                patch.handlerKey(),
+                optionalObject(patch.inputSchema(), "inputSchema"),
+                optionalObject(patch.outputSchema(), "outputSchema"),
+                optionalObject(patch.annotations(), "annotations")
         );
     }
 
-    private ToolVisibility visibilityFromJson(JsonNode value) {
+    private ToolVisibility visibilityFromParams(String value) {
         try {
-            return ToolVisibility.fromWire(value.asString("public"));
+            String visibility = value == null || value.isBlank() ? "public" : value;
+            return ToolVisibility.fromWire(visibility);
         } catch (IllegalArgumentException exception) {
-            LOGGER.warn("Invalid tool visibility value: {}", value.asString(""), exception);
+            LOGGER.warn("Invalid tool visibility value: {}", value == null ? "" : value, exception);
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "visibility must be public, private, or admin");
         }
     }
 
-    private JsonNode requiredObject(JsonNode parent, String field) {
-        JsonNode value = parent.path(field);
-        if (!value.isObject()) {
+    private JsonNode requiredObject(JsonNode value, String field) {
+        if (value == null || !value.isObject()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, field + " must be an object");
         }
         return value;
     }
 
-    private JsonNode optionalObject(JsonNode parent, String field) {
-        JsonNode value = parent.path(field);
-        if (value.isMissingNode() || value.isNull()) {
+    private JsonNode optionalObject(JsonNode value, String field) {
+        if (value == null || value.isNull()) {
             return null;
         }
         if (!value.isObject()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, field + " must be an object");
         }
         return value;
+    }
+
+    private RolesToolCheckParams required(RolesToolCheckParams params) {
+        if (params == null) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/check params must be an object");
+        }
+        return params;
+    }
+
+    private RolesToolAliasParams required(RolesToolAliasParams params) {
+        if (params == null) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/alias params must be an object");
+        }
+        return params;
+    }
+
+    private String textOrEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private String defaultText(String primary, String fallback) {
+        return (primary == null || primary.isBlank()) ? textOrEmpty(fallback) : primary;
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private int intOrDefault(Integer value, int fallback) {
+        return value == null ? fallback : value;
+    }
+
+    private boolean boolOrTrue(Boolean value) {
+        return value == null || value;
     }
 }

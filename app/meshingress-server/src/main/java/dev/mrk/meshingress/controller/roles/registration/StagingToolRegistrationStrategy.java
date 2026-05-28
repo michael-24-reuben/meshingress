@@ -1,7 +1,7 @@
 package dev.mrk.meshingress.controller.roles.registration;
 
 import dev.mrk.meshingress.config.MeshingressProperties;
-import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.runtime.artifacts.MavenCoordinatesSource;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleHandle;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleId;
@@ -85,7 +85,7 @@ class StagingToolRegistrationStrategy implements ToolRegistrationStrategy {
             store.markReplaced(record.registrationId());
         });
 
-        ToolModuleHandle handle = runtimeLoader.activate(new MavenCoordinatesSource(
+        ToolModuleHandle handle = runtimeLoader.    activate(new MavenCoordinatesSource(
                 maven.groupId(),
                 maven.artifactId(),
                 maven.version(),

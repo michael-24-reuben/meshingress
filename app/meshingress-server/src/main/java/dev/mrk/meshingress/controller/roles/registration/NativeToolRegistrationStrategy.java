@@ -2,7 +2,7 @@ package dev.mrk.meshingress.controller.roles.registration;
 
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
-import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;

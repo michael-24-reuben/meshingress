@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -137,6 +138,8 @@ public record MeshingressProperties(
                 boolean allowOverrideNative,
                 @NotNull StagingConflictPolicy stagingConflictPolicy,
                 @NotBlank String localJarRoot,
+                @NotBlank String localMavenRepositoryPath,
+                @NotBlank String bundlePomPath,
                 boolean requireLocalJarChecksum,
                 boolean requireMavenVersionPin,
                 boolean requireApprovalForDynamicPhases
@@ -144,6 +147,8 @@ public record MeshingressProperties(
             public Registration {
                 stagingConflictPolicy = stagingConflictPolicy == null ? StagingConflictPolicy.REPLACE_EXISTING : stagingConflictPolicy;
                 localJarRoot = defaultString(localJarRoot, "tools/lib");
+                localMavenRepositoryPath = defaultString(localMavenRepositoryPath, defaultLocalMavenRepositoryPath());
+                bundlePomPath = defaultString(bundlePomPath, "app/meshingress-tool-bundle/pom.xml");
             }
 
             static Registration defaults() {
@@ -160,6 +165,8 @@ public record MeshingressProperties(
                         false,
                         StagingConflictPolicy.REPLACE_EXISTING,
                         "tools/lib",
+                        defaultLocalMavenRepositoryPath(),
+                        "app/meshingress-tool-bundle/pom.xml",
                         true,
                         true,
                         true
@@ -296,6 +303,10 @@ public record MeshingressProperties(
 
     private static String defaultString(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private static String defaultLocalMavenRepositoryPath() {
+        return Path.of(System.getProperty("user.home"), ".m2", "repository").toString();
     }
 
     private static List<String> normalizeList(List<String> values, List<String> fallback) {

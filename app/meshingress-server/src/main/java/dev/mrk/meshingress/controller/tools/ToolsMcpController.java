@@ -7,7 +7,7 @@ import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolExecutor;
-import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
 import dev.mrk.meshingress.route.annotations.McpDispatchParam;
@@ -35,15 +35,6 @@ public class ToolsMcpController {
         this.toolRegistry = toolRegistry;
         this.toolExecutor = toolExecutor;
         this.properties = properties;
-    }
-
-    @McpDispatchMethod("register")
-    public @NonNull ObjectNode toolsRegister(@McpDispatchParam("params") @NonNull JsonNode params, McpCallContext context) {
-        ensureRegistryEnabled();
-        String artifactId = params.path("artifactId").asString("");
-        log.debug("MCP tools/registe: artifactId={} requestId={} sessionId={}", artifactId, context.requestId(), context.sessionId());
-
-        return objectMapper.createObjectNode();
     }
 
     @McpDispatchMethod("list")

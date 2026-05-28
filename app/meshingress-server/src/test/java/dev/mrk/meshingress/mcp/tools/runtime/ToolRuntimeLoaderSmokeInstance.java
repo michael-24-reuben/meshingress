@@ -1,6 +1,6 @@
 package dev.mrk.meshingress.mcp.tools.runtime;
 
-import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarArtifactResolver;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarSource;
 import dev.mrk.meshingress.runtime.artifacts.LocalMavenRepositoryArtifactResolver;

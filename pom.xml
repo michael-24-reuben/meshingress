@@ -35,7 +35,6 @@
         <module>toolspace/instagram-api</module>
         <module>toolspace/powershell-cli-tool</module>
         <module>toolspace/whatsapp-cobalt</module>
-        <module>toolspace/sample-module</module>
     </modules>
 
     <properties>

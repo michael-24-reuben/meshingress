@@ -486,7 +486,10 @@ public class McpToolAnnotationScanner {
             return objectSchemaFor(argsParam.bindType(), argsParam.description());
         }
 
-        ObjectNode schema = emptyObjectSchema(fallbackDescription);
+        String schemaDescription = methodSchema != null && !methodSchema.description().isBlank()
+                ? methodSchema.description()
+                : fallbackDescription;
+        ObjectNode schema = emptyObjectSchema(schemaDescription);
         ObjectNode properties = objectMapper.createObjectNode();
         ArrayNode required = objectMapper.createArrayNode();
         for (AnnotatedMcpFunctionParam param : params) {

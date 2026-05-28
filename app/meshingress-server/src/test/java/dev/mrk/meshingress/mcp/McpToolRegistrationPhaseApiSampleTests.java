@@ -39,6 +39,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         "meshingress.tools.registration.allow-staging=true",
         "meshingress.tools.registration.allow-bundle=true",
         "meshingress.tools.registration.local-jar-root=../../temp",
+        "meshingress.tools.registration.bundle-pom-path=../meshingress-tool-bundle/pom.xml",
         "meshingress.tools.registration.allow-native-http=true"
 })
 @AutoConfigureMockMvc
@@ -109,7 +110,10 @@ class McpToolRegistrationPhaseApiSampleTests {
 
     @Test
     void registerBundledToolThroughMcpApi() throws Exception {
-        printMcpResponse("bundle/classpath register",
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+
+        printMcpResponse("bundle/maven-to-module register",
                 mcpRequest("""
                         {
                           "jsonrpc": "2.0",
@@ -117,19 +121,24 @@ class McpToolRegistrationPhaseApiSampleTests {
                           "method": "roles/tools/register",
                           "params": {
                             "phase": "bundle",
-                            "toolId": "helloworld.greet",
+                            "toolId": "helloworld.text",
                             "bundle": {
                               "bundleId": "meshingress-tool-bundle"
+                            },
+                            "localJar": {
+                              "path": "%s",
+                              "checksumSha256": "%s"
+                            },
+                            "maven": {
+                              "groupId": "dev.mrk.toolspace",
+                              "artifactId": "sample-module",
+                              "version": "0.0.1-SNAPSHOT"
                             }
                           }
                         }
-                        """));
-        printMcpResponse("bundle/classpath tools/list", toolsListRequest(301));
-        printMcpResponse("bundle/classpath tools/call", toolCallRequest(302, "helloworld.greet", """
-                {
-                  "name": "Phase API"
-                }
-                """));
+                        """.formatted(SAMPLE_JAR_NAME, sha256(sampleJar))));
+        printMcpResponse("bundle/maven-to-module tools/list", toolsListRequest(301));
+        printMcpResponse("bundle/maven-to-module tools/call", toolCallRequest(302, "helloworld.text", "{}"));
     }
 
     @Test
@@ -212,17 +221,26 @@ class McpToolRegistrationPhaseApiSampleTests {
         return current.resolve("temp").resolve(SAMPLE_JAR_NAME);
     }
 
+    /**
+     * Test fixture helper only.
+     * <p>
+     * This writes a sample artifact directly into the local Maven repository so
+     * staging registration MCP flows can run in this test class. It does not
+     * emulate production/repository artifact installation behavior.
+     * <p>
+     * The real jar installation/repository artifact logic is planned under the
+     * architect draft `2026-05-27-meshingress-repository-artifact-implementation`.
+     */
     private void installSampleJarInLocalMavenRepository(Path sampleJar) throws IOException {
         Path artifactDirectory = Path.of(System.getProperty("user.home"), ".m2", "repository")
                 .resolve(SAMPLE_GROUP_ID.replace('.', '/'))
                 .resolve(SAMPLE_ARTIFACT_ID)
                 .resolve(SAMPLE_VERSION);
+        Path artifactJar = artifactDirectory.resolve(SAMPLE_ARTIFACT_ID + "-" + SAMPLE_VERSION + ".jar");
         Files.createDirectories(artifactDirectory);
-        Files.copy(
-                sampleJar,
-                artifactDirectory.resolve(SAMPLE_ARTIFACT_ID + "-" + SAMPLE_VERSION + ".jar"),
-                StandardCopyOption.REPLACE_EXISTING
-        );
+        if (!Files.isRegularFile(artifactJar)) {
+            Files.copy(sampleJar, artifactJar, StandardCopyOption.REPLACE_EXISTING);
+        }
         Files.writeString(
                 artifactDirectory.resolve(SAMPLE_ARTIFACT_ID + "-" + SAMPLE_VERSION + ".pom"),
                 """

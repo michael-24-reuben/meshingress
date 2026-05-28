@@ -1,14 +1,9 @@
 package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.api.McpCallContext;
-import dev.mrk.meshingress.controller.McpDispatcher;
-import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
-import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcResponses;
 import dev.mrk.meshingress.route.annotations.McpHttpMethod;
 import dev.mrk.meshingress.route.annotations.McpRoute;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.core.JacksonException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -31,14 +26,10 @@ public class McpController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(McpController.class);
 
-    private final ObjectMapper objectMapper;
-    private final McpDispatcher dispatcher;
-    private final JsonRpcResponses responses;
+    private final McpTransportDispatcher transportDispatcher;
 
-    public McpController(ObjectMapper objectMapper, McpDispatcher dispatcher, JsonRpcResponses responses) {
-        this.objectMapper = objectMapper;
-        this.dispatcher = dispatcher;
-        this.responses = responses;
+    public McpController(McpTransportDispatcher transportDispatcher) {
+        this.transportDispatcher = transportDispatcher;
     }
 
     @McpRoute(id = "mcp.transport.post.v1", method = McpHttpMethod.POST, path = "/mcp")
@@ -52,17 +43,8 @@ public class McpController {
             @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
         LOGGER.info("=== MCP REQUEST START [http] requestId={} sessionId={} ===", requestId, sessionId);
-        JsonNode request;
-        try {
-            request = objectMapper.readTree(body);
-        } catch (JacksonException exception) {
-            int bodyLength = body == null ? 0 : body.length();
-            LOGGER.warn("MCP http parse error: requestId={} sessionId={} bodyLength={}", requestId, sessionId, bodyLength, exception);
-            return ResponseEntity.ok(responses.error(null, JsonRpcErrorCodes.PARSE_ERROR, "Parse error"));
-        }
-
         McpCallContext context = new McpCallContext(authorization, roleHeader == null ? legacyAdminHeader : roleHeader, sessionId, requestId);
-        Optional<JsonNode> response = dispatcher.dispatch(request, context);
+        Optional<JsonNode> response = transportDispatcher.dispatch(body, context);
         return response
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.noContent().build());

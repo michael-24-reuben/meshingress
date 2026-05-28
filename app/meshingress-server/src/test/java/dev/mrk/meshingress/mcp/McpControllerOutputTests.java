@@ -182,18 +182,18 @@ class McpControllerOutputTests {
     }
 
     @Test
-    void roleAdminCanCheckRegisterUpdateAndDisableTool() throws Exception {
+    void roleAdminCanCheckAliasUpdateAndDisableTool() throws Exception {
         printResponse("roles/tools/check",
                 post("/mcp")
                         .header("Authorization", "Bearer dev-admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toolRequest(6, "roles/tools/check")));
 
-        printResponse("roles/tools/register",
+        printResponse("roles/tools/alias",
                 post("/mcp")
                         .header("Authorization", "Bearer dev-admin")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(toolRequest(7, "roles/tools/register")));
+                        .content(toolRequest(7, "roles/tools/alias")));
 
         printResponse("roles/tools/update",
                 post("/mcp")

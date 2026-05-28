@@ -1,7 +1,7 @@
 package dev.mrk.meshingress.mcp.tools.runtime;
 
 import dev.mrk.meshingress.api.tools.McpToolHandler;
-import dev.mrk.meshingress.mcp.tools.ToolRegistry;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleId;
 import dev.mrk.meshingress.runtime.registry.ToolModuleRegistration;
 import dev.mrk.meshingress.runtime.registry.ToolRegistrationBridge;

@@ -1,5 +1,6 @@
 package dev.mrk.meshingress.mcp.tools.runtime;
 
+import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarArtifactResolver;
 import dev.mrk.meshingress.runtime.artifacts.LocalMavenRepositoryArtifactResolver;
 import dev.mrk.meshingress.runtime.artifacts.ToolArtifactResolutionContext;
@@ -17,14 +18,18 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.nio.file.Path;
 import java.util.List;
 
 @Configuration
 public class ToolRuntimeLoaderConfiguration {
 
     @Bean
-    ToolArtifactResolutionContext toolArtifactResolutionContext() {
-        return ToolArtifactResolutionContext.defaults();
+    ToolArtifactResolutionContext toolArtifactResolutionContext(MeshingressProperties properties) {
+        Path localRepository = Path.of(properties.tools().registration().localMavenRepositoryPath())
+                .toAbsolutePath()
+                .normalize();
+        return new ToolArtifactResolutionContext(localRepository, null, false, List.of());
     }
 
     @Bean

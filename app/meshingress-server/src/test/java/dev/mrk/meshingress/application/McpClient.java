@@ -61,8 +61,8 @@ public class McpClient {
         c.printResponse("roles/tools/check",
                 c.post("/mcp", toolRequest(6, "roles/tools/check"), Map.of("Authorization", "Bearer dev-admin")));
 
-        c.printResponse("roles/tools/register",
-                c.post("/mcp", toolRequest(7, "roles/tools/register"), Map.of("Authorization", "Bearer dev-admin")));
+        c.printResponse("roles/tools/alias",
+                c.post("/mcp", toolRequest(7, "roles/tools/alias"), Map.of("Authorization", "Bearer dev-admin")));
 
         c.printResponse("roles/tools/update",
                 c.post("/mcp", "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 8,\n  \"method\": \"roles/tools/update\",\n  \"params\": {\n    \"name\": \"architect.entries.copy\",\n    \"patch\": {\n      \"description\": \"List architect entries through a dynamic alias.\",\n      \"enabled\": true\n    }\n  }\n}\n", Map.of("Authorization", "Bearer dev-admin")));
