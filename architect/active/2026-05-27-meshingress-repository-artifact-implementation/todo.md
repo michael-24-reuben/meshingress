@@ -50,16 +50,16 @@
 
 - [x] Add scanner adapter interface.
 - [ ] Add scanner process runner with timeout.
-- [ ] Add artifact behavior scanner for scope inference.
-- [ ] Define scope inference rule catalog schema.
-- [ ] Add SootUp-backed bytecode reachability analysis to distinguish dependency-only risky APIs from calls reachable from Meshingress tool entrypoints.
+- [x] Add artifact behavior scanner for scope inference.
+- [x] Define scope inference rule catalog schema.
+- [x] Add SootUp-backed bytecode reachability analysis to distinguish dependency-only risky APIs from calls reachable from Meshingress tool entrypoints.
 - [ ] Add SpotBugs embedded Java assessment adapter for general Java bug/risk patterns.
 - [ ] Add FindSecBugs rules to the SpotBugs adapter for Java security findings.
 - [ ] Add CycloneDX SBOM generation for embedded artifact inventory metadata before external Syft integration.
 - [ ] Generate CodeQL query packs from the repository scope rule catalog.
 - [ ] Add CodeQL result importer/normalizer for inferred scope findings.
 - [ ] Document CodeQL source/build requirements and JAR-only fallback behavior.
-- [ ] Add bytecode matcher support before regex-only matching.
+- [x] Add bytecode matcher support before regex-only matching.
 - [ ] Add source-aware matcher support for artifacts with source.
 - [ ] Add regex matcher support as low-confidence fallback only.
 - [ ] Add bytecode/source heuristics for file, process, network, environment, and secrets API usage.
@@ -81,8 +81,8 @@
 - [ ] Add scanner timeout and failure policy.
 - [ ] Compare requested scopes with inferred scopes.
 - [ ] Flag missing or under-declared scopes for reviewer action.
-- [ ] Ensure upload initializes `inferredScopes` as empty and assessment replaces it with scanner-derived scopes.
-- [ ] Ensure default approval never treats uploaded `requestedScopes` as trusted scope authority for JAR tools.
+- [x] Ensure upload initializes `inferredScopes` as empty and assessment replaces it with scanner-derived scopes.
+- [x] Ensure default approval never treats uploaded `requestedScopes` as trusted scope authority for JAR tools.
 - [ ] Add vulnerability severity thresholds.
 - [ ] Add malware blocking rule.
 - [ ] Add suspicious pattern review rule.

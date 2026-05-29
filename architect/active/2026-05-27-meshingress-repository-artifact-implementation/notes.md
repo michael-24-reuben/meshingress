@@ -16,6 +16,8 @@
 - Scope review must include artifact-behavior inference. Examples include treating `new File(...)` / `Path.of(...)` as filesystem review signals, `Files.read*` as `FILES_READ`, `Files.write*` as `FILES_WRITE`, `Files.delete*` as `FILES_DELETE`, `ProcessBuilder` / `Runtime.exec` as `SHELL_EXECUTE`, and sockets/HTTP clients as network scope evidence. The first implementation can be heuristic; the point is to catch under-declared or sneaky tools before publication.
 - Scope inference should be backed by a rule catalog, but regex should be a last-resort matcher. Prefer source-aware tools such as Semgrep when source is available, bytecode analyzers such as ASM or SootUp for JAR-only artifacts, and SpotBugs/FindSecBugs findings as extra evidence. Regex rules such as `new\\s+File\\s*\\(` should be low-confidence review hints unless no structured analyzer is available.
 - Reviewed `scopes-integration.analysis.md` and adopted CodeQL as a preferred source/build-aware scope analyzer, not the canonical scope policy store. The repository should own a versioned scope-to-lookup catalog, generate CodeQL query packs from that catalog, import normalized CodeQL findings into `inferredScopes`, and keep ASM/SootUp bytecode analysis for uploaded JARs that do not have source or a reproducible build.
+- Added SootUp CHA reachability for JAR scope assessment. The scanner discovers Meshingress tool entrypoints from `@McpTool` + `@McpFunction` methods and direct `McpToolHandler#call` implementations, filters method findings to calls reachable from those entrypoints, and falls back to full bytecode scanning when no tool entrypoints or no reachable graph can be resolved.
+- Repository `/assess` now uses the reachable tool-entrypoint scan mode and includes `analysisMode`, `entrypoints`, and `diagnostics` in the bytecode scanner raw result metadata.
 
 ## Verification
 
@@ -23,3 +25,5 @@
 - `.\mvnw.cmd -pl app/meshingress-server -am test` passed with 52 server/reactor tests after preserving Spring configuration binding for `MeshingressProperties`.
 - `.\mvnw.cmd -pl app/meshingress-server -am "-Dtest=McpPublicationInstallTests" "-Dsurefire.failIfNoSpecifiedTests=false" test` passed with 3 publication-install tests.
 - `.\mvnw.cmd -pl app/meshingress-server -am test` passed with 55 server/reactor tests.
+- `.\mvnw.cmd -pl lib/meshingress-artifact-scope-scanner test` passed with 3 scanner tests, including a reachability fixture that keeps reachable `FILES_READ` evidence and drops an unreachable `SHELL_EXECUTE` dependency class.
+- `.\mvnw.cmd -pl app/meshingress-repository -am test` passed after the repository switched to reachable-entrypoint scope scanning.

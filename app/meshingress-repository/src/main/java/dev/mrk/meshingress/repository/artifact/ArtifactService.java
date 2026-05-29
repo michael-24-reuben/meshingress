@@ -246,7 +246,7 @@ public class ArtifactService {
 
     private JarScopeScanResult scanScopes(Path artifactPath) {
         try {
-            return bytecodeScopeScanner.scan(artifactPath, scopeInferenceCatalog);
+            return bytecodeScopeScanner.scanReachableFromToolEntrypoints(artifactPath, scopeInferenceCatalog);
         } catch (Exception exception) {
             throw new RepositoryException("artifact scope inference failed: " + exception.getMessage(), exception);
         }
@@ -275,6 +275,9 @@ public class ArtifactService {
                 findings,
                 Map.of(
                         "catalogVersion", scopeScan.catalogVersion(),
+                        "analysisMode", scopeScan.analysisMode(),
+                        "entrypoints", scopeScan.entrypoints(),
+                        "diagnostics", scopeScan.diagnostics(),
                         "inferredScopes", List.copyOf(inferredScopes),
                         "findingCount", findings.size()
                 ),
