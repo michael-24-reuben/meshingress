@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.artifact.model;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 
 public record ArtifactPublicationRecord(
@@ -35,7 +36,9 @@ public record ArtifactPublicationRecord(
                 ? new ArtifactAssessmentSummary("unknown", java.util.List.of(), 0, Map.of())
                 : scanSummary;
         provenance = provenance == null ? ArtifactProvenance.empty() : provenance;
-        publishedAt = publishedAt == null ? OffsetDateTime.now() : publishedAt;
+        publishedAt = publishedAt == null
+                ? OffsetDateTime.now(ZoneOffset.UTC)
+                : publishedAt.withOffsetSameInstant(ZoneOffset.UTC);
         signatureAlgorithm = signatureAlgorithm == null ? "" : signatureAlgorithm;
         signature = signature == null ? "" : signature;
     }

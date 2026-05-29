@@ -256,6 +256,70 @@ Rules:
 - `approvedScopes` are the only scopes the runtime may honor.
 - `deniedScopes` must include reasons.
 - `requestedScopes != approvedScopes` is valid and expected.
+- Scope analysis should inspect artifact bytecode/resources/source where available for API usage that implies scopes. This is a heuristic safety net, not a proof system.
+- Conservative signals such as `new File(...)`, `Path.of(...)`, and broad `java.io` usage should trigger filesystem scope review. More specific calls should map to narrower scopes such as `FILES_READ`, `FILES_WRITE`, or `FILES_DELETE`.
+- Process execution APIs such as `ProcessBuilder` and `Runtime.exec` should infer `SHELL_EXECUTE`.
+- HTTP clients, sockets, and WebSocket clients should infer `NETWORK_ACCESS` or narrower network scopes.
+- Missing or under-declared requested scopes should be recorded as findings and should prevent automatic publication until a reviewer explicitly approves or denies the inferred scopes.
+
+### Scope Rule Catalog
+
+Add a repository-owned rule catalog for scope inference. The catalog should map analyzer findings to candidate scopes, but it should not be regex-only.
+
+Preferred matcher types:
+
+```txt
+bytecode-method      -> JVM owner/name/descriptor or wildcard method-call matching
+bytecode-class       -> class reference / inheritance / annotation matching
+codeql-call          -> CodeQL method/type/call query generated from catalog rules
+codeql-dataflow      -> CodeQL source/sink/dataflow query generated from catalog rules
+codeql-query-result  -> normalized CodeQL finding ID/result mapped to scopes
+source-pattern       -> Semgrep-style source patterns when source is available
+scanner-finding      -> SpotBugs/FindSecBugs/Semgrep finding IDs mapped to scopes
+manifest-entry       -> manifest or metadata hints
+resource-path        -> packaged script/config/native executable hints
+regex                -> last-resort source/decompiled/resource text hint
+```
+
+Implementation preference:
+
+1. Use open-source analyzers where they fit the artifact input:
+   - CodeQL custom query packs generated from the repository scope catalog when source or a reproducible Java/Kotlin build is available.
+   - Semgrep or similar source-aware rules when source is available.
+   - ASM or SootUp for direct JAR bytecode inspection.
+   - SpotBugs/FindSecBugs as extra Java security evidence.
+2. Normalize those outputs into `inferredScopes` plus findings.
+3. Keep the scope catalog as the source of truth, with CodeQL, bytecode, scanner, and regex adapters consuming generated or normalized forms of the same rules.
+4. Keep regex rules as low-confidence review hints, not as the primary authority.
+
+Example rule:
+
+```json
+{
+  "id": "java-files-read",
+  "scope": "FILES_READ",
+  "matchers": [
+    {
+      "type": "bytecode-method",
+      "owner": "java/nio/file/Files",
+      "namePattern": "read.*",
+      "confidence": "high"
+    },
+    {
+      "type": "codeql-call",
+      "owner": "java.nio.file.Files",
+      "namePattern": "read%",
+      "confidence": "high"
+    },
+    {
+      "type": "regex",
+      "pattern": "new\\s+File\\s*\\(",
+      "confidence": "low",
+      "reviewOnly": true
+    }
+  ]
+}
+```
 
 ## Phase 7: Publication Record
 

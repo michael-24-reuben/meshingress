@@ -10,10 +10,15 @@ import java.nio.file.Path;
 public record MeshingressRepositoryProperties(
         @NotNull Path root,
         @NotBlank String signingSecret,
-        boolean fakeScannerEnabled
+        boolean fakeScannerEnabled,
+        boolean scopeScannerEnabled,
+        String scopeCatalogLocation
 ) {
     public MeshingressRepositoryProperties {
         root = root == null ? Path.of("repository") : root;
         signingSecret = signingSecret == null || signingSecret.isBlank() ? "dev-repository-signing-key" : signingSecret;
+        scopeCatalogLocation = scopeCatalogLocation == null || scopeCatalogLocation.isBlank()
+                ? "classpath:/scope-rules/default-bytecode-scope-catalog.json"
+                : scopeCatalogLocation;
     }
 }

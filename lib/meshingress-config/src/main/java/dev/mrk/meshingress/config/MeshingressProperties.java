@@ -304,14 +304,18 @@ public record MeshingressProperties(
     }
 
     public record Repository(
-            @NotBlank String root
+            @NotBlank String root,
+            @NotBlank String runtimeCacheRoot,
+            @NotBlank String signingSecret
     ) {
         public Repository {
             root = defaultString(root, "repository");
+            runtimeCacheRoot = defaultString(runtimeCacheRoot, ".cache/meshingress/runtime-tools");
+            signingSecret = defaultString(signingSecret, "dev-repository-signing-key");
         }
 
         static Repository defaults() {
-            return new Repository("repository");
+            return new Repository("repository", ".cache/meshingress/runtime-tools", "dev-repository-signing-key");
         }
     }
 

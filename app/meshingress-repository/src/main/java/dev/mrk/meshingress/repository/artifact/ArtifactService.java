@@ -9,10 +9,16 @@ import dev.mrk.meshingress.artifact.model.ArtifactTrustStatus;
 import dev.mrk.meshingress.artifact.model.MeshingressArtifactType;
 import dev.mrk.meshingress.artifact.publication.PublicationRecordSigner;
 import dev.mrk.meshingress.artifact.publication.PublicationSignature;
+import dev.mrk.meshingress.artifact.scope.BytecodeScopeScanner;
+import dev.mrk.meshingress.artifact.scope.JarScopeScanResult;
+import dev.mrk.meshingress.artifact.scope.ScopeFinding;
+import dev.mrk.meshingress.artifact.scope.ScopeInferenceCatalog;
 import dev.mrk.meshingress.artifact.security.ScannerAdapter;
+import dev.mrk.meshingress.artifact.security.Finding;
 import dev.mrk.meshingress.artifact.security.ScannerRequest;
 import dev.mrk.meshingress.artifact.security.ScannerResult;
 import dev.mrk.meshingress.artifact.security.ScannerStatus;
+import dev.mrk.meshingress.repository.config.MeshingressRepositoryProperties;
 import dev.mrk.meshingress.artifact.storage.FileSystemArtifactStorage;
 import dev.mrk.meshingress.artifact.storage.StoredArtifactBlob;
 import org.springframework.stereotype.Service;
@@ -23,9 +29,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -33,6 +42,9 @@ public class ArtifactService {
 
     private final FileSystemArtifactStorage storage;
     private final List<ScannerAdapter> scanners;
+    private final BytecodeScopeScanner bytecodeScopeScanner;
+    private final ScopeInferenceCatalog scopeInferenceCatalog;
+    private final boolean scopeScannerEnabled;
     private final PublicationRecordSigner signer;
     private final ObjectMapper objectMapper;
     private final Map<String, ArtifactRecord> records = new ConcurrentHashMap<>();
@@ -43,11 +55,17 @@ public class ArtifactService {
     public ArtifactService(
             FileSystemArtifactStorage storage,
             List<ScannerAdapter> scanners,
+            BytecodeScopeScanner bytecodeScopeScanner,
+            ScopeInferenceCatalog scopeInferenceCatalog,
+            MeshingressRepositoryProperties properties,
             PublicationRecordSigner signer,
             ObjectMapper objectMapper
     ) {
         this.storage = storage;
         this.scanners = scanners == null ? List.of() : List.copyOf(scanners);
+        this.bytecodeScopeScanner = bytecodeScopeScanner;
+        this.scopeInferenceCatalog = scopeInferenceCatalog;
+        this.scopeScannerEnabled = properties.scopeScannerEnabled();
         this.signer = signer;
         this.objectMapper = objectMapper;
     }
@@ -105,10 +123,27 @@ public class ArtifactService {
                     current.files()
             )));
         }
+        List<String> inferredScopes = current.scopes().inferredScopes();
+        if (scopeScannerEnabled && isJar(current.coordinate().packaging())) {
+            JarScopeScanResult scopeScan = scanScopes(artifactPath);
+            inferredScopes = scopeScan.inferredScopes().stream()
+                    .sorted()
+                    .toList();
+            results.add(toScannerResult(scopeScan));
+        }
 
         ArtifactTrustStatus nextStatus = statusFrom(results);
         ArtifactAssessmentSummary summary = summaryFrom(results);
-        ArtifactRecord updated = current.withTrustStatus(nextStatus, summary);
+        ArtifactRecord assessed = current.withTrustStatus(nextStatus, summary);
+        ArtifactRecord updated = assessed.withScopes(
+                new ArtifactScopeDeclaration(
+                        current.scopes().requestedScopes(),
+                        inferredScopes,
+                        current.scopes().approvedScopes(),
+                        current.scopes().deniedScopes()
+                ),
+                assessed.trustStatus()
+        );
         records.put(key, updated);
         assessments.put(key, List.copyOf(results));
         writeJson(storage.layout().assessmentDirectory(current.coordinate()).resolve("assessment.json"), results);
@@ -136,7 +171,7 @@ public class ArtifactService {
         ArtifactScopeDeclaration scopes = new ArtifactScopeDeclaration(
                 current.scopes().requestedScopes(),
                 current.scopes().inferredScopes(),
-                request.approvedScopes().isEmpty() ? current.scopes().requestedScopes() : request.approvedScopes(),
+                request.approvedScopes().isEmpty() ? current.scopes().inferredScopes() : request.approvedScopes(),
                 request.deniedScopes()
         );
         ArtifactRecord updated = current.withScopes(scopes, status);
@@ -207,6 +242,48 @@ public class ArtifactService {
                 findingCount,
                 raw
         );
+    }
+
+    private JarScopeScanResult scanScopes(Path artifactPath) {
+        try {
+            return bytecodeScopeScanner.scan(artifactPath, scopeInferenceCatalog);
+        } catch (Exception exception) {
+            throw new RepositoryException("artifact scope inference failed: " + exception.getMessage(), exception);
+        }
+    }
+
+    private ScannerResult toScannerResult(JarScopeScanResult scopeScan) {
+        List<ScopeFinding> scopeFindings = scopeScan.findings().stream()
+                .sorted(Comparator.comparing(ScopeFinding::scope).thenComparing(ScopeFinding::location))
+                .toList();
+        Set<String> inferredScopes = new LinkedHashSet<>();
+        List<Finding> findings = new ArrayList<>();
+        for (ScopeFinding finding : scopeFindings) {
+            inferredScopes.add(finding.scope());
+            findings.add(new Finding(
+                    "INFO",
+                    finding.ruleId(),
+                    finding.scope() + " inferred from " + finding.evidence(),
+                    finding.location()
+            ));
+        }
+
+        return new ScannerResult(
+                "bytecode-scope-scanner",
+                scopeScan.catalogVersion(),
+                findings.isEmpty() ? ScannerStatus.PASSED : ScannerStatus.REVIEW,
+                findings,
+                Map.of(
+                        "catalogVersion", scopeScan.catalogVersion(),
+                        "inferredScopes", List.copyOf(inferredScopes),
+                        "findingCount", findings.size()
+                ),
+                null
+        );
+    }
+
+    private boolean isJar(String packaging) {
+        return packaging == null || packaging.isBlank() || "jar".equalsIgnoreCase(packaging);
     }
 
     private ArtifactTrustStatus statusFrom(List<ScannerResult> results) {

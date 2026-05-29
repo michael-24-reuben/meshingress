@@ -1,0 +1,100 @@
+{
+  "version": "sample-bytecode-catalog-v1",
+  "rules": [
+    {
+      "id": "java-files-read",
+      "scope": "FILES_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "read.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/FileInputStream",
+          "namePattern": ".*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-files-write",
+      "scope": "FILES_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "write.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/FileOutputStream",
+          "namePattern": ".*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-files-delete",
+      "scope": "FILES_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "delete.*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-process-execute",
+      "scope": "SHELL_EXECUTE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/ProcessBuilder",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Runtime",
+          "namePattern": "exec",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-network-outbound",
+      "scope": "NETWORK_ACCESS",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/URL",
+          "namePattern": "openConnection",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/Socket",
+          "namePattern": ".*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-cache-result",
+      "scope": "CACHE_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-annotation",
+          "owner": "dev/mrk/meshingress/api/tools/annotation/McpCacheResult",
+          "confidence": "medium"
+        }
+      ]
+    }
+  ]
+}

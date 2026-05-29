@@ -13,6 +13,7 @@ import tools.jackson.databind.ObjectMapper;
 import dev.mrk.meshingress.controller.roles.params.RolesToolAliasParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolCheckParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolDeleteParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolInstallPublicationParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolListParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolUpdateParams;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationParams;
@@ -41,6 +42,12 @@ public class RolesMcpController {
     public JsonNode register(@McpDispatchParam("params") JsonNode params, McpCallContext context) {
         LOGGER.info("MCP roles/tools/register: requestId={} sessionId={}", context.requestId(), context.sessionId());
         return roleToolService.register(context, toParams(params, ToolRegistrationParams.class));
+    }
+
+    @McpDispatchMethod("installPublication")
+    public JsonNode installPublication(@McpDispatchParam("params") JsonNode params, McpCallContext context) {
+        LOGGER.info("MCP roles/tools/installPublication: requestId={} sessionId={}", context.requestId(), context.sessionId());
+        return roleToolService.installPublication(context, toParams(params, RolesToolInstallPublicationParams.class));
     }
 
     @McpDispatchMethod("alias")

@@ -12,12 +12,15 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.blankOrNullString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -62,12 +65,16 @@ class ArtifactRepositoryFlowTests {
         mockMvc.perform(post("/artifact/dev.mrk.tools/generated-sample/1.0.0/assess"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("REVIEW_PENDING"))
-                .andExpect(jsonPath("$.assessment.scanners[0]").value("fake-scanner"));
+                .andExpect(jsonPath("$.assessment.scanners[0]").value("fake-scanner"))
+                .andExpect(jsonPath("$.assessment.scanners", hasItem("bytecode-scope-scanner")))
+                .andExpect(jsonPath("$.scopes.inferredScopes", hasItem("FILES_READ")));
 
         mockMvc.perform(get("/artifact/dev.mrk.tools/generated-sample/1.0.0/assessment"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].scanner").value("fake-scanner"))
-                .andExpect(jsonPath("$[0].status").value("PASSED"));
+                .andExpect(jsonPath("$[0].status").value("PASSED"))
+                .andExpect(jsonPath("$[1].scanner").value("bytecode-scope-scanner"))
+                .andExpect(jsonPath("$[1].status").value("REVIEW"));
 
         mockMvc.perform(post("/artifact/dev.mrk.tools/generated-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -110,7 +117,26 @@ class ArtifactRepositoryFlowTests {
             zip.putNextEntry(new ZipEntry("bin/run.ps1"));
             zip.write("Write-Output 'sample'\n".getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();
+
+            String fixtureClass = FileReadFixture.class.getName().replace('.', '/') + ".class";
+            zip.putNextEntry(new ZipEntry(fixtureClass));
+            zip.write(classBytes(FileReadFixture.class));
+            zip.closeEntry();
         }
         return output.toByteArray();
+    }
+
+    private byte[] classBytes(Class<?> type) throws IOException {
+        String resourceName = "/" + type.getName().replace('.', '/') + ".class";
+        try (InputStream inputStream = type.getResourceAsStream(resourceName)) {
+            org.assertj.core.api.Assertions.assertThat(inputStream).isNotNull();
+            return inputStream.readAllBytes();
+        }
+    }
+
+    private static final class FileReadFixture {
+        String read(Path path) throws IOException {
+            return Files.readString(path);
+        }
     }
 }

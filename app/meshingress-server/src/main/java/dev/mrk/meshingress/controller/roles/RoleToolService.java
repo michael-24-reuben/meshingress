@@ -8,6 +8,7 @@ import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.controller.roles.params.RolesToolAliasParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolCheckParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolDeleteParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolInstallPublicationParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolListParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolUpdateParams;
 import dev.mrk.meshingress.controller.roles.params.ToolDescriptorParams;
@@ -21,6 +22,7 @@ import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
 import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.security.McpAccessPolicyService;
+import dev.mrk.meshingress.server.install.ArtifactInstaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -40,17 +42,20 @@ public class RoleToolService {
     private final ToolRegistry toolRegistry;
     private final McpAccessPolicyService accessPolicyService;
     private final ToolRegistrationService toolRegistrationService;
+    private final ArtifactInstaller artifactInstaller;
 
     public RoleToolService(
             ObjectMapper objectMapper,
             ToolRegistry toolRegistry,
             McpAccessPolicyService accessPolicyService,
-            ToolRegistrationService toolRegistrationService
+            ToolRegistrationService toolRegistrationService,
+            ArtifactInstaller artifactInstaller
     ) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
         this.accessPolicyService = accessPolicyService;
         this.toolRegistrationService = toolRegistrationService;
+        this.artifactInstaller = artifactInstaller;
     }
 
     public ObjectNode check(McpCallContext context, RolesToolCheckParams params) {
@@ -69,6 +74,17 @@ public class RoleToolService {
                 JsonRpcErrorCodes.INVALID_PARAMS,
                 "roles/tools/register requires phase-aware registration params."
         );
+    }
+
+    public ObjectNode installPublication(McpCallContext context, RolesToolInstallPublicationParams params) {
+        accessPolicyService.requireAdmin(context);
+        if (params == null) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/installPublication params must be an object");
+        }
+        if (params.publication() == null) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/installPublication params.publication is required");
+        }
+        return artifactInstaller.install(params.publication(), params.toolId(), context).toJson(objectMapper);
     }
 
     public ObjectNode alias(McpCallContext context, RolesToolAliasParams params) {

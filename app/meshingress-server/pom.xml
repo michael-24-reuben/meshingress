@@ -49,6 +49,18 @@
 
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-artifact-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-artifact-publication</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
             <artifactId>meshingress-tool-bundle</artifactId>
             <version>${project.version}</version>
         </dependency>

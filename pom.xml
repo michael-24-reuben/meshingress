@@ -34,6 +34,8 @@
         <module>lib/meshingress-artifact-storage</module>
         <module>lib/meshingress-artifact-security</module>
         <module>lib/meshingress-artifact-publication</module>
+        <module>lib/meshingress-artifact-scope-scanner</module>
+        <module>lib/meshingress-codeql-scope-sample</module>
 
         <module>app/meshingress-repository</module>
         <module>toolspace/helloworld</module>

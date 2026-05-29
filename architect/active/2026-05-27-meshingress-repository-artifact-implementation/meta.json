@@ -6,7 +6,7 @@
   "activatedAt": "2026-05-28T21:00:57-04:00",
   "resolvedAt": null,
   "archivedAt": null,
-  "updatedAt": "2026-05-28T21:00:57-04:00",
+  "updatedAt": "2026-05-29T13:10:00-04:00",
   "tags": [
     "repository",
     "artifact-registry",
@@ -35,6 +35,36 @@
       "at": "2026-05-28T21:00:57-04:00",
       "type": "MOVED_TO_ACTIVE",
       "note": "Implementation started with a property-backed repository root, fake scanner MVP, and follow-up hardening record for direct registration gaps."
+    },
+    {
+      "at": "2026-05-29T00:35:00-04:00",
+      "type": "UPDATED",
+      "note": "Added server-side publication install path with signature verification, checksum validation, runtime cache copying, and focused MCP tests."
+    },
+    {
+      "at": "2026-05-29T00:40:00-04:00",
+      "type": "UPDATED",
+      "note": "Clarified that repository review must infer scopes from artifact behavior, including file, process, network, environment, and secrets API usage."
+    },
+    {
+      "at": "2026-05-29T00:45:00-04:00",
+      "type": "UPDATED",
+      "note": "Added preference for analyzer-backed scope inference rules with regex matching reserved as a low-confidence fallback."
+    },
+    {
+      "at": "2026-05-29T00:50:00-04:00",
+      "type": "UPDATED",
+      "note": "Reviewed CodeQL scope-integration analysis and recorded CodeQL as a source/build-aware backend generated from the repository scope rule catalog."
+    },
+    {
+      "at": "2026-05-29T12:58:00-04:00",
+      "type": "UPDATED",
+      "note": "Added todo items to preserve ArtifactScopeDeclaration parameter semantics: requested scopes as claims, inferred scopes from scanners, and approved scopes from review."
+    },
+    {
+      "at": "2026-05-29T13:10:00-04:00",
+      "type": "UPDATED",
+      "note": "Added standalone-first embedded library todos for SootUp reachability, SpotBugs, FindSecBugs, and CycloneDX SBOM generation."
     }
   ]
 }

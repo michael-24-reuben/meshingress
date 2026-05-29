@@ -194,7 +194,7 @@ public class ToolRegistrationService {
                     true,
                     "Native server tool cannot be removed from the current JVM; rebuild/restart is required."
             );
-            case LOCAL_JAR, MAVEN_COORDINATES -> new DeleteOutcome(
+            case LOCAL_JAR, MAVEN_COORDINATES, PUBLICATION_RECORD -> new DeleteOutcome(
                     "deleted",
                     false,
                     false,
