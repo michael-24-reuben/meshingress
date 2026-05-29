@@ -1,12 +1,12 @@
 {
   "id": "2026-05-27-meshingress-repository-artifact-implementation",
   "title": "Meshingress Repository Artifact Implementation",
-  "status": "pending",
+  "status": "active",
   "createdAt": "2026-05-27T16:30:00-04:00",
-  "activatedAt": null,
+  "activatedAt": "2026-05-28T21:00:57-04:00",
   "resolvedAt": null,
   "archivedAt": null,
-  "updatedAt": "2026-05-27T16:30:00-04:00",
+  "updatedAt": "2026-05-28T21:00:57-04:00",
   "tags": [
     "repository",
     "artifact-registry",
@@ -30,6 +30,11 @@
       "at": "2026-05-27T16:30:00-04:00",
       "type": "CREATED",
       "note": "Created implementation package for app/meshingress-repository and supporting artifact libraries."
+    },
+    {
+      "at": "2026-05-28T21:00:57-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation started with a property-backed repository root, fake scanner MVP, and follow-up hardening record for direct registration gaps."
     }
   ]
 }

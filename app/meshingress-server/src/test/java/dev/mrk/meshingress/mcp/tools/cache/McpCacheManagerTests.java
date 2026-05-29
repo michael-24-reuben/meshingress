@@ -167,6 +167,7 @@ class McpCacheManagerTests {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }

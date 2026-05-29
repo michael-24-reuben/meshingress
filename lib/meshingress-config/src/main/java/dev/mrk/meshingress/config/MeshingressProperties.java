@@ -23,7 +23,8 @@ public record MeshingressProperties(
         @Valid @NotNull Security security,
         @Valid @NotNull Scopes scopes,
         @Valid @NotNull Audit audit,
-        @Valid @NotNull Secrets secrets
+        @Valid @NotNull Secrets secrets,
+        @Valid @NotNull Repository repository
 ) {
     public MeshingressProperties {
         identity = identity == null ? Identity.defaults() : identity;
@@ -35,6 +36,7 @@ public record MeshingressProperties(
         scopes = scopes == null ? Scopes.defaults() : scopes;
         audit = audit == null ? Audit.defaults() : audit;
         secrets = secrets == null ? Secrets.defaults() : secrets;
+        repository = repository == null ? Repository.defaults() : repository;
     }
 
     public record Identity(
@@ -298,6 +300,18 @@ public record MeshingressProperties(
 
         static Secrets defaults() {
             return new Secrets(true, true, false, false, "****", true);
+        }
+    }
+
+    public record Repository(
+            @NotBlank String root
+    ) {
+        public Repository {
+            root = defaultString(root, "repository");
+        }
+
+        static Repository defaults() {
+            return new Repository("repository");
         }
     }
 
