@@ -83,7 +83,7 @@ class McpPublicationInstallTests {
 
         ArtifactPublicationRecord publication = signedPublication(
                 repositoryJar,
-                List.of(),
+                List.of("USER_WRITE"),
                 ArtifactTrustStatus.APPROVED_LIMITED,
                 false
         );
@@ -122,7 +122,7 @@ class McpPublicationInstallTests {
 
         ArtifactPublicationRecord publication = signedPublication(
                 repositoryJar,
-                List.of(),
+                List.of("USER_WRITE"),
                 ArtifactTrustStatus.APPROVED_LIMITED,
                 false
         );
@@ -151,6 +151,117 @@ class McpPublicationInstallTests {
     }
 
     @Test
+    void installRejectsUnsignedPublicationRecord() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord unsigned = unsignedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                false
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(512, unsigned, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("Publication record is unsigned.")));
+    }
+
+    @Test
+    void installRejectsChecksumMismatch() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = signedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                false,
+                ArtifactChecksum.sha256("deadbeef")
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(513, publication, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("repository artifact checksum mismatch")));
+    }
+
+    @Test
+    void installRejectsRevokedPublicationRecord() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = signedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                true
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(514, publication, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("Publication record is revoked.")));
+    }
+
+    @Test
+    void installRejectsNonInstallableTrustStatus() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = signedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.REJECTED,
+                false
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(515, publication, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("Publication record is not in an installable trust state.")));
+    }
+
+    @Test
+    void installRejectsUnapprovedFunctionScope() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = signedPublication(
+                repositoryJar,
+                List.of(),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                false
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(516, publication, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("Tool function helloworld.text scope not approved in publication: USER_WRITE")));
+    }
+
+    @Test
     void installRejectsLocallyDisabledApprovedScope() throws Exception {
         Path sampleJar = sampleJar();
         assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
@@ -158,7 +269,7 @@ class McpPublicationInstallTests {
 
         ArtifactPublicationRecord publication = signedPublication(
                 repositoryJar,
-                List.of("SHELL_EXECUTE"),
+                List.of("USER_WRITE", "SHELL_EXECUTE"),
                 ArtifactTrustStatus.APPROVED_LIMITED,
                 false
         );
@@ -192,13 +303,23 @@ class McpPublicationInstallTests {
             ArtifactTrustStatus trustStatus,
             boolean revoked
     ) throws Exception {
+        return signedPublication(repositoryJar, approvedScopes, trustStatus, revoked, ArtifactChecksum.sha256(sha256(repositoryJar)));
+    }
+
+    private ArtifactPublicationRecord signedPublication(
+            Path repositoryJar,
+            List<String> approvedScopes,
+            ArtifactTrustStatus trustStatus,
+            boolean revoked,
+            ArtifactChecksum checksum
+    ) throws Exception {
         ArtifactCoordinate coordinate = new ArtifactCoordinate(GROUP_ID, ARTIFACT_ID, VERSION, null, "jar");
         ArtifactPublicationRecord unsigned = new ArtifactPublicationRecord(
                 coordinate,
                 MeshingressArtifactType.GENERATED_TOOL_MODULE,
                 trustStatus,
                 "meshingress-repository://artifact/%s/%s/%s/%s".formatted(GROUP_ID, ARTIFACT_ID, VERSION, SAMPLE_JAR_NAME),
-                ArtifactChecksum.sha256(sha256(repositoryJar)),
+                checksum,
                 new ArtifactScopeDeclaration(approvedScopes, approvedScopes, approvedScopes, List.of()),
                 new ArtifactAssessmentSummary("clean", List.of("fake-scanner"), 0, Map.of("test", true)),
                 null,
@@ -221,6 +342,39 @@ class McpPublicationInstallTests {
                 unsigned.publishedAt(),
                 signature.algorithm(),
                 signature.value()
+        );
+    }
+
+    private ArtifactPublicationRecord unsignedPublication(
+            Path repositoryJar,
+            List<String> approvedScopes,
+            ArtifactTrustStatus trustStatus,
+            boolean revoked
+    ) throws Exception {
+        return unsignedPublication(repositoryJar, approvedScopes, trustStatus, revoked, ArtifactChecksum.sha256(sha256(repositoryJar)));
+    }
+
+    private ArtifactPublicationRecord unsignedPublication(
+            Path repositoryJar,
+            List<String> approvedScopes,
+            ArtifactTrustStatus trustStatus,
+            boolean revoked,
+            ArtifactChecksum checksum
+    ) {
+        ArtifactCoordinate coordinate = new ArtifactCoordinate(GROUP_ID, ARTIFACT_ID, VERSION, null, "jar");
+        return new ArtifactPublicationRecord(
+                coordinate,
+                MeshingressArtifactType.GENERATED_TOOL_MODULE,
+                trustStatus,
+                "meshingress-repository://artifact/%s/%s/%s/%s".formatted(GROUP_ID, ARTIFACT_ID, VERSION, SAMPLE_JAR_NAME),
+                checksum,
+                new ArtifactScopeDeclaration(approvedScopes, approvedScopes, approvedScopes, List.of()),
+                new ArtifactAssessmentSummary("clean", List.of("fake-scanner"), 0, Map.of("test", true)),
+                null,
+                revoked,
+                OffsetDateTime.parse("2026-05-29T00:00:00-04:00"),
+                "HmacSHA256",
+                ""
         );
     }
 

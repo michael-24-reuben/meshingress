@@ -24,9 +24,6 @@ public record ArtifactPublicationRecord(
         }
         type = type == null ? MeshingressArtifactType.TOOL_MODULE : type;
         trustStatus = trustStatus == null ? ArtifactTrustStatus.REVIEW_PENDING : trustStatus;
-        if (!trustStatus.installable()) {
-            throw new IllegalArgumentException("publication record requires an installable trust status");
-        }
         artifactUri = requireText(artifactUri, "artifactUri");
         if (artifactChecksum == null) {
             throw new IllegalArgumentException("artifactChecksum must not be null");

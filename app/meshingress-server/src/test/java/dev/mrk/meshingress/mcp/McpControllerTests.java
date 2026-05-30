@@ -20,7 +20,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "meshingress.architect.root=../../architect")
+@SpringBootTest(properties = {
+        "meshingress.architect.root=../../architect",
+        "meshingress.voicebox.base-url=http://127.0.0.1:1"
+})
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class McpControllerTests {
@@ -84,7 +87,7 @@ class McpControllerTests {
     }
 
     @Test
-    void toolsListIncludesAttachedHelloWorldModule() throws Exception {
+    void toolsListIncludesAttachedVoiceboxModule() throws Exception {
         mockMvc.perform(post("/mcp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -96,11 +99,13 @@ class McpControllerTests {
                 }
                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.tools[*].name", hasItem("helloworld.greet")));
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("voicebox.speak")))
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("voicebox.list_profiles")))
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("voicebox.transcribe_file")));
     }
 
     @Test
-    void toolsCallInvokesAttachedHelloWorldModule() throws Exception {
+    void toolsCallReportsVoiceboxUnavailableWhenBackendIsNotRunning() throws Exception {
         mockMvc.perform(post("/mcp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -109,16 +114,14 @@ class McpControllerTests {
                                   "id": 21,
                                   "method": "tools/call",
                                   "params": {
-                                    "name": "helloworld.greet",
-                                    "arguments": {
-                                      "name": "Meshingress"
-                                    }
+                                    "name": "voicebox.health",
+                                    "arguments": {}
                                   }
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.isError", is(false)))
-                .andExpect(jsonPath("$.result.structuredContent.message", is("Hello, Meshingress!")));
+                .andExpect(jsonPath("$.result.isError", is(true)))
+                .andExpect(jsonPath("$.result.structuredContent.ok", is(false)));
     }
 
     @Test
@@ -286,7 +289,7 @@ class McpControllerTests {
                                   "method": "roles/tools/register",
                                   "params": {
                                     "phase": "bundle",
-                                    "toolId": "helloworld.greet",
+                                    "toolId": "voicebox.speak",
                                     "bundle": {
                                       "bundleId": "meshingress-tool-bundle"
                                     }
@@ -298,7 +301,7 @@ class McpControllerTests {
                 .andExpect(jsonPath("$.result.phase", is("bundle")))
                 .andExpect(jsonPath("$.result.sourceKind", is("CLASSPATH_BUNDLE")))
                 .andExpect(jsonPath("$.result.status", is("reconciled")))
-                .andExpect(jsonPath("$.result.registeredFunctions[0]", is("helloworld.greet")));
+                .andExpect(jsonPath("$.result.registeredFunctions[0]", is("voicebox.speak")));
     }
 
     @Test
@@ -313,7 +316,7 @@ class McpControllerTests {
                                   "method": "roles/tools/register",
                                   "params": {
                                     "phase": "bundle",
-                                    "toolId": "helloworld.greet"
+                                    "toolId": "voicebox.speak"
                                   }
                                 }
                                 """))
@@ -333,9 +336,9 @@ class McpControllerTests {
                                     "includePrivate": true
                                   }
                                 }
-                                """))
+                """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.registrations[0].toolId", is("helloworld.greet")))
+                .andExpect(jsonPath("$.result.registrations[0].toolId", is("voicebox.speak")))
                 .andExpect(jsonPath("$.result.registrations[0].phase", is("bundle")));
     }
 
@@ -351,7 +354,7 @@ class McpControllerTests {
                                   "method": "roles/tools/register",
                                   "params": {
                                     "phase": "bundle",
-                                    "toolId": "helloworld.greet"
+                                    "toolId": "voicebox.speak"
                                   }
                                 }
                                 """))
@@ -367,7 +370,7 @@ class McpControllerTests {
                                   "id": 37,
                                   "method": "roles/tools/delete",
                                   "params": {
-                                    "name": "helloworld.greet",
+                                    "name": "voicebox.speak",
                                     "mode": "disable"
                                   }
                                 }

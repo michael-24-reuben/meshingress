@@ -1,0 +1,17 @@
+:root {
+  --color-primary: #4A90E2;
+  --color-secondary: #50E3C2;
+  --color-background: #F5F7FA;
+  --color-text: #333333;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #EEF3F7;
+  --color-border: #D7E0E8;
+  --color-muted: #647486;
+  --color-success: #1B8A5A;
+  --color-warning: #A66A00;
+  --color-danger: #B42318;
+  --color-danger-surface: #FFF0ED;
+  --color-warning-surface: #FFF7E6;
+  --color-code: #17202A;
+  --shadow-panel: 0 12px 40px rgba(39, 58, 80, 0.12);
+}

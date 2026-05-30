@@ -5,7 +5,14 @@ import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.scopes.McpToolScope;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class InstallPolicyEvaluator {
@@ -43,6 +50,35 @@ public class InstallPolicyEvaluator {
                 throw forbidden("Publication record approves disabled scope: NETWORK_INBOUND");
             }
         }
+    }
+
+    public void requireApprovedScopes(ArtifactPublicationRecord publication, List<McpFunctionDescriptor> functions) {
+        if (functions == null || functions.isEmpty()) {
+            return;
+        }
+        Set<String> approved = new HashSet<>(publication.scopePolicy().approvedScopes());
+        for (McpFunctionDescriptor function : functions) {
+            for (String scopeName : scopeNames(function)) {
+                if (!approved.contains(scopeName)) {
+                    throw forbidden("Tool function " + function.name() + " scope not approved in publication: " + scopeName);
+                }
+            }
+        }
+    }
+
+    private List<String> scopeNames(McpFunctionDescriptor function) {
+        JsonNode scopes = function.annotations() == null ? null : function.annotations().path("scopes");
+        if (scopes == null || !scopes.isArray()) {
+            return List.of();
+        }
+        List<String> names = new java.util.ArrayList<>();
+        for (JsonNode scope : (ArrayNode) scopes) {
+            String name = scope.asString("").trim();
+            if (!name.isBlank()) {
+                names.add(name);
+            }
+        }
+        return names;
     }
 
     private JsonRpcException forbidden(String message) {

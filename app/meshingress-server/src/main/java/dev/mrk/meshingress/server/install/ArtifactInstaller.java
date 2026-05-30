@@ -1,11 +1,16 @@
 package dev.mrk.meshingress.server.install;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.tools.McpToolDescriptor;
+import dev.mrk.meshingress.api.tools.McpToolHandler;
+import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.artifact.model.ArtifactPublicationRecord;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationRecord;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationStore;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationPhase;
 import dev.mrk.meshingress.controller.roles.registration.ToolSourceKind;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarSource;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleHandle;
@@ -14,7 +19,9 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -48,6 +55,17 @@ public class ArtifactInstaller {
         policyEvaluator.requireInstallable(publication);
         Path cachedJar = runtimeToolCache.install(publication);
         ToolModuleHandle handle = runtimeLoader.activate(new LocalJarSource(cachedJar));
+        List<McpFunctionDescriptor> installedFunctions = resolveInstalledFunctions(handle.registeredFunctions());
+        try {
+            policyEvaluator.requireApprovedScopes(publication, installedFunctions);
+        } catch (RuntimeException exception) {
+            try {
+                runtimeLoader.deactivate(handle.moduleId());
+            } catch (RuntimeException suppressed) {
+                // Preserve original exception for install failures.
+            }
+            throw exception;
+        }
 
         String toolId = requestedToolId == null || requestedToolId.isBlank()
                 ? handle.registeredFunctions().stream().findFirst().orElse(publication.coordinate().artifactId())
@@ -59,6 +77,7 @@ public class ArtifactInstaller {
         source.put("trustStatus", publication.trustStatus().name());
         source.put("runtimeCachePath", cachedJar.toString());
         source.put("signatureAlgorithm", publication.signatureAlgorithm());
+        source.put("approvedScopes", String.join(",", publication.scopePolicy().approvedScopes()));
 
         ToolRegistrationRecord record = new ToolRegistrationRecord(
                 "publication:" + publication.coordinate().artifactId() + ":" + Long.toUnsignedString(System.nanoTime(), 36),
@@ -76,6 +95,39 @@ public class ArtifactInstaller {
         );
         registrationStore.saveActive(record);
         return new ToolPublicationInstallResult(record, toolRegistry.registryVersion());
+    }
+
+    private List<McpFunctionDescriptor> resolveInstalledFunctions(List<String> functionNames) {
+        Map<String, McpFunctionDescriptor> lookup = new LinkedHashMap<>();
+        for (McpToolDescriptor descriptor : toolRegistry.listRoleVisibleTools(true, true)) {
+            for (McpFunctionDescriptor function : descriptor.functions()) {
+                lookup.putIfAbsent(function.name(), function);
+            }
+        }
+        List<McpFunctionDescriptor> resolved = new ArrayList<>();
+        for (String functionName : functionNames) {
+            McpFunctionDescriptor function = lookup.get(functionName);
+            if (function == null) {
+                throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS,
+                        "Installed tool function is not registered: " + functionName);
+            }
+            McpFunctionDescriptor resolvedFunction = resolveHandlerFunction(functionName, function);
+            resolved.add(resolvedFunction);
+        }
+        return resolved;
+    }
+
+    private McpFunctionDescriptor resolveHandlerFunction(String functionName, McpFunctionDescriptor fallback) {
+        String handlerKey = fallback.handlerKey();
+        if (handlerKey == null || handlerKey.isBlank()) {
+            return fallback;
+        }
+        return toolRegistry.findHandler(handlerKey)
+                .map(McpToolHandler::descriptor)
+                .flatMap(descriptor -> descriptor.functions().stream()
+                        .filter(function -> functionName.equals(function.name()))
+                        .findFirst())
+                .orElse(fallback);
     }
 
     private String actor(McpCallContext context) {

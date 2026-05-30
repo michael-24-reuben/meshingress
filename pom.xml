@@ -40,8 +40,9 @@
         <module>app/meshingress-repository</module>
         <module>toolspace/helloworld</module>
         <module>toolspace/instagram-api</module>
-        <module>toolspace/powershell-cli-tool</module>
+        <module>toolspace/powershell-cli</module>
         <module>toolspace/whatsapp-cobalt</module>
+        <module>toolspace/voicebox</module>
     </modules>
 
     <properties>

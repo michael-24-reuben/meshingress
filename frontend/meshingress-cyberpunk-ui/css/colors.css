@@ -1,0 +1,30 @@
+:root {
+  color-scheme: dark;
+  --color-primary: #00e7ff;
+  --color-primary-strong: #39f7ff;
+  --color-secondary: #ff2bd6;
+  --color-tertiary: #a7ff3f;
+  --color-background: #03050d;
+  --color-background-elevated: #07101d;
+  --color-text: #e8faff;
+  --color-heading: #f8fdff;
+  --color-surface: rgba(8, 18, 33, 0.84);
+  --color-surface-strong: rgba(13, 28, 52, 0.94);
+  --color-surface-muted: rgba(11, 25, 44, 0.72);
+  --color-border: rgba(75, 234, 255, 0.22);
+  --color-border-strong: rgba(0, 231, 255, 0.48);
+  --color-muted: #8aa3b6;
+  --color-success: #36ff9f;
+  --color-warning: #ffd166;
+  --color-danger: #ff4d7d;
+  --color-danger-surface: rgba(255, 77, 125, 0.13);
+  --color-warning-surface: rgba(255, 209, 102, 0.13);
+  --color-code: #030711;
+  --shadow-panel: 0 28px 90px rgba(0, 0, 0, 0.46), 0 0 48px rgba(0, 231, 255, 0.07);
+  --shadow-neon-cyan: 0 0 18px rgba(0, 231, 255, 0.45), 0 0 42px rgba(0, 231, 255, 0.12);
+  --shadow-neon-pink: 0 0 18px rgba(255, 43, 214, 0.42), 0 0 42px rgba(255, 43, 214, 0.14);
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}

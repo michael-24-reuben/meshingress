@@ -17,6 +17,12 @@
     <dependencies>
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>
+            <artifactId>voicebox</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.mrk.toolspace</groupId>
             <artifactId>helloworld</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -38,7 +44,6 @@
             <artifactId>whatsapp-cobalt</artifactId>
             <version>${project.version}</version>
         </dependency>
-
     
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>
