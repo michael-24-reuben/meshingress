@@ -119,6 +119,7 @@
 - [x] Reject non-installable trust statuses.
 - [ ] Reject unapproved scopes.
 - [ ] Verify executable checksums before execution.
+- [ ] Add `frontend/` web interface for `app/meshingress-repository` to track artifacts and reduce manual API calls/uploads.
 
 ## Tests
 
