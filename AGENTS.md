@@ -101,3 +101,4 @@ Summary
 -------
 This file contained: quick architecture overview, files to read, concrete JSON-RPC and admin examples, exact build/run/test commands, and step-by-step guidance for implementing tools.
 
+Last updated: `backup-2026-05-30-202858` This branch will serve as a restore point if needed. During the time period that I will not be available.
