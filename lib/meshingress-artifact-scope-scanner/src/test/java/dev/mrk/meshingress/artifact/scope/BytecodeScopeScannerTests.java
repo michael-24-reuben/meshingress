@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.artifact.scope;
 
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
+import dev.mrk.meshingress.api.tools.annotation.McpCacheResult;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -15,15 +16,15 @@ import java.util.zip.ZipOutputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class BytecodeScopeScannerTests {
-    private static final Path SAMPLE_JAR = Path.of("..", "..", "temp", "sample-module-0.0.1-SNAPSHOT-all.jar");
-
     @Test
-    void scansJarWithJsonCatalogLoadedOnce() throws Exception {
+    void scansJarWithJsonCatalogLoadedOnce(@TempDir Path tempDir) throws Exception {
+        Path sampleJar = tempDir.resolve("sample-module.jar");
+        writeJar(sampleJar, CacheWritingTool.class);
         ScopeInferenceCatalog catalogBean = loadCatalogBean();
         BytecodeScopeScanner scanner = new BytecodeScopeScanner();
 
-        JarScopeScanResult firstScan = scanner.scan(SAMPLE_JAR, catalogBean);
-        JarScopeScanResult secondScan = scanner.scan(SAMPLE_JAR, catalogBean);
+        JarScopeScanResult firstScan = scanner.scan(sampleJar, catalogBean);
+        JarScopeScanResult secondScan = scanner.scan(sampleJar, catalogBean);
 
         assertThat(firstScan.catalogVersion()).isEqualTo("sample-bytecode-catalog-v1");
         assertThat(firstScan.inferredScopes()).contains("CACHE_WRITE");
@@ -90,6 +91,13 @@ class BytecodeScopeScannerTests {
     private static final class UnreachableDependency {
         void execute() throws IOException {
             new ProcessBuilder("cmd", "/c", "echo unreachable").start();
+        }
+    }
+
+    private static final class CacheWritingTool {
+        @McpCacheResult
+        String cached() {
+            return "cached";
         }
     }
 }
