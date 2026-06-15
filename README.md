@@ -8,6 +8,7 @@ Meshingress is a Java/Spring Boot MCP tool server and runtime that discovers, re
 
 ```txt
 app/meshingress-server
+app/meshingress-tool-bundle
 lib/meshingress-tool-api
 lib/meshingress-tool-annotations
 lib/meshingress-tool-framework
@@ -17,6 +18,7 @@ architect/
 ```
 
 - `app/meshingress-server` is the Spring Boot MCP server runtime.
+- `app/meshingress-tool-bundle` aggregates attachable tool modules for server startup discovery.
 - `lib/meshingress-tool-api` contains the tool SPI (`McpToolHandler`, `DispatchExecutionResult`).
 - `lib/meshingress-tool-annotations` defines the tool annotation model.
 - `lib/meshingress-tool-framework` implements annotation scanning and dispatch wiring.
@@ -170,7 +172,8 @@ public class ExampleEchoTool {
 - `pending/`
 - `active/`
 - `resolved/`
-- `archived/`
+- `discontinued/` for abandoned or superseded work in this workspace
+- `archived/` for long-term archival records when used by the project
 
 Work entries should include files such as `meta.json`, `brief.md`, `todo.md`, `context.md`, and resolution files when complete.
 

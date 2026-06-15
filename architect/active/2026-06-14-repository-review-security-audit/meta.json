@@ -1,0 +1,45 @@
+{
+  "id": "2026-06-14-repository-review-security-audit",
+  "title": "Repository Review Security and Audit",
+  "status": "active",
+  "createdAt": "2026-06-14T00:52:00-04:00",
+  "activatedAt": "2026-06-15T11:40:39-04:00",
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-06-15T11:44:41-04:00",
+  "tags": [
+    "artifact-repository",
+    "security",
+    "review",
+    "audit",
+    "authorization",
+    "observability",
+    "ui"
+  ],
+  "related": [
+    "2026-06-08-sql-tool-metadata-store",
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-06-14-publication-trust-provenance-policy"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "Grouped follow-up for securing repository upload, assessment, approval, and publication APIs and adding auditable review workflow around those state transitions."
+  },
+  "events": [
+    {
+      "at": "2026-06-14T00:52:00-04:00",
+      "type": "CREATED",
+      "note": "Created as a pending architect package for repository API auth, reviewer workflow, audit events, and review/operator visibility."
+    },
+    {
+      "at": "2026-06-15T11:40:39-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated for the first repository API role-gate and lifecycle audit metadata slice."
+    },
+    {
+      "at": "2026-06-15T11:44:41-04:00",
+      "type": "UPDATED",
+      "note": "Completed and verified first API role-gate/audit metadata slice; broader review queue and revoke/delete/restore events remain open."
+    }
+  ]
+}

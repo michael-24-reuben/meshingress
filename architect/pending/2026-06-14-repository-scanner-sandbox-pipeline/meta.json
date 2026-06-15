@@ -1,0 +1,36 @@
+{
+  "id": "2026-06-14-repository-scanner-sandbox-pipeline",
+  "title": "Repository Scanner Sandbox Pipeline",
+  "status": "pending",
+  "createdAt": "2026-06-14T00:52:00-04:00",
+  "activatedAt": null,
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-06-14T00:52:00-04:00",
+  "tags": [
+    "artifact-repository",
+    "scanner",
+    "sandbox",
+    "malware",
+    "sbom",
+    "scope-scanner",
+    "security"
+  ],
+  "related": [
+    "2026-06-14-repository-fake-scanner-removal",
+    "2026-06-05-embedded-assessment-enrichment",
+    "2026-06-08-sql-tool-metadata-store",
+    "2026-06-14-publication-trust-provenance-policy"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "Grouped follow-up for replacing placeholder scanning with a configurable real scanner pipeline, malware/sandbox assessment, and richer SBOM/dependency analysis."
+  },
+  "events": [
+    {
+      "at": "2026-06-14T00:52:00-04:00",
+      "type": "CREATED",
+      "note": "Created as a pending architect package for real scanner plugin orchestration, sandbox malware detection, and dependency-aware SBOM enrichment."
+    }
+  ]
+}

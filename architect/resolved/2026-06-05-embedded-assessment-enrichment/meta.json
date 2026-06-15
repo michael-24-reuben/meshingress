@@ -1,0 +1,59 @@
+{
+  "id": "2026-06-05-embedded-assessment-enrichment",
+  "title": "Embedded Assessment Enrichment",
+  "status": "resolved",
+  "createdAt": "2026-06-05T21:43:52-04:00",
+  "activatedAt": "2026-06-05T21:43:52-04:00",
+  "resolvedAt": "2026-06-08T11:07:09-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-08T11:07:09-04:00",
+  "tags": [
+    "chapter-2",
+    "artifact-assessment",
+    "scope-scanner",
+    "sbom",
+    "static-analysis",
+    "repository"
+  ],
+  "related": [
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-06-07-runtime-smoke-duplicate-tool"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "assignment",
+    "summary": "Chapter 1 repository artifact implementation is complete; chapter 2 starts embedded assessment enrichment for repository artifact review."
+  },
+  "events": [
+    {
+      "at": "2026-06-05T21:43:52-04:00",
+      "type": "CREATED",
+      "note": "Created as the active chapter 2 objective after repository runtime acceptance was marked complete."
+    },
+    {
+      "at": "2026-06-05T21:43:52-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated immediately because the user asked to move on to chapter 2."
+    },
+    {
+      "at": "2026-06-06T16:02:43-04:00",
+      "type": "UPDATED",
+      "note": "Completed the first no-code inspection and chose existing assessment summary/raw scanner result storage for the first CycloneDX SBOM slice."
+    },
+    {
+      "at": "2026-06-06T16:59:58-04:00",
+      "type": "UPDATED",
+      "note": "Ran scanner, repository, and smoke verification; core checks passed but broad server smoke failed on duplicate helloworld.text registration."
+    },
+    {
+      "at": "2026-06-07T16:49:50-04:00",
+      "type": "UPDATED",
+      "note": "Resolved the broad smoke baseline failure in a dedicated architect; next action returns to embedded CycloneDX generator implementation."
+    },
+    {
+      "at": "2026-06-08T11:07:09-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and verified deterministic embedded CycloneDX SBOM generation plus repository assessment storage for the first chapter 2 slice."
+    }
+  ]
+}
