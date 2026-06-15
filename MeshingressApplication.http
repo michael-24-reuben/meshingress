@@ -1,0 +1,50 @@
+GET http://100.121.15.11:4737/actuator
+Accept: application/vnd.spring-boot.actuator.v3+json
+
+<> 2026-06-14T174706.200.json
+
+###
+
+GET http://100.121.15.11:4737/error
+
+<> 2026-06-14T174751.500.json
+
+###
+
+GET http://100.121.15.11:4737/mcp
+
+###
+
+POST http://100.121.15.11:4737/mcp
+
+###
+
+DELETE http://100.121.15.11:4737/mcp
+
+###
+
+GET http://100.121.15.11:4737/mcp/ws
+
+###
+
+GET http://100.121.15.11:4737/swagger-ui.html
+
+<> 2026-06-14T174902.200.html
+
+###
+
+GET http://100.121.15.11:4737/v3/api-docs
+Accept: application/json
+
+###
+
+GET http://100.121.15.11:4737/v3/api-docs.yaml
+Accept: application/vnd.oai.openapi
+
+###
+
+GET http://100.121.15.11:4737/v3/api-docs/swagger-config
+Accept: application/json
+
+###
+

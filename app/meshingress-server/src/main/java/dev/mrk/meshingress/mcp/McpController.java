@@ -1,8 +1,12 @@
 package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.mcp.docs.post.McpOpenApiRequestBody;
+import dev.mrk.meshingress.mcp.docs.post.McpOpenApiResponses;
 import dev.mrk.meshingress.route.annotations.McpHttpMethod;
 import dev.mrk.meshingress.route.annotations.McpRoute;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import tools.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,13 +37,29 @@ public class McpController {
     }
 
     @McpRoute(id = "mcp.transport.post.v1", method = McpHttpMethod.POST, path = "/mcp")
+    @Operation(
+            summary = "Dispatch MCP JSON-RPC requests",
+            description = "Accepts JSON-RPC 2.0 single requests, notifications, and batches for the Meshingress MCP transport."
+    )
+    @McpOpenApiRequestBody
+    @McpOpenApiResponses
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<JsonNode> post(
             @RequestBody String body,
+
+            @Parameter(description = "Bearer admin token for role-gated MCP methods.", example = "Bearer dev-admin")
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+
+            @Parameter(description = "MCP role hint. Use admin for role-gated registry methods.", example = "admin")
             @RequestHeader(value = "X-Mcp-Role", required = false) String roleHeader,
+
+            @Parameter(description = "Legacy admin flag accepted for compatibility.", example = "true")
             @RequestHeader(value = "X-Mcp-Admin", required = false) String legacyAdminHeader,
+
+            @Parameter(description = "Client MCP session identifier.", example = "session-123")
             @RequestHeader(value = "Mcp-Session-Id", required = false) String sessionId,
+
+            @Parameter(description = "Caller request correlation identifier.", example = "req-123")
             @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
         LOGGER.info("=== MCP REQUEST START [http] requestId={} sessionId={} ===", requestId, sessionId);
@@ -63,6 +83,4 @@ public class McpController {
         LOGGER.info("=== MCP REQUEST START [http] method=DELETE ===");
         return ResponseEntity.accepted().build();
     }
-
-
 }

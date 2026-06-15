@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -73,6 +77,7 @@ class ExperimentalToolRegistrationStrategy implements ToolRegistrationStrategy {
         });
 
         Path jarPath = resolveJar(localJar.path(), config.localJarRoot());
+        verifyChecksum(jarPath, localJar.checksumSha256());
         ToolModuleHandle handle = runtimeLoader.activate(new LocalJarSource(jarPath));
 
         Map<String, String> source = new LinkedHashMap<>();
@@ -113,6 +118,34 @@ class ExperimentalToolRegistrationStrategy implements ToolRegistrationStrategy {
             );
         }
         return resolved;
+    }
+
+    private void verifyChecksum(Path sourceJar, String expectedSha256) {
+        if (expectedSha256 == null || expectedSha256.isBlank()) {
+            return;
+        }
+        String actual = sha256(sourceJar);
+        if (!actual.equalsIgnoreCase(expectedSha256)) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "localJar.checksumSha256 does not match the local jar.",
+                    "TOOL_REGISTRATION_CHECKSUM_MISMATCH"
+            );
+        }
+    }
+
+    private String sha256(Path path) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            try (InputStream input = new DigestInputStream(Files.newInputStream(path), digest)) {
+                input.transferTo(java.io.OutputStream.nullOutputStream());
+            }
+            return HexFormat.of().formatHex(digest.digest());
+        } catch (Exception exception) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Unable to calculate local jar checksum: " + exception.getMessage(),
+                    "TOOL_REGISTRATION_CHECKSUM_FAILED"
+            );
+        }
     }
 
     private void rejectNativeOverride(String toolId, MeshingressProperties.Tools.Registration config) {

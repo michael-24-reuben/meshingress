@@ -20,10 +20,7 @@ public class MeshingressApplication {
     }
 
     @Bean
-    ApplicationRunner serverPropertiesPrinter(
-            ServerProperties serverProperties,
-            MeshingressProperties properties
-    ) {
+    ApplicationRunner serverPropertiesPrinter(ServerProperties serverProperties, MeshingressProperties properties) {
         return args -> {
             String host = serverProperties.getAddress() != null
                     ? serverProperties.getAddress().getHostAddress()
@@ -35,17 +32,18 @@ public class MeshingressApplication {
                     : "disabled";
 
             System.out.println("\n" +
-                    "╔═════════════════════════════════════════════════════════════╗\n" +
-                    "║               Meshingress Server Started                    ║\n" +
-                    "╠═════════════════════════════════════════════════════════════╣\n" +
-                    "║ Runtime:    " + String.format("%-47s", properties.identity().name()) + "║\n" +
-                    "║ Instance:   " + String.format("%-47s", properties.identity().instanceId()) + "║\n" +
-                    "║ Environment:" + String.format(" %-46s", properties.identity().environment()) + "║\n" +
-                    "║ Server Host: " + String.format("%-47s", host) +            "║\n" +
-                    "║ Server Port: " + String.format("%-47d", port) +            "║\n" +
-                    "║ HTTP URL:    " + String.format("%-47s", httpUrl) +         "║\n" +
-                    "║ WebSocket URL: " + String.format("%-45s", wsUrl) +         "║\n" +
-                    "╚═════════════════════════════════════════════════════════════╝\n");
+                    "╔═══════════════════════════════════════════════════════════════════════╗\n" +
+                    "║                     Meshingress Server Started                        ║\n" +
+                    "╠═══════════════════════════════════════════════════════════════════════╣\n" +
+                    "║ Runtime:    " + String.format("%-58s", properties.identity().name()) + "║\n" +
+                    "║ Instance:   " + String.format("%-58s", properties.identity().instanceId()) + "║\n" +
+                    "║ Environment:" + String.format(" %-57s", properties.identity().environment()) + "║\n" +
+                    "║ Server Host: " + String.format("%-57s", host) +                     "║\n" +
+                    "║ Server Port: " + String.format("%-57d", port) +                     "║\n" +
+                    "║ HTTP URL:    " + String.format("%-57s", httpUrl) +                  "║\n" +
+                    "║ WebSocket URL: " + String.format("%-55s", wsUrl) +                  "║\n" +
+                    "║ Swagger UI URL: " + String.format("%-54s", httpUrl + "/swagger-ui/index.html") + "║\n" +
+                    "╚═══════════════════════════════════════════════════════════════════════╝\n");
         };
     }
 

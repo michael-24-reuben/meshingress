@@ -6,6 +6,7 @@ import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
+import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,7 +31,9 @@ import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest(properties = {
         "meshingress.architect.root=../../architect",
@@ -78,6 +81,33 @@ class McpToolRegistrationPhaseApiSampleTests {
                         """.formatted(SAMPLE_JAR_NAME, sha256(sampleJar))));
         printMcpResponse("experimental/local-jar tools/list", toolsListRequest(101));
         printMcpResponse("experimental/local-jar tools/call", toolCallRequest(102, "helloworld.text", "{}"));
+    }
+
+    @Test
+    void rejectExperimentalLocalJarToolWhenChecksumDoesNotMatch() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+
+        mockMvc.perform(mcpRequest("""
+                        {
+                          "jsonrpc": "2.0",
+                          "id": 110,
+                          "method": "roles/tools/register",
+                          "params": {
+                            "phase": "experimental",
+                            "toolId": "checksum.mismatch",
+                            "replace": true,
+                            "localJar": {
+                              "path": "%s",
+                              "checksumSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+                            }
+                          }
+                        }
+                        """.formatted(SAMPLE_JAR_NAME)))
+                .andExpect(jsonPath("$.jsonrpc", is("2.0")))
+                .andExpect(jsonPath("$.id", is(110)))
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.INVALID_PARAMS)))
+                .andExpect(jsonPath("$.error.data.errorCode", is("TOOL_REGISTRATION_CHECKSUM_MISMATCH")));
     }
 
     @Test

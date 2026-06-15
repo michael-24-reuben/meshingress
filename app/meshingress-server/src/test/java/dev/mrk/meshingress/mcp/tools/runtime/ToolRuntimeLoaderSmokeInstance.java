@@ -35,7 +35,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@SpringBootTest(properties = "meshingress.architect.root=../../architect")
+@SpringBootTest(properties = {
+        "meshingress.architect.root=../../architect",
+        "meshingress.tools.registry.scan-on-startup=false"
+})
 class ToolRuntimeLoaderSmokeTestResults {
 
     private static final String SAMPLE_FUNCTION = "helloworld.text";
