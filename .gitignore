@@ -45,3 +45,13 @@ build/
 ### AI plugin - Antigravity ###
 .env
 .antigravity/
+
+### ETC ###
+/tools/**/*.jar
+/identifier.sqlite
+/.agents/automation/logs/
+/app/meshingress-server/.cache/
+/lib/meshingress-codeql-scope-sample/vendor/
+/temp/*.jar
+/temp/cobalt-sources-*/
+/temp/voicebox-upstream/
