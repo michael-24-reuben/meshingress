@@ -43,6 +43,7 @@
         <module>toolspace/powershell-cli</module>
         <module>toolspace/whatsapp-cobalt</module>
         <module>toolspace/voicebox</module>
+        <module>toolspace/webtoon-downloader</module>
     </modules>
 
     <properties>

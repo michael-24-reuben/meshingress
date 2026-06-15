@@ -1,0 +1,29 @@
+package dev.mrk.meshingress.repository.artifact.store;
+
+import dev.mrk.meshingress.artifact.model.ArtifactCoordinate;
+import dev.mrk.meshingress.artifact.model.ArtifactPublicationRecord;
+import dev.mrk.meshingress.artifact.model.ArtifactRecord;
+import dev.mrk.meshingress.artifact.security.ScannerResult;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+
+public interface ArtifactMetadataStore {
+
+    void saveArtifact(ArtifactRecord record, Path artifactPath);
+
+    Optional<ArtifactMetadataEntry> findArtifact(ArtifactCoordinate coordinate);
+
+    void saveAssessment(ArtifactCoordinate coordinate, List<ScannerResult> results);
+
+    List<ScannerResult> findAssessment(ArtifactCoordinate coordinate);
+
+    void savePublication(ArtifactPublicationRecord publication);
+
+    Optional<ArtifactPublicationRecord> findPublication(ArtifactCoordinate coordinate);
+
+    boolean hasLifecycleEvent(ArtifactCoordinate coordinate, String eventType);
+
+    void appendLifecycleEvent(ArtifactLifecycleEvent event);
+}

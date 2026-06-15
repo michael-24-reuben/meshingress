@@ -10,6 +10,8 @@ import dev.mrk.meshingress.artifact.model.MeshingressArtifactType;
 import dev.mrk.meshingress.artifact.publication.PublicationRecordSigner;
 import dev.mrk.meshingress.artifact.publication.PublicationSignature;
 import dev.mrk.meshingress.artifact.scope.BytecodeScopeScanner;
+import dev.mrk.meshingress.artifact.scope.CycloneDxSbom;
+import dev.mrk.meshingress.artifact.scope.CycloneDxSbomGenerator;
 import dev.mrk.meshingress.artifact.scope.JarScopeScanResult;
 import dev.mrk.meshingress.artifact.scope.ScopeFinding;
 import dev.mrk.meshingress.artifact.scope.ScopeInferenceCatalog;
@@ -21,6 +23,9 @@ import dev.mrk.meshingress.artifact.security.ScannerStatus;
 import dev.mrk.meshingress.repository.config.MeshingressRepositoryProperties;
 import dev.mrk.meshingress.artifact.storage.FileSystemArtifactStorage;
 import dev.mrk.meshingress.artifact.storage.StoredArtifactBlob;
+import dev.mrk.meshingress.repository.artifact.store.ArtifactMetadataEntry;
+import dev.mrk.meshingress.repository.artifact.store.ArtifactLifecycleEvent;
+import dev.mrk.meshingress.repository.artifact.store.ArtifactMetadataStore;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
@@ -35,7 +40,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ArtifactService {
@@ -43,31 +47,33 @@ public class ArtifactService {
     private final FileSystemArtifactStorage storage;
     private final List<ScannerAdapter> scanners;
     private final BytecodeScopeScanner bytecodeScopeScanner;
+    private final CycloneDxSbomGenerator sbomGenerator;
     private final ScopeInferenceCatalog scopeInferenceCatalog;
     private final boolean scopeScannerEnabled;
     private final PublicationRecordSigner signer;
     private final ObjectMapper objectMapper;
-    private final Map<String, ArtifactRecord> records = new ConcurrentHashMap<>();
-    private final Map<String, Path> artifactPaths = new ConcurrentHashMap<>();
-    private final Map<String, List<ScannerResult>> assessments = new ConcurrentHashMap<>();
-    private final Map<String, ArtifactPublicationRecord> publications = new ConcurrentHashMap<>();
+    private final ArtifactMetadataStore metadataStore;
 
     public ArtifactService(
             FileSystemArtifactStorage storage,
             List<ScannerAdapter> scanners,
             BytecodeScopeScanner bytecodeScopeScanner,
+            CycloneDxSbomGenerator sbomGenerator,
             ScopeInferenceCatalog scopeInferenceCatalog,
             MeshingressRepositoryProperties properties,
             PublicationRecordSigner signer,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            ArtifactMetadataStore metadataStore
     ) {
         this.storage = storage;
         this.scanners = scanners == null ? List.of() : List.copyOf(scanners);
         this.bytecodeScopeScanner = bytecodeScopeScanner;
+        this.sbomGenerator = sbomGenerator;
         this.scopeInferenceCatalog = scopeInferenceCatalog;
         this.scopeScannerEnabled = properties.scopeScannerEnabled();
         this.signer = signer;
         this.objectMapper = objectMapper;
+        this.metadataStore = metadataStore;
     }
 
     public ArtifactRecord upload(
@@ -77,7 +83,8 @@ public class ArtifactService {
             String packaging,
             MeshingressArtifactType type,
             List<String> requestedScopes,
-            MultipartFile file
+            MultipartFile file,
+            RepositoryRequestContext context
     ) {
         try {
             ArtifactCoordinate coordinate = coordinate(groupId, artifactId, version, packaging);
@@ -95,9 +102,8 @@ public class ArtifactService {
                     OffsetDateTime.now(),
                     OffsetDateTime.now()
             );
-            records.put(key(coordinate), record);
-            artifactPaths.put(key(coordinate), blob.path());
-            writeMetadata(record);
+            metadataStore.saveArtifact(record, blob.path());
+            appendLifecycleEvent(coordinate, "UPLOAD", null, record.trustStatus().name(), context, "Artifact uploaded to quarantine.");
             return record;
         } catch (RepositoryException exception) {
             throw exception;
@@ -107,13 +113,13 @@ public class ArtifactService {
     }
 
     public ArtifactRecord metadata(String groupId, String artifactId, String version) {
-        return requireRecord(coordinate(groupId, artifactId, version, "jar"));
+        return requireEntry(coordinate(groupId, artifactId, version, "jar")).record();
     }
 
-    public ArtifactRecord assess(String groupId, String artifactId, String version) {
-        ArtifactRecord current = requireRecord(coordinate(groupId, artifactId, version, "jar"));
-        String key = key(current.coordinate());
-        Path artifactPath = artifactPaths.get(key);
+    public ArtifactRecord assess(String groupId, String artifactId, String version, RepositoryRequestContext context) {
+        ArtifactMetadataEntry entry = requireEntry(coordinate(groupId, artifactId, version, "jar"));
+        ArtifactRecord current = entry.record();
+        Path artifactPath = entry.artifactPath();
         List<ScannerResult> results = new ArrayList<>();
         for (ScannerAdapter scanner : scanners) {
             results.add(scanner.scan(new ScannerRequest(
@@ -124,6 +130,9 @@ public class ArtifactService {
             )));
         }
         List<String> inferredScopes = current.scopes().inferredScopes();
+        if (isJar(current.coordinate().packaging())) {
+            results.add(generateSbomResult(current, artifactPath));
+        }
         if (scopeScannerEnabled && isJar(current.coordinate().packaging())) {
             JarScopeScanResult scopeScan = scanScopes(artifactPath);
             inferredScopes = scopeScan.inferredScopes().stream()
@@ -144,20 +153,28 @@ public class ArtifactService {
                 ),
                 assessed.trustStatus()
         );
-        records.put(key, updated);
-        assessments.put(key, List.copyOf(results));
+        metadataStore.saveArtifact(updated, artifactPath);
+        metadataStore.saveAssessment(current.coordinate(), results);
+        appendLifecycleEvent(
+                current.coordinate(),
+                "ASSESS",
+                current.trustStatus().name(),
+                updated.trustStatus().name(),
+                context,
+                "Artifact assessment completed."
+        );
         writeJson(storage.layout().assessmentDirectory(current.coordinate()).resolve("assessment.json"), results);
-        writeMetadata(updated);
         return updated;
     }
 
     public List<ScannerResult> assessment(String groupId, String artifactId, String version) {
-        ArtifactRecord record = requireRecord(coordinate(groupId, artifactId, version, "jar"));
-        return assessments.getOrDefault(key(record.coordinate()), List.of());
+        ArtifactRecord record = requireEntry(coordinate(groupId, artifactId, version, "jar")).record();
+        return metadataStore.findAssessment(record.coordinate());
     }
 
-    public ArtifactRecord approve(String groupId, String artifactId, String version, ArtifactReviewRequest request) {
-        ArtifactRecord current = requireRecord(coordinate(groupId, artifactId, version, "jar"));
+    public ArtifactRecord approve(String groupId, String artifactId, String version, ArtifactReviewRequest request, RepositoryRequestContext context) {
+        ArtifactMetadataEntry entry = requireEntry(coordinate(groupId, artifactId, version, "jar"));
+        ArtifactRecord current = entry.record();
         if (current.trustStatus() != ArtifactTrustStatus.REVIEW_PENDING) {
             throw new RepositoryException("artifact must be REVIEW_PENDING before approval");
         }
@@ -175,14 +192,20 @@ public class ArtifactService {
                 request.deniedScopes()
         );
         ArtifactRecord updated = current.withScopes(scopes, status);
-        records.put(key(current.coordinate()), updated);
-        writeJson(storage.layout().reviewDirectory(current.coordinate()).resolve("latest-review.json"), request);
-        writeMetadata(updated);
+        metadataStore.saveArtifact(updated, entry.artifactPath());
+        appendLifecycleEvent(
+                current.coordinate(),
+                "APPROVE",
+                current.trustStatus().name(),
+                updated.trustStatus().name(),
+                context,
+                "Artifact review completed by " + (request.reviewer() == null || request.reviewer().isBlank() ? "unknown" : request.reviewer()) + "."
+        );
         return updated;
     }
 
-    public ArtifactPublicationRecord publish(String groupId, String artifactId, String version) {
-        ArtifactRecord record = requireRecord(coordinate(groupId, artifactId, version, "jar"));
+    public ArtifactPublicationRecord publish(String groupId, String artifactId, String version, RepositoryRequestContext context) {
+        ArtifactRecord record = requireEntry(coordinate(groupId, artifactId, version, "jar")).record();
         if (!record.trustStatus().installable()) {
             throw new RepositoryException("only approved artifacts can be published");
         }
@@ -216,18 +239,22 @@ public class ArtifactService {
                 signature.algorithm(),
                 signature.value()
         );
-        publications.put(key(record.coordinate()), signed);
-        writeJson(storage.layout().publicationDirectory(record.coordinate()).resolve("publication.json"), signed);
+        metadataStore.savePublication(signed);
+        appendLifecycleEvent(
+                record.coordinate(),
+                "PUBLISH",
+                record.trustStatus().name(),
+                record.trustStatus().name(),
+                context,
+                "Artifact publication record signed."
+        );
         return signed;
     }
 
     public ArtifactPublicationRecord publication(String groupId, String artifactId, String version) {
         ArtifactCoordinate coordinate = coordinate(groupId, artifactId, version, "jar");
-        ArtifactPublicationRecord publication = publications.get(key(coordinate));
-        if (publication == null) {
-            throw new RepositoryException("publication record not found");
-        }
-        return publication;
+        return metadataStore.findPublication(coordinate)
+                .orElseThrow(() -> new RepositoryException("publication record not found"));
     }
 
     private ArtifactAssessmentSummary summaryFrom(List<ScannerResult> results) {
@@ -235,7 +262,10 @@ public class ArtifactService {
         Map<String, Object> raw = new LinkedHashMap<>();
         raw.put("scannerCount", results.size());
         raw.put("findingCount", findingCount);
-        raw.put("fakeScannerMvp", results.stream().anyMatch(result -> result.scanner().equals("fake-scanner")));
+        results.stream()
+                .filter(result -> result.scanner().equals("cyclonedx-sbom"))
+                .findFirst()
+                .ifPresent(result -> raw.put("sbom", result.rawSummary()));
         return new ArtifactAssessmentSummary(
                 findingCount == 0 ? "clean" : "findings",
                 results.stream().map(ScannerResult::scanner).toList(),
@@ -244,12 +274,37 @@ public class ArtifactService {
         );
     }
 
+    private ScannerResult generateSbomResult(ArtifactRecord record, Path artifactPath) {
+        try {
+            CycloneDxSbom sbom = sbomGenerator.generate(artifactPath);
+            Path rawReportPath = storage.layout().assessmentDirectory(record.coordinate()).resolve("cyclonedx-sbom.json");
+            Files.createDirectories(rawReportPath.getParent());
+            Files.writeString(rawReportPath, sbom.toJson(objectMapper));
+            return toScannerResult(sbom, rawReportPath);
+        } catch (Exception exception) {
+            throw new RepositoryException("artifact SBOM generation failed: " + exception.getMessage(), exception);
+        }
+    }
+
     private JarScopeScanResult scanScopes(Path artifactPath) {
         try {
             return bytecodeScopeScanner.scanReachableFromToolEntrypoints(artifactPath, scopeInferenceCatalog);
         } catch (Exception exception) {
             throw new RepositoryException("artifact scope inference failed: " + exception.getMessage(), exception);
         }
+    }
+
+    private ScannerResult toScannerResult(CycloneDxSbom sbom, Path rawReportPath) {
+        Map<String, Object> rawSummary = new LinkedHashMap<>(sbom.summary());
+        rawSummary.put("rawReport", "cyclonedx-sbom.json");
+        return new ScannerResult(
+                "cyclonedx-sbom",
+                sbom.specVersion(),
+                ScannerStatus.PASSED,
+                List.of(),
+                rawSummary,
+                rawReportPath
+        );
     }
 
     private ScannerResult toScannerResult(JarScopeScanResult scopeScan) {
@@ -299,24 +354,33 @@ public class ArtifactService {
         return ArtifactTrustStatus.REVIEW_PENDING;
     }
 
-    private ArtifactRecord requireRecord(ArtifactCoordinate coordinate) {
-        ArtifactRecord record = records.get(key(coordinate));
-        if (record == null) {
-            throw new RepositoryException("artifact not found: " + coordinate.display());
-        }
-        return record;
+    private ArtifactMetadataEntry requireEntry(ArtifactCoordinate coordinate) {
+        return metadataStore.findArtifact(coordinate)
+                .orElseThrow(() -> new RepositoryException("artifact not found: " + coordinate.display()));
     }
 
     private ArtifactCoordinate coordinate(String groupId, String artifactId, String version, String packaging) {
         return new ArtifactCoordinate(groupId, artifactId, version, null, packaging);
     }
 
-    private String key(ArtifactCoordinate coordinate) {
-        return coordinate.display();
-    }
-
-    private void writeMetadata(ArtifactRecord record) {
-        writeJson(storage.layout().metadataDirectory(record.coordinate()).resolve("record.json"), record);
+    private void appendLifecycleEvent(
+            ArtifactCoordinate coordinate,
+            String eventType,
+            String fromState,
+            String toState,
+            RepositoryRequestContext context,
+            String reason
+    ) {
+        RepositoryRequestContext safeContext = context == null ? RepositoryRequestContext.system() : context;
+        metadataStore.appendLifecycleEvent(new ArtifactLifecycleEvent(
+                coordinate,
+                eventType,
+                fromState,
+                toState,
+                safeContext.actor(),
+                safeContext.requestId(),
+                reason
+        ));
     }
 
     private void writeJson(Path path, Object value) {
