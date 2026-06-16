@@ -9,13 +9,19 @@
 
 ## Deferred
 
-- Review queue/read API.
 - Revoke/delete/restore lifecycle operations.
 - Admin UI.
 - External scanner sandboxing and publication provenance policy entries.
 
+## 2026-06-16 Review Queue Slice
+
+- Keep the first review surface API-only in `ArtifactController`.
+- Add `GET /artifact/reviews/pending` as a read endpoint requiring any repository role.
+- Back the queue with SQL artifact metadata and assessment rows for artifacts in `REVIEW_PENDING`.
+- Preserve the existing scope split in the response: uploaded `requestedScopes` are claims, inferred scopes are assessment evidence, and approved/denied scopes stay empty until review.
+
 ## Next Slice
 
-- Decide whether pending-review listing belongs in `ArtifactController` or a separate review controller.
-- Add an API-only review queue endpoint backed by SQL artifact metadata and assessment rows.
-- Extend lifecycle event coverage when reject/revoke/delete/restore transitions are introduced.
+- Add reject/revoke/delete/restore lifecycle operations only when their state semantics are defined.
+- Extend lifecycle event coverage for the new transitions.
+- Keep scanner sandboxing and publication provenance policy in their pending follow-up entries.

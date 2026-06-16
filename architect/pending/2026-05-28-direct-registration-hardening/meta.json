@@ -1,0 +1,32 @@
+{
+  "id": "2026-05-28-direct-registration-hardening",
+  "title": "Direct Registration Hardening",
+  "status": "pending",
+  "createdAt": "2026-05-28T21:00:57-04:00",
+  "activatedAt": null,
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-05-28T21:00:57-04:00",
+  "tags": [
+    "tool-registration",
+    "checksum",
+    "security",
+    "follow-up",
+    "mcp-runtime"
+  ],
+  "related": [
+    "2026-05-27-meshingress-repository-artifact-implementation"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User asked to place checksum and other minor direct-registration issues into a separate architect record, with origin locations noted, while repository implementation proceeds."
+  },
+  "events": [
+    {
+      "at": "2026-05-28T21:00:57-04:00",
+      "type": "CREATED",
+      "note": "Created follow-up record for direct registration checksum and publication-boundary hardening."
+    }
+  ]
+}

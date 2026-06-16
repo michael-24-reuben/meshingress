@@ -12,6 +12,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
@@ -110,6 +111,22 @@ public class FileSystemArtifactStorage {
             throw exception;
         } catch (Exception exception) {
             throw new ArtifactStorageException("unable to extract artifact to quarantine: " + exception.getMessage(), exception);
+        }
+    }
+
+    public void cleanQuarantine(ArtifactCoordinate coordinate) {
+        Path quarantineRoot = layout.quarantineDirectory(coordinate);
+        try {
+            if (!Files.exists(quarantineRoot)) {
+                return;
+            }
+            try (var stream = Files.walk(quarantineRoot)) {
+                for (Path item : stream.sorted(Comparator.reverseOrder()).toList()) {
+                    Files.deleteIfExists(item);
+                }
+            }
+        } catch (Exception exception) {
+            throw new ArtifactStorageException("unable to clean artifact quarantine: " + exception.getMessage(), exception);
         }
     }
 

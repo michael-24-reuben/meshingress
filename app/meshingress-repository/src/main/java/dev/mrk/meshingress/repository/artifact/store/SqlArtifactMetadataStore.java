@@ -4,7 +4,9 @@ import dev.mrk.meshingress.artifact.model.ArtifactCoordinate;
 import dev.mrk.meshingress.artifact.model.ArtifactFileEntry;
 import dev.mrk.meshingress.artifact.model.ArtifactPublicationRecord;
 import dev.mrk.meshingress.artifact.model.ArtifactRecord;
+import dev.mrk.meshingress.artifact.model.ArtifactTrustStatus;
 import dev.mrk.meshingress.artifact.security.ScannerResult;
+import dev.mrk.meshingress.repository.artifact.ArtifactReviewQueueItem;
 import dev.mrk.meshingress.repository.artifact.RepositoryException;
 import dev.mrk.meshingress.repository.config.MeshingressRepositoryProperties;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -278,6 +280,21 @@ public class SqlArtifactMetadataStore implements ArtifactMetadataStore {
     }
 
     @Override
+    public List<ArtifactReviewQueueItem> findPendingReviewArtifacts() {
+        return jdbcTemplate.query("""
+                        select artifacts.payload_json as artifact_payload,
+                               assessments.payload_json as assessment_payload
+                        from %s artifacts
+                        left join %s assessments on assessments.coordinate_key = artifacts.coordinate_key
+                        where artifacts.trust_status = ?
+                        order by artifacts.updated_at asc
+                        """.formatted(artifactsTable, assessmentsTable),
+                reviewQueueMapper(),
+                ArtifactTrustStatus.REVIEW_PENDING.name()
+        );
+    }
+
+    @Override
     public boolean hasLifecycleEvent(ArtifactCoordinate coordinate, String eventType) {
         Integer count = jdbcTemplate.queryForObject(
                 "select count(*) from %s where coordinate_key = ? and event_type = ?".formatted(lifecycleEventsTable),
@@ -391,6 +408,19 @@ public class SqlArtifactMetadataStore implements ArtifactMetadataStore {
                 fromJson(rs.getString("payload_json"), ArtifactRecord.class),
                 Path.of(rs.getString("artifact_path"))
         );
+    }
+
+    private RowMapper<ArtifactReviewQueueItem> reviewQueueMapper() {
+        return (rs, rowNum) -> {
+            String assessmentPayload = rs.getString("assessment_payload");
+            List<ScannerResult> assessment = assessmentPayload == null || assessmentPayload.isBlank()
+                    ? List.of()
+                    : List.of(fromJson(assessmentPayload, ScannerResult[].class));
+            return new ArtifactReviewQueueItem(
+                    fromJson(rs.getString("artifact_payload"), ArtifactRecord.class),
+                    assessment
+            );
+        };
     }
 
     private String qualified(String table, String name) {

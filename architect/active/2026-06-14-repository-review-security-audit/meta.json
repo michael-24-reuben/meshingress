@@ -6,7 +6,7 @@
   "activatedAt": "2026-06-15T11:40:39-04:00",
   "resolvedAt": null,
   "archivedAt": null,
-  "updatedAt": "2026-06-15T11:44:41-04:00",
+  "updatedAt": "2026-06-16T01:03:17-04:00",
   "tags": [
     "artifact-repository",
     "security",
@@ -40,6 +40,11 @@
       "at": "2026-06-15T11:44:41-04:00",
       "type": "UPDATED",
       "note": "Completed and verified first API role-gate/audit metadata slice; broader review queue and revoke/delete/restore events remain open."
+    },
+    {
+      "at": "2026-06-16T01:03:17-04:00",
+      "type": "UPDATED",
+      "note": "Completed and verified API-only pending review queue; reject/revoke/delete/restore lifecycle operations remain open."
     }
   ]
 }

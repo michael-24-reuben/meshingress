@@ -105,6 +105,23 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$[1].scanner").value("bytecode-scope-scanner"))
                 .andExpect(jsonPath("$[1].status").value("REVIEW"));
 
+        mockMvc.perform(get("/artifact/reviews/pending"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("repository role is not allowed to read"));
+
+        mockMvc.perform(get("/artifact/reviews/pending")
+                        .header("X-Repository-Role", "reviewer"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].artifact.coordinate.groupId").value("dev.mrk.tools"))
+                .andExpect(jsonPath("$[0].artifact.coordinate.artifactId").value("generated-sample"))
+                .andExpect(jsonPath("$[0].artifact.trustStatus").value("REVIEW_PENDING"))
+                .andExpect(jsonPath("$[0].artifact.scopes.requestedScopes", hasItem("SHELL_EXECUTE")))
+                .andExpect(jsonPath("$[0].artifact.scopes.inferredScopes", hasItem("FILES_READ")))
+                .andExpect(jsonPath("$[0].artifact.scopes.approvedScopes").isEmpty())
+                .andExpect(jsonPath("$[0].artifact.scopes.deniedScopes").isEmpty())
+                .andExpect(jsonPath("$[0].assessment[0].scanner").value("cyclonedx-sbom"))
+                .andExpect(jsonPath("$[0].assessment[1].scanner").value("bytecode-scope-scanner"));
+
         mockMvc.perform(post("/artifact/dev.mrk.tools/generated-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -126,6 +143,11 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
                 .andExpect(jsonPath("$.scopes.approvedScopes[0]").value("FILES_READ"));
+
+        mockMvc.perform(get("/artifact/reviews/pending")
+                        .header("X-Repository-Role", "reviewer"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.artifact.coordinate.artifactId == 'generated-sample')]").isEmpty());
 
         mockMvc.perform(post("/artifact/dev.mrk.tools/generated-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher")
@@ -180,10 +202,13 @@ class ArtifactRepositoryFlowTests {
         org.assertj.core.api.Assertions.assertThat(approvalAuditEvents).isEqualTo(1);
 
         Path root = tempDir.resolve("repository");
+        Path artifactDirectory = root.resolve("artifacts/dev/mrk/tools/generated-sample/1.0.0");
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("metadata/dev/mrk/tools/generated-sample/1.0.0/record.json"))).isFalse();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("reviews/dev/mrk/tools/generated-sample/1.0.0/latest-review.json"))).isFalse();
-        org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("assessments/dev/mrk/tools/generated-sample/1.0.0/assessment.json"))).isTrue();
-        org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("assessments/dev/mrk/tools/generated-sample/1.0.0/cyclonedx-sbom.json"))).isTrue();
+        org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("assessment.json"))).isTrue();
+        org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("cyclonedx-sbom.json"))).isTrue();
+        org.assertj.core.api.Assertions.assertThat(Files.exists(root.resolve("assessments/dev/mrk/tools/generated-sample/1.0.0"))).isFalse();
+        org.assertj.core.api.Assertions.assertThat(Files.exists(root.resolve("quarantine/dev/mrk/tools/generated-sample/1.0.0"))).isFalse();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("publications/dev/mrk/tools/generated-sample/1.0.0/publication.json"))).isFalse();
     }
 

@@ -22,3 +22,13 @@
 - Added schema migration statements for existing lifecycle event tables: `actor` defaults to `unknown`, `request_id` is nullable.
 - Verification passed: `.\mvnw.cmd -pl app\meshingress-repository -am "-Dtest=ArtifactRepositoryFlowTests" "-Dsurefire.failIfNoSpecifiedTests=false" test` with 3 tests.
 - Decision: no new chapter/branch is needed for this slice; continue on `codex/chapter-2-embedded-assessment-enrichment` until the repository security/audit architect is either resolved or intentionally split.
+
+## 2026-06-16
+
+- Added API-only pending review queue support in the repository app.
+- Chose `ArtifactController` for the first queue endpoint because all current repository artifact endpoints live there and this slice does not introduce separate review workflow commands yet.
+- Added `ArtifactReviewQueueItem` with the stored `ArtifactRecord` plus scanner assessment results.
+- Added `ArtifactMetadataStore.findPendingReviewArtifacts()` and implemented it in `SqlArtifactMetadataStore` with a SQL join over artifact metadata and assessment rows, filtered to `REVIEW_PENDING`.
+- Added `GET /artifact/reviews/pending` and gated it through the existing `RepositoryAction.READ` role policy.
+- Updated `ArtifactRepositoryFlowTests` to assert unauthenticated queue access is denied, reviewer queue access returns pending artifact metadata plus `cyclonedx-sbom` and `bytecode-scope-scanner` assessment evidence, uploaded `requestedScopes` remain separate from inferred/approved/denied scopes, and the artifact leaves the queue after approval.
+- Verification passed: `.\mvnw.cmd -pl app\meshingress-repository -am "-Dtest=ArtifactRepositoryFlowTests" "-Dsurefire.failIfNoSpecifiedTests=false" test` with 3 tests.

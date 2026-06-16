@@ -65,7 +65,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
     @Test
     void uploadAssessReviewAndPublishPackagedPowerShellCliJarIntoRepository() throws Exception {
         Path jar = packagedJar();
-        assumeTrue(jar != null, "Packaged PowerShell CLI jar not found under temp/powershell-cli/target: " + JAR_NAME);
+        assumeTrue(jar != null, "Packaged PowerShell CLI jar not found under tools/lib: " + JAR_NAME);
         assertThat(Files.isRegularFile(jar)).isTrue();
         ArtifactCoordinate coordinate = new ArtifactCoordinate(GROUP_ID, ARTIFACT_ID, VERSION, null, PACKAGING);
         resetCoordinate(coordinate);
@@ -84,11 +84,12 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
         );
 
         MvcResult uploadResult = mockMvc.perform(multipart("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION)
+                        .header("X-Repository-Role", "admin")
                         .file(file)
                         .param("requestedScopes", "SHELL_EXECUTE")
                         .param("requestedScopes", "FILES_WRITE"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status().isOk()) // error 403
                 .andReturn();
 
         JsonNode response = objectMapper.readTree(uploadResult.getResponse().getContentAsByteArray());
@@ -131,7 +132,9 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
         assertThat(Files.isDirectory(quarantineRoot)).isTrue();
         assertThat(countEntries(quarantineRoot)).isGreaterThan(0);
 
-        MvcResult assessResult = mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assess"))
+        MvcResult assessResult = mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assess")
+                        .header("X-Repository-Role", "admin")
+                )
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("REVIEW_PENDING"))
@@ -142,8 +145,10 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
 
         JsonNode assessed = objectMapper.readTree(assessResult.getResponse().getContentAsByteArray());
         System.out.println("assessResponse=" + assessed.toPrettyString());
+        assertThat(Files.exists(quarantineRoot)).isFalse();
 
-        mockMvc.perform(get("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assessment"))
+        mockMvc.perform(get("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assessment")
+                .header("X-Repository-Role", "admin"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].scanner").value("cyclonedx-sbom"))
@@ -154,6 +159,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andExpect(jsonPath("$[1].status").value("REVIEW"));
 
         MvcResult approveResult = mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/approve")
+                        .header("X-Repository-Role", "admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -174,14 +180,16 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
         JsonNode approved = objectMapper.readTree(approveResult.getResponse().getContentAsByteArray());
         System.out.println("approveResponse=" + approved.toPrettyString());
 
-        mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publish"))
+        mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publish")
+                .header("X-Repository-Role", "admin"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
                 .andExpect(jsonPath("$.signatureAlgorithm").value("HmacSHA256"))
                 .andExpect(jsonPath("$.signature", not(blankOrNullString())));
 
-        mockMvc.perform(get("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publication"))
+        mockMvc.perform(get("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publication")
+                .header("X-Repository-Role", "admin"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
@@ -191,16 +199,12 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
         assertThat(reviewedEntry.record().trustStatus().name()).isEqualTo("APPROVED_LIMITED");
         assertThat(store.findAssessment(coordinate)).hasSize(2);
         assertThat(store.findPublication(coordinate)).isPresent();
-        assertThat(Files.isRegularFile(repositoryRoot.resolve("assessments")
+        assertThat(Files.isRegularFile(artifactPath.getParent().resolve("assessment.json"))).isTrue();
+        assertThat(Files.isRegularFile(artifactPath.getParent().resolve("cyclonedx-sbom.json"))).isTrue();
+        assertThat(Files.exists(repositoryRoot.resolve("assessments")
                 .resolve(GROUP_ID.replace('.', '/'))
                 .resolve(ARTIFACT_ID)
-                .resolve(VERSION)
-                .resolve("assessment.json"))).isTrue();
-        assertThat(Files.isRegularFile(repositoryRoot.resolve("assessments")
-                .resolve(GROUP_ID.replace('.', '/'))
-                .resolve(ARTIFACT_ID)
-                .resolve(VERSION)
-                .resolve("cyclonedx-sbom.json"))).isTrue();
+                .resolve(VERSION))).isFalse();
 
         System.out.println("=== PowerShell CLI repository upload/assessment smoke complete ===");
     }
@@ -208,9 +212,8 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
     private Path packagedJar() {
         Path current = Path.of("").toAbsolutePath().normalize();
         for (Path cursor = current; cursor != null; cursor = cursor.getParent()) {
-            Path candidate = cursor.resolve("temp")
-                    .resolve("powershell-cli")
-                    .resolve("target")
+            Path candidate = cursor.resolve("tools")
+                    .resolve("lib")
                     .resolve(JAR_NAME);
             if (Files.isRegularFile(candidate)) {
                 return candidate;

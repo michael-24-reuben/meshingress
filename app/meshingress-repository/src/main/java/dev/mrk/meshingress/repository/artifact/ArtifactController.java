@@ -97,6 +97,17 @@ public class ArtifactController {
         return artifactService.assessment(groupId, artifactId, version);
     }
 
+    @GetMapping("/artifact/reviews/pending")
+    public List<ArtifactReviewQueueItem> pendingReviewQueue(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestHeader(value = "X-Repository-Role", required = false) String role,
+            @RequestHeader(value = "X-Repository-Actor", required = false) String actor,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
+    ) {
+        accessPolicy.require(context(authorization, role, actor, requestId), RepositoryAction.READ);
+        return artifactService.reviewQueue();
+    }
+
     @PostMapping("/artifact/{groupId}/{artifactId}/{version}/approve")
     public ArtifactRecord approve(
             @PathVariable String groupId,

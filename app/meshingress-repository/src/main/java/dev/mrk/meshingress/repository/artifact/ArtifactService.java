@@ -164,6 +164,7 @@ public class ArtifactService {
                 "Artifact assessment completed."
         );
         writeJson(storage.layout().assessmentDirectory(current.coordinate()).resolve("assessment.json"), results);
+        storage.cleanQuarantine(current.coordinate());
         return updated;
     }
 
@@ -255,6 +256,10 @@ public class ArtifactService {
         ArtifactCoordinate coordinate = coordinate(groupId, artifactId, version, "jar");
         return metadataStore.findPublication(coordinate)
                 .orElseThrow(() -> new RepositoryException("publication record not found"));
+    }
+
+    public List<ArtifactReviewQueueItem> reviewQueue() {
+        return metadataStore.findPendingReviewArtifacts();
     }
 
     private ArtifactAssessmentSummary summaryFrom(List<ScannerResult> results) {

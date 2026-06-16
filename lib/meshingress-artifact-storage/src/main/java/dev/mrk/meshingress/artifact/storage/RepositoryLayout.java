@@ -28,10 +28,6 @@ public record RepositoryLayout(Path root) {
         return root.resolve("quarantine");
     }
 
-    public Path assessmentsRoot() {
-        return root.resolve("assessments");
-    }
-
     public Path reviewsRoot() {
         return root.resolve("reviews");
     }
@@ -65,7 +61,7 @@ public record RepositoryLayout(Path root) {
     }
 
     public Path assessmentDirectory(ArtifactCoordinate coordinate) {
-        return coordinatePath(assessmentsRoot(), coordinate);
+        return artifactDirectory(coordinate);
     }
 
     public Path reviewDirectory(ArtifactCoordinate coordinate) {
