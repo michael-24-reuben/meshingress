@@ -32,6 +32,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -163,7 +164,8 @@ public class ArtifactService {
                 context,
                 "Artifact assessment completed."
         );
-        writeJson(storage.layout().assessmentDirectory(current.coordinate()).resolve("assessment.json"), results);
+        writeAssessmentArtifacts(current.coordinate(), results);
+        storage.deleteQuarantine(current.coordinate());
         return updated;
     }
 
@@ -389,6 +391,28 @@ public class ArtifactService {
             Files.writeString(path, toJson(value));
         } catch (Exception exception) {
             throw new RepositoryException("unable to write repository metadata: " + exception.getMessage(), exception);
+        }
+    }
+
+    private void writeAssessmentArtifacts(ArtifactCoordinate coordinate, List<ScannerResult> results) {
+        Path assessmentDirectory = storage.layout().assessmentDirectory(coordinate);
+        Path artifactDirectory = storage.layout().artifactDirectory(coordinate);
+        writeJson(assessmentDirectory.resolve("assessment.json"), results);
+        writeJson(artifactDirectory.resolve("assessment.json"), results);
+        results.stream()
+                .filter(result -> result.scanner().equals("cyclonedx-sbom"))
+                .map(ScannerResult::rawReportPath)
+                .filter(path -> path != null && Files.isRegularFile(path))
+                .findFirst()
+                .ifPresent(path -> copyFile(path, artifactDirectory.resolve("cyclonedx-sbom.json")));
+    }
+
+    private void copyFile(Path source, Path target) {
+        try {
+            Files.createDirectories(target.getParent());
+            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception exception) {
+            throw new RepositoryException("unable to copy repository artifact: " + exception.getMessage(), exception);
         }
     }
 

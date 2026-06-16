@@ -180,10 +180,17 @@ class ArtifactRepositoryFlowTests {
         org.assertj.core.api.Assertions.assertThat(approvalAuditEvents).isEqualTo(1);
 
         Path root = tempDir.resolve("repository");
+        Path artifactDirectory = root.resolve("artifacts/dev/mrk/tools/generated-sample/1.0.0");
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("metadata/dev/mrk/tools/generated-sample/1.0.0/record.json"))).isFalse();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("reviews/dev/mrk/tools/generated-sample/1.0.0/latest-review.json"))).isFalse();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("assessments/dev/mrk/tools/generated-sample/1.0.0/assessment.json"))).isTrue();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("assessments/dev/mrk/tools/generated-sample/1.0.0/cyclonedx-sbom.json"))).isTrue();
+        org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("generated-sample.jar"))).isTrue();
+        org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("assessment.json"))).isTrue();
+        org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("cyclonedx-sbom.json"))).isTrue();
+        org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("cyclonedx-sbom.json"), StandardCharsets.UTF_8))
+                .contains("\"bomFormat\":\"CycloneDX\"");
+        org.assertj.core.api.Assertions.assertThat(Files.exists(root.resolve("quarantine/dev/mrk/tools/generated-sample/1.0.0"))).isFalse();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("publications/dev/mrk/tools/generated-sample/1.0.0/publication.json"))).isFalse();
     }
 

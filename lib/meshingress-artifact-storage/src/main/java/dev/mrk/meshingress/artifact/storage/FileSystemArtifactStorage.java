@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
@@ -110,6 +111,32 @@ public class FileSystemArtifactStorage {
             throw exception;
         } catch (Exception exception) {
             throw new ArtifactStorageException("unable to extract artifact to quarantine: " + exception.getMessage(), exception);
+        }
+    }
+
+    public void deleteQuarantine(ArtifactCoordinate coordinate) {
+        Path quarantineRoot = layout.quarantineDirectory(coordinate).toAbsolutePath().normalize();
+        Path expectedRoot = layout.quarantineRoot().toAbsolutePath().normalize();
+        if (!quarantineRoot.startsWith(expectedRoot)) {
+            throw new ArtifactStorageException("quarantine directory escapes quarantine root");
+        }
+        if (!Files.exists(quarantineRoot)) {
+            return;
+        }
+
+        try (var paths = Files.walk(quarantineRoot)) {
+            paths.sorted(Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (Exception exception) {
+                            throw new ArtifactStorageException("unable to delete quarantine path: " + path, exception);
+                        }
+                    });
+        } catch (ArtifactStorageException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw new ArtifactStorageException("unable to delete quarantine directory: " + exception.getMessage(), exception);
         }
     }
 
