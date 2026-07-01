@@ -64,8 +64,12 @@ public record PowerShellExecuteArgs(
     }
 
     public String normalizedExecutable() {
+        return normalizedExecutable("pwsh");
+    }
+
+    public String normalizedExecutable(String defaultExecutable) {
         if (executable == null || executable.isBlank()) {
-            return "pwsh";
+            return defaultExecutable;
         }
         return executable.trim();
     }

@@ -12,6 +12,7 @@ public enum ArtifactTrustStatus {
     BLOCKED_POLICY(false),
     BLOCKED_VULNERABILITY(false),
     SUPERSEDED(false),
+    DELETED(false),
     REVOKED(false);
 
     private final boolean installable;

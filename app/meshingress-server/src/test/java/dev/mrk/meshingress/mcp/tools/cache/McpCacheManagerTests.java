@@ -155,6 +155,7 @@ class McpCacheManagerTests {
                 null,
                 new MeshingressProperties.Cache(
                         true,
+                        tempDir.toString(),
                         defaultStorage,
                         tempDir.toString(),
                         Duration.ofMinutes(5),

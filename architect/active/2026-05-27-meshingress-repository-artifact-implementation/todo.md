@@ -18,22 +18,22 @@
 - [x] Implement artifact checksum model.
 - [x] Implement executable file entry model.
 - [x] Implement requested/inferred/approved/denied scope model.
-- [ ] Document `ArtifactScopeDeclaration(requestedScopes, inferredScopes, approvedScopes, deniedScopes)` parameter semantics for upload, assessment, review, and publication records.
+- [x] Document `ArtifactScopeDeclaration(requestedScopes, inferredScopes, approvedScopes, deniedScopes)` parameter semantics for upload, assessment, review, and publication records.
 - [x] Implement scan result summary model.
-- [ ] Implement review decision model.
+- [x] Implement review decision model.
 - [x] Implement publication record model.
 - [x] Implement provenance model.
 
 ## Storage
 
 - [ ] Define `ArtifactBlobStore`.
-- [ ] Define `ArtifactMetadataStore`.
+- [x] Define `ArtifactMetadataStore`.
 - [ ] Define `ArtifactIndexStore`.
 - [ ] Define `ArtifactQuarantineStore`.
 - [x] Implement filesystem storage backend.
 - [ ] Add content-addressed blob storage.
-- [ ] Add append-only review event storage.
-- [ ] Add immutable publication record storage.
+- [x] Add append-only review event storage.
+- [x] Add immutable publication record storage.
 
 ## Upload and Quarantine
 
@@ -49,13 +49,13 @@
 ## Scanners and External Tools
 
 - [x] Add scanner adapter interface.
-- [ ] Add scanner process runner with timeout.
+- [x] Add scanner process runner with timeout.
 - [x] Add artifact behavior scanner for scope inference.
 - [x] Define scope inference rule catalog schema.
 - [x] Add SootUp-backed bytecode reachability analysis to distinguish dependency-only risky APIs from calls reachable from Meshingress tool entrypoints.
 - [ ] Add SpotBugs embedded Java assessment adapter for general Java bug/risk patterns.
 - [ ] Add FindSecBugs rules to the SpotBugs adapter for Java security findings.
-- [ ] Add CycloneDX SBOM generation for embedded artifact inventory metadata before external Syft integration.
+- [x] Add CycloneDX SBOM generation for embedded artifact inventory metadata before external Syft integration.
 - [ ] Generate CodeQL query packs from the repository scope rule catalog.
 - [ ] Add CodeQL result importer/normalizer for inferred scope findings.
 - [ ] Document CodeQL source/build requirements and JAR-only fallback behavior.
@@ -64,7 +64,7 @@
 - [ ] Add regex matcher support as low-confidence fallback only.
 - [ ] Add bytecode/source heuristics for file, process, network, environment, and secrets API usage.
 - [ ] Integrate Syft for SBOM generation.
-- [ ] Integrate Grype for vulnerability scanning.
+- [x] Integrate Grype for vulnerability scanning.
 - [ ] Integrate Trivy for vulnerability/misconfiguration/secret scanning.
 - [ ] Integrate ClamAV for malware scanning.
 - [ ] Integrate YARA for suspicious binary/text patterns.
@@ -78,12 +78,12 @@
 
 - [ ] Implement assessment job service.
 - [x] Implement sequential assessment pipeline.
-- [ ] Add scanner timeout and failure policy.
+- [x] Add scanner timeout and failure policy.
 - [ ] Compare requested scopes with inferred scopes.
 - [ ] Flag missing or under-declared scopes for reviewer action.
 - [x] Ensure upload initializes `inferredScopes` as empty and assessment replaces it with scanner-derived scopes.
 - [x] Ensure default approval never treats uploaded `requestedScopes` as trusted scope authority for JAR tools.
-- [ ] Add vulnerability severity thresholds.
+- [x] Add vulnerability severity thresholds.
 - [ ] Add malware blocking rule.
 - [ ] Add suspicious pattern review rule.
 - [ ] Add forbidden scope policy rule.
@@ -91,11 +91,11 @@
 
 ## Review
 
-- [ ] Implement review endpoint.
+- [x] Implement review endpoint.
 - [x] Implement approve endpoint.
-- [ ] Implement reject endpoint.
-- [ ] Implement revoke endpoint.
-- [ ] Store reviewer identity/context.
+- [x] Implement reject endpoint.
+- [x] Implement revoke endpoint.
+- [x] Store reviewer identity/context.
 - [x] Store approved scopes.
 - [x] Store denied scopes with reasons.
 - [x] Require review before publication.
@@ -104,10 +104,10 @@
 
 - [x] Generate publication record JSON.
 - [x] Sign publication record.
-- [ ] Store signature bundle.
+- [x] Store signature bundle.
 - [x] Expose publication endpoint.
 - [ ] Add revocation overlay.
-- [ ] Add publication record schema.
+- [x] Add publication record schema.
 
 ## Runtime Integration
 
@@ -117,7 +117,7 @@
 - [x] Add runtime install policy evaluator.
 - [x] Add runtime tool cache.
 - [x] Reject non-installable trust statuses.
-- [ ] Reject unapproved scopes.
+- [x] Reject unapproved scopes.
 - [ ] Verify executable checksums before execution.
 - [ ] Add `frontend/` web interface for `app/meshingress-repository` to track artifacts and reduce manual API calls/uploads.
 

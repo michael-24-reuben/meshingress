@@ -8,6 +8,7 @@ import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
+import dev.mrk.meshingress.dispatch.tool.ToolResultContent;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -118,11 +119,9 @@ public class VoiceboxTool {
     private DispatchExecutionResult run(String summary, boolean mutating, VoiceboxCall call) {
         try {
             JsonNode response = call.execute();
-            ObjectNode structured = objectMapper.createObjectNode();
-            structured.put("ok", true);
-            structured.put("mutating", mutating);
-            structured.put("receivedAt", Instant.now().toString());
-            structured.set("response", response);
+            ToolResultContent structured = base(mutating);
+            structured.setOk(true);
+            structured.setResponse(response);
 
             return DispatchExecutionResult.builder()
                     .appendContent(ResultContent.json(response))
@@ -136,14 +135,13 @@ public class VoiceboxTool {
     }
 
     private DispatchExecutionResult failure(Exception exception) {
-        ObjectNode structured = objectMapper.createObjectNode();
-        structured.put("ok", false);
-        structured.put("receivedAt", Instant.now().toString());
-        structured.put("exceptionType", exception.getClass().getName());
-        structured.put("message", exception.getMessage() == null ? "" : exception.getMessage());
+        ToolResultContent structured = base(false);
+        structured.setOk(false);
+        structured.setExceptionType(exception.getClass().getName());
+        structured.setMessage(exception.getMessage() == null ? "" : exception.getMessage());
 
         if (exception instanceof VoiceboxHttpException httpException) {
-            structured.set("http", httpException.response());
+            structured.setHttp(httpException.response());
         }
 
         String code = errorCode(exception);
@@ -153,6 +151,14 @@ public class VoiceboxTool {
                 .status("failed")
                 .summary("Voicebox request failed.")
                 .build();
+    }
+
+    private ToolResultContent base(boolean mutating) {
+        ToolResultContent structured = new ToolResultContent();
+        structured.setTool("voicebox");
+        structured.setMutating(mutating);
+        structured.setReceivedAt(Instant.now().toString());
+        return structured;
     }
 
     private String errorCode(Exception exception) {

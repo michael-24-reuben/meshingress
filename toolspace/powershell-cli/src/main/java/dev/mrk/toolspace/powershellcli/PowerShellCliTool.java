@@ -8,7 +8,10 @@ import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
+import dev.mrk.meshingress.dispatch.process.ProcessExecutionContent;
 import dev.mrk.meshingress.scopes.McpToolScope;
+import dev.mrk.meshingress.toolmetadata.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -23,11 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -43,10 +42,32 @@ import java.util.concurrent.atomic.AtomicLong;
         McpToolScope.SHELL_EXECUTE,
         McpToolScope.FILES_WRITE
 })
+@McpToolProperty(
+        name = "meshingress.powershell.executable",
+        description = "PowerShell executable used by native deployments when a call does not provide an executable argument.",
+        defaultValue = "pwsh"
+)
+@McpToolProperty(
+        name = "meshingress.powershell.timeout-ms",
+        description = "Default PowerShell execution timeout in milliseconds for native deployments.",
+        defaultValue = "20000",
+        valueType = "long"
+)
+@McpToolReadme("""
+        # PowerShell CLI
+        
+        Executes a PowerShell script through the `cli.powershell.execute` MCP function.
+        
+        Configure `resources/application.yaml` beside this artifact when a native deployment needs a host-specific PowerShell executable or timeout default.
+        """)
 @McpToolMapping("tools")
 public class PowerShellCliTool {
 
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    McpToolMetadata mcpToolMetadata;
+
 
     public PowerShellCliTool(ObjectMapper objectMapper) {
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper must not be null");
@@ -63,6 +84,13 @@ public class PowerShellCliTool {
             description = "Runs a PowerShell script and returns ordered execution tracks, stdout, stderr, exit code, duration, and status."
     )
     public DispatchExecutionResult execute(PowerShellExecuteArgs arguments, McpCallContext context) {
+        String executable = mcpToolMetadata
+                .toolProperty(PowerShellCliTool.class, "meshingress.powershell.executable")
+                .value();
+
+//        List<McpToolPropertyMetadata> properties = mcpToolMetadata.toolProperties(PowerShellCliTool.class);
+//        String readme = mcpToolMetadata.toolReadme(PowerShellCliTool.class);
+
         DispatchExecutionResult.Builder dispatch = DispatchExecutionResult.builder();
         ArrayNode tracks = objectMapper.createArrayNode();
         AtomicLong sequence = new AtomicLong(0);
@@ -75,7 +103,7 @@ public class PowerShellCliTool {
             validateArguments(arguments);
 
             long timeoutMs = arguments.normalizedTimeoutMs();
-            String executable = arguments.normalizedExecutable();
+            executable = arguments.normalizedExecutable(executable);
             Path workingDirectory = resolveWorkingDirectory(arguments.workingDirectory());
 
             scriptFile = writeTemporaryScript(arguments.script());
@@ -141,20 +169,21 @@ public class PowerShellCliTool {
                             .put("timedOut", timedOut)
                             .put("durationMs", Duration.between(startedAt, finishedAt).toMillis()));
 
-            ObjectNode structured = objectMapper.createObjectNode();
-            structured.put("status", isError ? "failed" : "completed");
-            structured.put("exitCode", exitCode);
-            structured.put("timedOut", timedOut);
-            structured.put("startedAt", startedAt.toString());
-            structured.put("finishedAt", finishedAt.toString());
-            structured.put("durationMs", Duration.between(startedAt, finishedAt).toMillis());
-            structured.put("trackCount", tracks.size());
-            structured.set("tracks", tracks);
+            ProcessExecutionContent structured = executionContent(
+                    isError ? "failed" : "completed",
+                    executable,
+                    command,
+                    workingDirectory,
+                    exitCode,
+                    timedOut,
+                    startedAt,
+                    finishedAt,
+                    tracks,
+                    arguments.shouldIncludeScriptInStructuredContent() ? arguments.script() : null,
+                    null
+            );
 
-            if (arguments.shouldIncludeScriptInStructuredContent()) {
-                structured.put("script", arguments.script());
-            }
-
+            // end timer then calculate duration
             return dispatch
                     .structuredContent(structured)
                     .error(isError)
@@ -168,7 +197,7 @@ public class PowerShellCliTool {
             Thread.currentThread().interrupt();
             appendException(dispatch, tracks, sequence, "interrupted", interrupted);
             return dispatch
-                    .structuredContent(failureStructured(startedAt, tracks, "interrupted", interrupted.getMessage()))
+                    .structuredContent(failureExecutionContent(startedAt, tracks, "interrupted", interrupted.getMessage()))
                     .error("POWERSHELL_INTERRUPTED", "PowerShell execution was interrupted.")
                     .status("interrupted")
                     .summary("PowerShell execution was interrupted.")
@@ -177,7 +206,7 @@ public class PowerShellCliTool {
         } catch (Exception exception) {
             appendException(dispatch, tracks, sequence, "exception", exception);
             return dispatch
-                    .structuredContent(failureStructured(startedAt, tracks, "exception", exception.getMessage()))
+                    .structuredContent(failureExecutionContent(startedAt, tracks, "exception", exception.getMessage()))
                     .error("POWERSHELL_EXECUTION_FAILED", exception.getMessage())
                     .status("failed")
                     .summary("PowerShell execution failed before a normal process exit.")
@@ -292,22 +321,43 @@ public class PowerShellCliTool {
         appendTrack(dispatch, tracks, sequence, type, "system", payload);
     }
 
-    private ObjectNode failureStructured(
+    private ProcessExecutionContent failureExecutionContent(
             Instant startedAt,
             ArrayNode tracks,
             String status,
             String message
     ) {
         Instant finishedAt = Instant.now();
+        return executionContent(status, null, List.of(), null, null, false, startedAt, finishedAt, tracks, null, message);
+    }
 
-        ObjectNode structured = objectMapper.createObjectNode();
-        structured.put("status", status);
-        structured.put("message", message == null ? "" : message);
-        structured.put("startedAt", startedAt.toString());
-        structured.put("finishedAt", finishedAt.toString());
-        structured.put("durationMs", Duration.between(startedAt, finishedAt).toMillis());
-        structured.put("trackCount", tracks.size());
-        structured.set("tracks", tracks);
+    private ProcessExecutionContent executionContent(
+            String status,
+            String executable,
+            List<String> command,
+            Path workingDirectory,
+            Integer exitCode,
+            boolean timedOut,
+            Instant startedAt,
+            Instant finishedAt,
+            ArrayNode tracks,
+            String script,
+            String message
+    ) {
+        ProcessExecutionContent structured = new ProcessExecutionContent();
+        structured.setStatus(status);
+        structured.setCommand(executable);
+        structured.setArgs(command == null || command.size() <= 1 ? List.of() : command.subList(1, command.size()));
+        structured.setWorkingDirectory(workingDirectory == null ? null : workingDirectory.toString());
+        structured.setExitCode(exitCode);
+        structured.setTimedOut(timedOut);
+        structured.setStartedAt(startedAt.toString());
+        structured.setFinishedAt(finishedAt.toString());
+        structured.setDurationMs(Duration.between(startedAt, finishedAt).toMillis());
+        structured.setTrackCount(tracks.size());
+        structured.setTracks(tracks);
+        structured.setScript(script);
+        structured.setMessage(message == null ? "" : message);
         return structured;
     }
 

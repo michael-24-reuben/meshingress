@@ -48,9 +48,16 @@ public record CycloneDxSbom(
         summary.put("format", bomFormat);
         summary.put("specVersion", specVersion);
         summary.put("componentCount", componentCount());
+        summary.put("dependencyComponentCount", dependencyComponentCount());
         summary.put("artifactName", artifactName());
         summary.put("artifactSha256", artifactSha256());
         return summary;
+    }
+
+    public long dependencyComponentCount() {
+        return components.stream()
+                .filter(Component::isDependency)
+                .count();
     }
 
     public Map<String, Object> toDocument() {
@@ -89,15 +96,27 @@ public record CycloneDxSbom(
     public record Component(
             String type,
             String bomRef,
+            String group,
             String name,
+            String version,
+            String purl,
+            String scope,
             Long size,
             String sha256,
             List<Property> properties
     ) {
+        public Component(String type, String bomRef, String name, Long size, String sha256, List<Property> properties) {
+            this(type, bomRef, null, name, null, null, null, size, sha256, properties);
+        }
+
         public Component {
             type = type == null || type.isBlank() ? "file" : type;
             bomRef = bomRef == null ? "" : bomRef;
+            group = group == null ? "" : group;
             name = name == null ? "" : name;
+            version = version == null ? "" : version;
+            purl = purl == null ? "" : purl;
+            scope = scope == null ? "" : scope;
             properties = properties == null ? List.of() : List.copyOf(properties);
         }
 
@@ -105,7 +124,19 @@ public record CycloneDxSbom(
             Map<String, Object> component = new LinkedHashMap<>();
             component.put("type", type);
             component.put("bom-ref", bomRef);
+            if (!group.isBlank()) {
+                component.put("group", group);
+            }
             component.put("name", name);
+            if (!version.isBlank()) {
+                component.put("version", version);
+            }
+            if (!purl.isBlank()) {
+                component.put("purl", purl);
+            }
+            if (!scope.isBlank()) {
+                component.put("scope", scope);
+            }
             if (size != null && size >= 0) {
                 component.put("size", size);
             }
@@ -125,6 +156,12 @@ public record CycloneDxSbom(
             hash.put("alg", "SHA-256");
             hash.put("content", value);
             return hash;
+        }
+
+        boolean isDependency() {
+            return properties.stream()
+                    .anyMatch(property -> property.name().equals("meshingress:component-role")
+                            && property.value().equals("maven-dependency"));
         }
     }
 

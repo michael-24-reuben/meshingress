@@ -1,14 +1,11 @@
 package dev.mrk.meshingress.controller.roles.registration;
 
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Service
 class InMemoryToolRegistrationStore implements ToolRegistrationStore {
 
     private final Map<String, ToolRegistrationRecord> records = new LinkedHashMap<>();

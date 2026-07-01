@@ -1,8 +1,11 @@
 package dev.mrk.meshingress.api.result;
 
+import dev.mrk.meshingress.dispatch.StructuredContent;
+import dev.mrk.meshingress.dispatch.StructuredContentMapper;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -19,7 +22,16 @@ public final class DispatchExecutionResult {
     private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
 
     private final List<ResultContent> content;
-    private JsonNode structuredContent;
+
+    /**
+     * Preferred typed structured content.
+     */
+    private StructuredContent structuredContent;
+
+    /**
+     * Legacy/raw structured content escape hatch.
+     */
+    private JsonNode rawStructuredContent;
     private boolean error;
     private String status;
     private String summary;
@@ -46,12 +58,39 @@ public final class DispatchExecutionResult {
         return this;
     }
 
-    public DispatchExecutionResult setStructuredContent(JsonNode structuredContent) {
+    public DispatchExecutionResult setStructuredContent(StructuredContent structuredContent) {
         this.structuredContent = Objects.requireNonNull(
                 structuredContent,
                 "structuredContent must not be null"
         );
+        this.rawStructuredContent = null;
         return this;
+    }
+
+    /**
+     * Legacy escape hatch for tools that still provide arbitrary JSON.
+     * Prefer setStructuredContent(StructuredContent).
+     */
+    @Deprecated(forRemoval = false)
+    public DispatchExecutionResult setStructuredContent(JsonNode structuredContent) {
+        this.rawStructuredContent = Objects.requireNonNull(
+                structuredContent,
+                "structuredContent must not be null"
+        );
+        this.structuredContent = null;
+        return this;
+    }
+
+    public @Nullable String contentKind() {
+        return structuredContent != null ? structuredContent.kind().toUpperCase() : null;
+    }
+
+    public @Nullable String contentSchema() {
+        return structuredContent != null ? structuredContent.schema() : null;
+    }
+
+    public int contentVersion() {
+        return structuredContent != null ? structuredContent.version() : 0;
     }
 
     public DispatchExecutionResult setError(boolean error) {
@@ -64,6 +103,7 @@ public final class DispatchExecutionResult {
         return this;
     }
 
+    @Contract(value = "_, _ -> this", mutates = "this")
     public DispatchExecutionResult markError(String errorCode, String errorMessage) {
         this.error = true;
         this.errorCode = errorCode;
@@ -86,9 +126,27 @@ public final class DispatchExecutionResult {
         return this;
     }
 
+    /**
+     * Preferred accessor for typed structured content.
+     */
+    @Contract(pure = true)
+    public @NonNull Optional<StructuredContent> typedStructuredContent() {
+        return Optional.ofNullable(structuredContent);
+    }
+
+    /**
+     * Backward-compatible accessor.
+     *
+     * If typed structured content is present, this returns its serialized envelope.
+     * If legacy raw content is present, this returns that raw node.
+     */
     @Contract(pure = true)
     public @NonNull Optional<JsonNode> structuredContent() {
-        return Optional.ofNullable(structuredContent);
+        if (structuredContent != null) {
+            return Optional.of(StructuredContentMapper.toJson(DEFAULT_OBJECT_MAPPER, structuredContent));
+        }
+
+        return Optional.ofNullable(rawStructuredContent);
     }
 
     @Contract(pure = true)
@@ -116,10 +174,14 @@ public final class DispatchExecutionResult {
         root.set("content", contentArray);
 
         if (structuredContent != null) {
-            root.set("structuredContent", structuredContent);
+            root.set("structuredContent", StructuredContentMapper.toJson(objectMapper, structuredContent));
+        } else if (rawStructuredContent != null) {
+            root.set("structuredContent", rawStructuredContent);
         }
 
-        root.put("isError", error);
+        if (error) {
+            root.put("isError", true);
+        }
 
         ObjectNode metaNode = buildMeta(objectMapper);
         if (!metaNode.isEmpty()) {
@@ -193,7 +255,13 @@ public final class DispatchExecutionResult {
             return this;
         }
 
+        @Deprecated(forRemoval = false)
         public Builder structuredContent(JsonNode structuredContent) {
+            result.setStructuredContent(structuredContent);
+            return this;
+        }
+
+        public Builder structuredContent(StructuredContent structuredContent) {
             result.setStructuredContent(structuredContent);
             return this;
         }

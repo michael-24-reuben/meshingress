@@ -3,6 +3,7 @@ package dev.mrk.meshingress.controller.roles.registration;
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
+import dev.mrk.meshingress.server.install.RuntimeToolCache;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleId;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleStatus;
 import dev.mrk.meshingress.runtime.loader.ToolRuntimeLoader;
@@ -30,6 +31,7 @@ public class ToolRegistrationService {
     private final MeshingressProperties properties;
     private final ToolRegistrationStore store;
     private final ToolRuntimeLoader runtimeLoader;
+    private final RuntimeToolCache runtimeToolCache;
     private final ToolRegistry toolRegistry;
     private final Map<ToolRegistrationPhase, ToolRegistrationStrategy> strategies;
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
@@ -39,6 +41,7 @@ public class ToolRegistrationService {
             MeshingressProperties properties,
             ToolRegistrationStore store,
             ToolRuntimeLoader runtimeLoader,
+            RuntimeToolCache runtimeToolCache,
             ToolRegistry toolRegistry,
             List<ToolRegistrationStrategy> strategies
     ) {
@@ -46,6 +49,7 @@ public class ToolRegistrationService {
         this.properties = properties;
         this.store = store;
         this.runtimeLoader = runtimeLoader;
+        this.runtimeToolCache = runtimeToolCache;
         this.toolRegistry = toolRegistry;
         this.strategies = new EnumMap<>(ToolRegistrationPhase.class);
         for (ToolRegistrationStrategy strategy : strategies) {
@@ -104,11 +108,15 @@ public class ToolRegistrationService {
             ArrayNode registrations = objectMapper.createArrayNode();
             boolean restartRequired = false;
             int runtimeDeactivated = 0;
+            int runtimeCacheRemoved = 0;
             int bundleDependenciesRemoved = 0;
             for (ToolRegistrationRecord record : activeRecords) {
                 DeleteOutcome outcome = deleteRecord(record);
                 if (outcome.runtimeDeactivated()) {
                     runtimeDeactivated++;
+                }
+                if (outcome.runtimeCacheRemoved()) {
+                    runtimeCacheRemoved++;
                 }
                 if (outcome.bundleDependencyRemoved()) {
                     bundleDependenciesRemoved++;
@@ -118,6 +126,7 @@ public class ToolRegistrationService {
                 ToolRegistrationRecord updated = store.markStatus(record.registrationId(), outcome.status());
                 ObjectNode recordJson = recordToJson(updated);
                 recordJson.put("runtimeDeactivated", outcome.runtimeDeactivated());
+                recordJson.put("runtimeCacheRemoved", outcome.runtimeCacheRemoved());
                 recordJson.put("bundleDependencyRemoved", outcome.bundleDependencyRemoved());
                 recordJson.put("restartRequired", outcome.restartRequired());
                 if (hasText(outcome.message())) {
@@ -127,6 +136,7 @@ public class ToolRegistrationService {
             }
 
             result.put("runtimeDeactivated", runtimeDeactivated);
+            result.put("runtimeCacheRemoved", runtimeCacheRemoved);
             result.put("bundleDependenciesRemoved", bundleDependenciesRemoved);
             result.put("restartRequired", restartRequired);
             result.put("registryVersion", toolRegistry.registryVersion());
@@ -175,7 +185,17 @@ public class ToolRegistrationService {
     private DeleteOutcome deleteRecord(ToolRegistrationRecord record) {
         if (record.runtimeModuleId() != null && !record.runtimeModuleId().isBlank()) {
             runtimeLoader.deactivate(new ToolModuleId(record.runtimeModuleId()));
-            return new DeleteOutcome("deleted", true, false, false, "Runtime module deactivated.");
+            boolean cacheRemoved = removePublicationRuntimeCache(record);
+            return new DeleteOutcome(
+                    "deleted",
+                    true,
+                    cacheRemoved,
+                    false,
+                    false,
+                    cacheRemoved
+                            ? "Runtime module deactivated and runtime cache artifact removed."
+                            : "Runtime module deactivated."
+            );
         }
 
         return switch (record.sourceKind()) {
@@ -184,11 +204,13 @@ public class ToolRegistrationService {
                     "reconciled-deleted",
                     false,
                     false,
+                    false,
                     true,
                     "Classpath bundle tool remains available until the server is rebuilt/restarted without it."
             );
             case SERVER_NATIVE -> new DeleteOutcome(
                     "reconciled-deleted",
+                    false,
                     false,
                     false,
                     true,
@@ -199,9 +221,22 @@ public class ToolRegistrationService {
                     false,
                     false,
                     false,
+                    false,
                     "Registration record deleted; no active runtime module was attached."
             );
         };
+    }
+
+    private boolean removePublicationRuntimeCache(ToolRegistrationRecord record) {
+        if (record.sourceKind() != ToolSourceKind.PUBLICATION_RECORD) {
+            return false;
+        }
+        String runtimeCachePath = record.source().getOrDefault("runtimeCachePath", "");
+        if (runtimeCachePath.isBlank()) {
+            return false;
+        }
+        runtimeToolCache.remove(Path.of(runtimeCachePath));
+        return true;
     }
 
     private DeleteOutcome deleteMavenBundleRecord(ToolRegistrationRecord record) {
@@ -210,6 +245,7 @@ public class ToolRegistrationService {
         if (!dependencyAdded) {
             return new DeleteOutcome(
                     "deleted-restart-required",
+                    false,
                     false,
                     false,
                     true,
@@ -224,6 +260,7 @@ public class ToolRegistrationService {
         boolean removed = removeBundleDependency(Path.of(bundlePomPath).toAbsolutePath().normalize(), groupId, artifactId, version);
         return new DeleteOutcome(
                 "deleted-restart-required",
+                false,
                 false,
                 removed,
                 true,
@@ -430,6 +467,7 @@ public class ToolRegistrationService {
     private record DeleteOutcome(
             String status,
             boolean runtimeDeactivated,
+            boolean runtimeCacheRemoved,
             boolean bundleDependencyRemoved,
             boolean restartRequired,
             String message

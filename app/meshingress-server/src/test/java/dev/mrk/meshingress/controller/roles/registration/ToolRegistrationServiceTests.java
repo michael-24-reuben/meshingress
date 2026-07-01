@@ -9,6 +9,7 @@ import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
 import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
+import dev.mrk.meshingress.server.install.RuntimeToolCache;
 import dev.mrk.meshingress.runtime.artifacts.ResolvedToolArtifact;
 import dev.mrk.meshingress.runtime.artifacts.ToolArtifactSource;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleHandle;
@@ -81,6 +82,7 @@ class ToolRegistrationServiceTests {
                 meshingressProperties(bundlePom),
                 store,
                 new EmptyToolRuntimeLoader(),
+                new RecordingRuntimeToolCache(),
                 new EmptyToolRegistry(),
                 List.of()
         );
@@ -100,6 +102,53 @@ class ToolRegistrationServiceTests {
         String updatedPom = Files.readString(bundlePom);
         assertThat(updatedPom).doesNotContain("<artifactId>sample-module</artifactId>");
         assertThat(updatedPom).contains("<artifactId>other-module</artifactId>");
+    }
+
+    @Test
+    void deleteDeactivatesPublicationRuntimeModuleAndRemovesRuntimeCache() {
+        ToolRegistrationStore store = new InMemoryToolRegistrationStore();
+        Path cachedJar = tempDir.resolve("runtime-cache").resolve("sample-module.jar");
+        store.saveActive(new ToolRegistrationRecord(
+                "publication-reg-1",
+                "sample.tool",
+                ToolRegistrationPhase.STAGING,
+                ToolSourceKind.PUBLICATION_RECORD,
+                "active",
+                Map.of("runtimeCachePath", cachedJar.toString()),
+                "test",
+                "req-1",
+                OffsetDateTime.now(),
+                null,
+                "dev.mrk.tools:sample-module:0.0.1-SNAPSHOT",
+                List.of("sample.tool")
+        ));
+        RecordingToolRuntimeLoader runtimeLoader = new RecordingToolRuntimeLoader();
+        RecordingRuntimeToolCache runtimeToolCache = new RecordingRuntimeToolCache();
+        ToolRegistrationService service = new ToolRegistrationService(
+                new ObjectMapper(),
+                meshingressProperties(tempDir.resolve("pom.xml")),
+                store,
+                runtimeLoader,
+                runtimeToolCache,
+                new EmptyToolRegistry(),
+                List.of()
+        );
+
+        ObjectNode result = service.delete(
+                new McpCallContext("Bearer dev-admin", null, null, "req-1"),
+                "sample.tool",
+                "disable"
+        );
+
+        assertThat(result.path("deleted").asBoolean()).isTrue();
+        assertThat(result.path("runtimeDeactivated").asInt()).isEqualTo(1);
+        assertThat(result.path("runtimeCacheRemoved").asInt()).isEqualTo(1);
+        assertThat(result.path("registrations").path(0).path("status").asString()).isEqualTo("deleted");
+        assertThat(result.path("registrations").path(0).path("runtimeDeactivated").asBoolean()).isTrue();
+        assertThat(result.path("registrations").path(0).path("runtimeCacheRemoved").asBoolean()).isTrue();
+        assertThat(runtimeLoader.deactivatedModuleId.value()).isEqualTo("dev.mrk.tools:sample-module:0.0.1-SNAPSHOT");
+        assertThat(runtimeToolCache.removedPath).isEqualTo(cachedJar);
+        assertThat(store.findActive("sample.tool")).isEmpty();
     }
 
     private MeshingressProperties meshingressProperties(Path bundlePom) {
@@ -176,6 +225,50 @@ class ToolRegistrationServiceTests {
         }
     }
 
+    private static final class RecordingToolRuntimeLoader implements ToolRuntimeLoader {
+
+        private ToolModuleId deactivatedModuleId;
+
+        @Override
+        public ToolModuleHandle activate(ToolArtifactSource source) {
+            throw new UnsupportedOperationException("activate is not used by this test");
+        }
+
+        @Override
+        public ToolModuleHandle activate(ResolvedToolArtifact artifact) {
+            throw new UnsupportedOperationException("activate is not used by this test");
+        }
+
+        @Override
+        public void deactivate(ToolModuleId moduleId) {
+            this.deactivatedModuleId = moduleId;
+        }
+
+        @Override
+        public Optional<ToolModuleStatus> status(ToolModuleId moduleId) {
+            return Optional.empty();
+        }
+
+        @Override
+        public List<ToolModuleStatus> list() {
+            return List.of();
+        }
+    }
+
+    private static final class RecordingRuntimeToolCache extends RuntimeToolCache {
+
+        private Path removedPath;
+
+        RecordingRuntimeToolCache() {
+            super(null, null);
+        }
+
+        @Override
+        public void remove(Path cachedJar) {
+            this.removedPath = cachedJar;
+        }
+    }
+
     private static final class EmptyToolRegistry implements ToolRegistry {
 
         @Override
@@ -200,6 +293,11 @@ class ToolRegistrationServiceTests {
 
         @Override
         public Optional<McpFunctionDescriptor> findEnabledFunction(String name) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<McpToolDescriptor> findOwningTool(String functionName) {
             return Optional.empty();
         }
 

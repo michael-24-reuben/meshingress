@@ -1,0 +1,38 @@
+{
+  "id": "2026-06-24-cobalt-media-tool-module",
+  "title": "Cobalt Media Tool Module",
+  "status": "resolved",
+  "createdAt": "2026-06-24T20:20:06-04:00",
+  "activatedAt": "2026-06-24T20:20:06-04:00",
+  "resolvedAt": "2026-06-24T20:25:15-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-24T20:25:15-04:00",
+  "tags": [
+    "toolspace",
+    "mcp",
+    "cobalt",
+    "media",
+    "vendor"
+  ],
+  "related": [
+    "2026-05-23-runtime-tool-creation-and-registry",
+    "2026-05-24-whatsapp-cobalt-tool"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User requested installing https://github.com/imputnet/cobalt as a Meshingress tool with the repo placed inside the tool module, not outside Meshingress."
+  },
+  "events": [
+    {
+      "at": "2026-06-24T20:20:06-04:00",
+      "type": "CREATED",
+      "note": "Created active entry for user-directed Cobalt media tool module integration."
+    },
+    {
+      "at": "2026-06-24T20:25:15-04:00",
+      "type": "RESOLVED",
+      "note": "Cobalt module, vendored upstream source, bundle wiring, and focused tests were completed."
+    }
+  ]
+}

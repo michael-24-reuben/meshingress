@@ -8,8 +8,8 @@ High-level architecture (big picture)
 ------------------------------------
 - Maven reactor with three module families:
   - `lib/meshingress-tool-api` contains the shared MCP tool SPI.
-  - `toolspace/*` contains attachable tool modules, including `toolspace/helloworld`, `toolspace/instagram-api`, `toolspace/powershell-cli-tool`, `toolspace/whatsapp-cobalt`, and `toolspace/sample-module`.
-  - `app/meshingress-server` contains the Spring Boot application. Java 22 is used (see `pom.xml`).
+  - `toolspace/*` contains attachable tool modules, including `toolspace/helloworld`, `toolspace/instagram-api`, `toolspace/powershell-cli`, `toolspace/whatsapp-cobalt`, `toolspace/voicebox`, and `toolspace/webtoon-downloader`.
+  - `app/meshingress-server` contains the Spring Boot application. Java 25 is used (see `pom.xml`).
   - `app/meshingress-tool-bundle` aggregates tool module dependencies for server startup discovery.
 - Two logical surfaces:
   - HTTP/REST internal API under `/api/v1/architect/*` (in `architect/` domain work; see `architect/README.md`).
@@ -19,8 +19,10 @@ High-level architecture (big picture)
 
 Key files to read first
 ----------------------
-- `lib/meshingress-tool-api/src/main/java/dev/mrk/meshingress/mcp/tools/McpToolHandler.java` — SPI interface tool modules implement.
-- `lib/meshingress-tool-api/src/main/java/dev/mrk/meshingress/mcp/tools/McpToolDescriptor.java` — public tool metadata contract.
+- `lib/meshingress-tool-api/src/main/java/dev/mrk/meshingress/api/tools/McpToolHandler.java` — SPI interface tool modules implement.
+- `lib/meshingress-tool-api/src/main/java/dev/mrk/meshingress/api/tools/McpToolDescriptor.java` — public tool metadata contract.
+- `.agents/context/tool-modules/README.md` — portable context bundle and upload guidance for online models.
+- `.agents/context/tool-modules/BUILDING_TOOL_MODULES.md` — compact current guide for building and editing tool modules.
 - `toolspace/helloworld/src/main/java/dev/mrk/toolspace/helloworld/HelloWorldTool.java` — example external tool module.
 - `toolspace/helloworld/src/main/java/dev/mrk/toolspace/helloworld/HelloWorldToolAutoConfiguration.java` — example auto-configuration that attaches the tool when the module is on the server classpath.
 - `app/meshingress-server/src/main/java/dev/mrk/meshingress/MeshingressApplication.java` — app entry.
@@ -66,7 +68,7 @@ Build, run and test (concrete commands)
   or after packaging: java -jar app\meshingress-server\target\meshingress.jar
 - Run tests:
   mvnw.cmd test
-- Notes: the repository uses the bundled Maven wrapper; use `mvnw.cmd` on Windows or `./mvnw` on *nix. Java 22 required.
+- Notes: the repository uses the bundled Maven wrapper; use `mvnw.cmd` on Windows or `./mvnw` on *nix. Java 25 is required.
 
 Conventions and project-specific workflows
 -----------------------------------------

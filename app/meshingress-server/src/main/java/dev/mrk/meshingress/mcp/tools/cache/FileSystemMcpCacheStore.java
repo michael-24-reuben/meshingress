@@ -23,12 +23,10 @@ public class FileSystemMcpCacheStore implements McpCacheStore {
     private static final String SCHEMA_VERSION = "mcp-cache-v1";
 
     private final ObjectMapper objectMapper;
-    private final MeshingressProperties properties;
     private final Path rootDirectory;
 
     public FileSystemMcpCacheStore(ObjectMapper objectMapper, MeshingressProperties properties) {
         this.objectMapper = objectMapper;
-        this.properties = properties;
         this.rootDirectory = Path.of(properties.cache().directory());
         if (properties.cache().createDirectories()) {
             createDirectories(rootDirectory);

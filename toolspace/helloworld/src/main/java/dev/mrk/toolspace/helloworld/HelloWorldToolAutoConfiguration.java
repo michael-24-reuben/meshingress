@@ -9,6 +9,6 @@ public class HelloWorldToolAutoConfiguration {
 
     @Bean
     HelloWorldTool helloWorldTool(ObjectMapper objectMapper) {
-        return new HelloWorldTool(objectMapper);
+        return new HelloWorldTool();
     }
 }

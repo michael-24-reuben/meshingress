@@ -97,6 +97,16 @@ public class DelegatingToolRegistry implements ToolRegistry {
     }
 
     @Override
+    public Optional<McpToolDescriptor> findOwningTool(String functionName) {
+        Optional<McpToolDescriptor> tool = delegates.stream()
+                .map(delegate -> delegate.findOwningTool(functionName))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
+        return onFindOwningTool(tool, functionName);
+    }
+
+    @Override
     public Optional<McpToolDescriptor> findTool(String name) {
         Optional<McpToolDescriptor> tool = delegates.stream()
                 .map(delegate -> delegate.findTool(name))
@@ -207,6 +217,13 @@ public class DelegatingToolRegistry implements ToolRegistry {
      */
     protected Optional<McpFunctionDescriptor> onFindEnabledFunction(Optional<McpFunctionDescriptor> function, String name) {
         return function;
+    }
+
+    /**
+     * Hook after finding a function's owning tool.
+     */
+    protected Optional<McpToolDescriptor> onFindOwningTool(Optional<McpToolDescriptor> tool, String functionName) {
+        return tool;
     }
 
     /**

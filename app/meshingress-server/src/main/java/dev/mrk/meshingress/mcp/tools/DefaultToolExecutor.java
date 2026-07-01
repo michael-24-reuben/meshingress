@@ -2,6 +2,7 @@ package dev.mrk.meshingress.mcp.tools;
 
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
+import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
@@ -38,6 +39,8 @@ public class DefaultToolExecutor implements ToolExecutor {
     public DispatchExecutionResult execute(String functionName, ObjectNode arguments, McpCallContext context) {
         McpFunctionDescriptor function = toolRegistry.findEnabledFunction(functionName)
                 .orElseThrow(() -> new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Tool function is not available."));
+        McpToolDescriptor tool = toolRegistry.findOwningTool(function.name())
+                .orElseThrow(() -> new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Tool descriptor is not available."));
         validateArguments(function, arguments);
         enforceScopePolicy(function);
         McpToolHandler handler = toolRegistry.findHandler(function.handlerKey())
@@ -46,17 +49,42 @@ public class DefaultToolExecutor implements ToolExecutor {
         logCall(functionName, arguments, context);
         try {
             DispatchExecutionResult result = handler.call(arguments, context);
+            enrichToolIdentity(result, tool, function);
             logResult(functionName, result, context);
             return result;
         } catch (JsonRpcException exception) {
             throw exception;
         } catch (Exception exception) {
             LOGGER.warn("MCP tool execution failed: name={} requestId={} sessionId={}", functionName, context.requestId(), context.sessionId(), exception);
-            return DispatchExecutionResult.builder()
+            DispatchExecutionResult result = DispatchExecutionResult.builder()
                     .text("Tool execution failed: " + exception.getMessage())
                     .error(true)
                     .build();
+            enrichToolIdentity(result, tool, function);
+            return result;
         }
+    }
+
+    private void enrichToolIdentity(DispatchExecutionResult result, McpToolDescriptor tool, McpFunctionDescriptor function) {
+        JsonNode currentMeta = result.toJson(objectMapper).path("_meta");
+        ObjectNode meta = currentMeta.isObject() ? (ObjectNode) currentMeta.deepCopy() : objectMapper.createObjectNode();
+        ObjectNode toolNode = objectMapper.createObjectNode();
+        toolNode.put("id", tool.name());
+        toolNode.put("name", function.name());
+        toolNode.put("title", tool.title() == null ? "" : tool.title());
+        toolNode.put("function", localFunctionName(tool, function));
+        toolNode.put("functionTitle", function.title() == null ? "" : function.title());
+        toolNode.put("version", tool.version());
+        meta.set("tool", toolNode);
+        result.setMeta(meta);
+    }
+
+    private String localFunctionName(McpToolDescriptor tool, McpFunctionDescriptor function) {
+        String prefix = tool.name() + ".";
+        if (function.name().startsWith(prefix)) {
+            return function.name().substring(prefix.length());
+        }
+        return function.name();
     }
 
     private void validateArguments(McpFunctionDescriptor function, ObjectNode arguments) {

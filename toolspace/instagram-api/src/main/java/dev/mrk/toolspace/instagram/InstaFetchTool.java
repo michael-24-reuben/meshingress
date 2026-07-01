@@ -9,6 +9,7 @@ import dev.mrk.meshingress.api.tools.annotation.McpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
+import dev.mrk.meshingress.dispatch.data.RecordContent;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import dev.mrk.toolspace.instagram.instafetch.FetchPath;
 import dev.mrk.toolspace.instagram.instafetch.InstaFetch;
@@ -46,10 +47,14 @@ public class InstaFetchTool {
         }
 
         JsonNode response = new InstaFetch(FetchPath.from(url)).submitRequest();
+        RecordContent structured = new RecordContent();
+        structured.setId(url);
+        structured.setTitle("Instagram fetch");
+        structured.setRecord(response);
 
         return DispatchExecutionResult.builder()
                 .appendContent(ResultContent.json(response))
-                .structuredContent(response)
+                .structuredContent(structured)
                 .status("ok")
                 .summary("Fetched Instagram data.")
                 .build();

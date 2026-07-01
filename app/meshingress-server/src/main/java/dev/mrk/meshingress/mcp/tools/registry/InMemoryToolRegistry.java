@@ -183,6 +183,14 @@ public class InMemoryToolRegistry implements ToolRegistry {
     }
 
     /**
+     * Find the registered tool descriptor that owns a function name.
+     */
+    @Override
+    public synchronized Optional<McpToolDescriptor> findOwningTool(String functionName) {
+        return owningTool(functionName);
+    }
+
+    /**
      * Find a tool regardless of enablement or visibility.
      */
     @Override

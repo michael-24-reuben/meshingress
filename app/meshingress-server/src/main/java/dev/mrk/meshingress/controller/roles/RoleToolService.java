@@ -23,6 +23,7 @@ import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.security.McpAccessPolicyService;
 import dev.mrk.meshingress.server.install.ArtifactInstaller;
+import dev.mrk.meshingress.server.install.RepositoryArtifactFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -43,19 +44,22 @@ public class RoleToolService {
     private final McpAccessPolicyService accessPolicyService;
     private final ToolRegistrationService toolRegistrationService;
     private final ArtifactInstaller artifactInstaller;
+    private final RepositoryArtifactFetcher repositoryArtifactFetcher;
 
     public RoleToolService(
             ObjectMapper objectMapper,
             ToolRegistry toolRegistry,
             McpAccessPolicyService accessPolicyService,
             ToolRegistrationService toolRegistrationService,
-            ArtifactInstaller artifactInstaller
+            ArtifactInstaller artifactInstaller,
+            RepositoryArtifactFetcher repositoryArtifactFetcher
     ) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
         this.accessPolicyService = accessPolicyService;
         this.toolRegistrationService = toolRegistrationService;
         this.artifactInstaller = artifactInstaller;
+        this.repositoryArtifactFetcher = repositoryArtifactFetcher;
     }
 
     public ObjectNode check(McpCallContext context, RolesToolCheckParams params) {
@@ -81,10 +85,16 @@ public class RoleToolService {
         if (params == null) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/installPublication params must be an object");
         }
-        if (params.publication() == null) {
-            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/installPublication params.publication is required");
+        if (params.publication() != null && params.coordinate() != null) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Provide either params.publication or params.coordinate, not both");
         }
-        return artifactInstaller.install(params.publication(), params.toolId(), context).toJson(objectMapper);
+        if (params.publication() == null && params.coordinate() == null) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "roles/tools/installPublication params.publication or params.coordinate is required");
+        }
+        var publication = params.publication() == null
+                ? repositoryArtifactFetcher.fetchPublication(params.coordinate())
+                : params.publication();
+        return artifactInstaller.install(publication, params.toolId(), context).toJson(objectMapper);
     }
 
     public ObjectNode alias(McpCallContext context, RolesToolAliasParams params) {

@@ -57,6 +57,37 @@ class EmbeddedCycloneDxJarSbomGeneratorTests {
         assertThat(first.summary().get("artifactSha256").toString()).hasSize(64);
     }
 
+    @Test
+    void includesMavenCoordinatesAndDeclaredDependenciesWhenPackagedMetadataExists(@TempDir Path tempDir) throws Exception {
+        Path jar = tempDir.resolve("dependency-aware-1.2.3.jar");
+        writeDependencyAwareJar(jar);
+
+        CycloneDxSbom sbom = new EmbeddedCycloneDxJarSbomGenerator().generate(jar);
+        JsonNode root = objectMapper.readTree(sbom.toJson(objectMapper));
+
+        JsonNode metadataComponent = root.path("metadata").path("component");
+        assertThat(metadataComponent.path("type").asString()).isEqualTo("application");
+        assertThat(metadataComponent.path("group").asString()).isEqualTo("dev.mrk.tools");
+        assertThat(metadataComponent.path("name").asString()).isEqualTo("dependency-aware");
+        assertThat(metadataComponent.path("version").asString()).isEqualTo("1.2.3");
+        assertThat(metadataComponent.path("purl").asString())
+                .isEqualTo("pkg:maven/dev.mrk.tools/dependency-aware@1.2.3");
+
+        assertThat(root.path("components").size()).isEqualTo(4);
+        assertThat(sbom.summary())
+                .containsEntry("componentCount", 4)
+                .containsEntry("dependencyComponentCount", 1L)
+                .containsEntry("artifactName", "dependency-aware");
+
+        JsonNode dependency = findComponent(root, "jackson-databind");
+        assertThat(dependency.path("type").asString()).isEqualTo("library");
+        assertThat(dependency.path("group").asString()).isEqualTo("tools.jackson.core");
+        assertThat(dependency.path("version").asString()).isEqualTo("3.2.0");
+        assertThat(dependency.path("scope").asString()).isEqualTo("runtime");
+        assertThat(dependency.path("purl").asString())
+                .isEqualTo("pkg:maven/tools.jackson.core/jackson-databind@3.2.0");
+    }
+
     private static List<String> componentNames(JsonNode root) {
         List<String> names = new ArrayList<>();
         for (JsonNode component : root.path("components")) {
@@ -65,12 +96,48 @@ class EmbeddedCycloneDxJarSbomGeneratorTests {
         return names;
     }
 
+    private static JsonNode findComponent(JsonNode root, String name) {
+        for (JsonNode component : root.path("components")) {
+            if (component.path("name").asString().equals(name)) {
+                return component;
+            }
+        }
+        throw new AssertionError("component not found: " + name);
+    }
+
     private static void writeJar(Path jar, Class<?>... classes) throws IOException {
         try (ZipOutputStream zip = new ZipOutputStream(java.nio.file.Files.newOutputStream(jar))) {
             writeEntry(zip, "META-INF/meshingress/descriptor.json", "{\"name\":\"representative\"}".getBytes(StandardCharsets.UTF_8));
             for (Class<?> type : classes) {
                 writeEntry(zip, entryName(type), classBytes(type));
             }
+        }
+    }
+
+    private static void writeDependencyAwareJar(Path jar) throws IOException {
+        try (ZipOutputStream zip = new ZipOutputStream(java.nio.file.Files.newOutputStream(jar))) {
+            writeEntry(zip, "META-INF/maven/dev.mrk.tools/dependency-aware/pom.properties", """
+                    groupId=dev.mrk.tools
+                    artifactId=dependency-aware
+                    version=1.2.3
+                    """.getBytes(StandardCharsets.UTF_8));
+            writeEntry(zip, "META-INF/maven/dev.mrk.tools/dependency-aware/pom.xml", """
+                    <project xmlns="http://maven.apache.org/POM/4.0.0">
+                      <modelVersion>4.0.0</modelVersion>
+                      <groupId>dev.mrk.tools</groupId>
+                      <artifactId>dependency-aware</artifactId>
+                      <version>1.2.3</version>
+                      <dependencies>
+                        <dependency>
+                          <groupId>tools.jackson.core</groupId>
+                          <artifactId>jackson-databind</artifactId>
+                          <version>3.2.0</version>
+                          <scope>runtime</scope>
+                        </dependency>
+                      </dependencies>
+                    </project>
+                    """.getBytes(StandardCharsets.UTF_8));
+            writeEntry(zip, entryName(RepresentativeTool.class), classBytes(RepresentativeTool.class));
         }
     }
 

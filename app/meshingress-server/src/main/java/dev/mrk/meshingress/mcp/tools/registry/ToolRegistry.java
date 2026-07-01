@@ -23,6 +23,8 @@ public interface ToolRegistry {
 
     Optional<McpFunctionDescriptor> findEnabledFunction(String name);
 
+    Optional<McpToolDescriptor> findOwningTool(String functionName);
+
     Optional<McpToolDescriptor> findTool(String name);
 
     Optional<McpToolHandler> findHandler(String handlerKey);

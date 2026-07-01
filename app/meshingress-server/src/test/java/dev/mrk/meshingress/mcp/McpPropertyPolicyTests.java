@@ -100,6 +100,8 @@ class McpPropertyPolicyTests {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result._meta.generatedAt").doesNotExist());
+                .andExpect(jsonPath("$.result._meta.generatedAt").doesNotExist())
+                .andExpect(jsonPath("$.result._meta.tool.id", is("architect.entries")))
+                .andExpect(jsonPath("$.result._meta.tool.name", is("architect.entries.list")));
     }
 }

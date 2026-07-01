@@ -25,8 +25,9 @@ public class RepositoryAccessPolicy {
         return switch (action) {
             case READ -> !roles.isEmpty();
             case UPLOAD -> roles.contains("uploader");
-            case ASSESS, APPROVE -> roles.contains("reviewer");
-            case PUBLISH -> roles.contains("publisher");
+            case ASSESS, APPROVE, REJECT -> roles.contains("reviewer");
+            case PUBLISH, REVOKE -> roles.contains("publisher");
+            case DELETE, RESTORE -> false;
         };
     }
 

@@ -121,7 +121,15 @@ class McpControllerTests {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.isError", is(true)))
-                .andExpect(jsonPath("$.result.structuredContent.ok", is(false)));
+                .andExpect(jsonPath("$.result.structuredContent.ok", is(false)))
+                .andExpect(jsonPath("$.result._meta.status", is("failed")))
+                .andExpect(jsonPath("$.result._meta.errorCode", is("VOICEBOX_UNAVAILABLE")))
+                .andExpect(jsonPath("$.result._meta.tool.id", is("voicebox")))
+                .andExpect(jsonPath("$.result._meta.tool.name", is("voicebox.health")))
+                .andExpect(jsonPath("$.result._meta.tool.title", is("Voicebox")))
+                .andExpect(jsonPath("$.result._meta.tool.function", is("health")))
+                .andExpect(jsonPath("$.result._meta.tool.functionTitle", is("Voicebox Health")))
+                .andExpect(jsonPath("$.result._meta.tool.version", is(1)));
     }
 
     @Test
@@ -143,7 +151,13 @@ class McpControllerTests {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.isError", is(false)))
-                .andExpect(jsonPath("$.result.structuredContent.entries.length()", greaterThanOrEqualTo(1)));
+                .andExpect(jsonPath("$.result.structuredContent.entries.length()", greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.result._meta.tool.id", is("architect.entries")))
+                .andExpect(jsonPath("$.result._meta.tool.name", is("architect.entries.list")))
+                .andExpect(jsonPath("$.result._meta.tool.title", is("Architect Entries")))
+                .andExpect(jsonPath("$.result._meta.tool.function", is("list")))
+                .andExpect(jsonPath("$.result._meta.tool.functionTitle", is("List Architect Entries")))
+                .andExpect(jsonPath("$.result._meta.tool.version", is(1)));
     }
 
     @Test

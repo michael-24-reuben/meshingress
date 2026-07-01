@@ -2,13 +2,181 @@
   "version": "default-bytecode-catalog-v1",
   "rules": [
     {
+      "id": "java-local-read",
+      "scope": "LOCAL_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/System",
+          "namePattern": "getProperty|getProperties|getenv|getSecurityManager",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Runtime",
+          "namePattern": "availableProcessors|freeMemory|maxMemory|totalMemory|version",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/management/ManagementFactory",
+          "namePattern": "get.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/sun/management/OperatingSystemMXBean",
+          "namePattern": "get.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-local-write",
+      "scope": "LOCAL_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/System",
+          "namePattern": "setProperty|clearProperty|setOut|setErr|setIn|load|loadLibrary",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/Locale",
+          "namePattern": "setDefault",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/TimeZone",
+          "namePattern": "setDefault",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-runtime-read",
+      "scope": "RUNTIME_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Runtime",
+          "namePattern": "getRuntime|version",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/ProcessHandle",
+          "namePattern": "current|info|pid|allProcesses",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/management/RuntimeMXBean",
+          "namePattern": "get.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/info/BuildProperties",
+          "namePattern": "get.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/core/env/Environment",
+          "namePattern": "getProperty|getActiveProfiles|getDefaultProfiles",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-runtime-write",
+      "scope": "RUNTIME_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/System",
+          "namePattern": "exit|setProperties|setProperty|clearProperty",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Runtime",
+          "namePattern": "exit|halt|addShutdownHook|removeShutdownHook",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/context/ConfigurableApplicationContext",
+          "namePattern": "close|refresh",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/SpringApplication",
+          "namePattern": "setDefaultProperties|setAdditionalProfiles|setRegisterShutdownHook",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-files-list",
+      "scope": "FILES_LIST",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "list|walk|find|newDirectoryStream",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/File",
+          "namePattern": "list|listFiles|roots",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/FileSystem",
+          "namePattern": "getRootDirectories|getFileStores",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-files-metadata-read",
+      "scope": "FILES_METADATA_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "exists|notExists|is.*|size|get.*Attribute|readAttributes|getOwner|getPosixFilePermissions|getLastModifiedTime|probeContentType",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/File",
+          "namePattern": "exists|is.*|length|lastModified|canRead|canWrite|canExecute|get.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/attribute/.*",
+          "namePattern": "readAttributes|.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
       "id": "java-files-read",
       "scope": "FILES_READ",
       "matchers": [
         {
           "type": "bytecode-method",
           "owner": "java/nio/file/Files",
-          "namePattern": "read.*",
+          "namePattern": "read.*|lines|newBufferedReader|newInputStream",
           "confidence": "high"
         },
         {
@@ -16,6 +184,30 @@
           "owner": "java/io/FileInputStream",
           "namePattern": ".*",
           "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/FileReader",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/RandomAccessFile",
+          "namePattern": "read.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/Scanner",
+          "namePattern": "<init>|find.*|next.*",
+          "confidence": "low"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/core/io/Resource",
+          "namePattern": "getInputStream|getContentAs.*",
+          "confidence": "medium"
         }
       ]
     },
@@ -26,13 +218,73 @@
         {
           "type": "bytecode-method",
           "owner": "java/nio/file/Files",
-          "namePattern": "write.*",
+          "namePattern": "write.*|newBufferedWriter|newOutputStream|createFile|createDirectory|createDirectories|createTempFile|createTempDirectory|set.*Attribute|setOwner|setPosixFilePermissions|setLastModifiedTime",
           "confidence": "high"
         },
         {
           "type": "bytecode-method",
           "owner": "java/io/FileOutputStream",
           "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/FileWriter",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/RandomAccessFile",
+          "namePattern": "write.*|setLength",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/File",
+          "namePattern": "createNewFile|mkdir|mkdirs|set.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-files-copy",
+      "scope": "FILES_COPY",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "copy",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/commons/io/FileUtils",
+          "namePattern": "copy.*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-files-move",
+      "scope": "FILES_MOVE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "move",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/File",
+          "namePattern": "renameTo",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/commons/io/FileUtils",
+          "namePattern": "move.*",
           "confidence": "high"
         }
       ]
@@ -44,37 +296,121 @@
         {
           "type": "bytecode-method",
           "owner": "java/nio/file/Files",
-          "namePattern": "delete.*",
+          "namePattern": "delete|deleteIfExists",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/File",
+          "namePattern": "delete",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/commons/io/FileUtils",
+          "namePattern": "delete.*|forceDelete|cleanDirectory",
           "confidence": "high"
         }
       ]
     },
     {
-      "id": "java-process-execute",
-      "scope": "SHELL_EXECUTE",
+      "id": "java-files-upload",
+      "scope": "FILES_UPLOAD",
       "matchers": [
         {
           "type": "bytecode-method",
-          "owner": "java/lang/ProcessBuilder",
+          "owner": "org/springframework/web/multipart/MultipartFile",
+          "namePattern": "transferTo|getBytes|getInputStream",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpRequest$BodyPublishers",
+          "namePattern": "ofFile|ofInputStream",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/http/entity/mime/MultipartEntityBuilder",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-files-download",
+      "scope": "FILES_DOWNLOAD",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/URL",
+          "namePattern": "openStream",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpResponse$BodyHandlers",
+          "namePattern": "ofFile|ofFileDownload|ofInputStream|ofByteArray",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/client/RestTemplate",
+          "namePattern": "getForObject|getForEntity|execute",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-files-archive",
+      "scope": "FILES_ARCHIVE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/zip/ZipInputStream",
+          "namePattern": ".*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/zip/ZipOutputStream",
           "namePattern": ".*",
           "confidence": "high"
         },
         {
           "type": "bytecode-method",
-          "owner": "java/lang/Runtime",
-          "namePattern": "exec",
+          "owner": "java/util/jar/JarInputStream",
+          "namePattern": ".*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/jar/JarOutputStream",
+          "namePattern": ".*",
           "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/commons/compress/.*",
+          "namePattern": ".*",
+          "confidence": "medium"
         }
       ]
     },
     {
-      "id": "java-network-outbound",
+      "id": "java-network-access",
       "scope": "NETWORK_ACCESS",
       "matchers": [
         {
           "type": "bytecode-method",
           "owner": "java/net/URL",
-          "namePattern": "openConnection",
+          "namePattern": "openConnection|openStream",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/URLConnection",
+          "namePattern": ".*",
           "confidence": "medium"
         },
         {
@@ -82,16 +418,1905 @@
           "owner": "java/net/Socket",
           "namePattern": ".*",
           "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/ServerSocket",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/DatagramSocket",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/channels/SocketChannel",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/channels/ServerSocketChannel",
+          "namePattern": ".*",
+          "confidence": "high"
         }
       ]
     },
     {
-      "id": "meshingress-cache-result",
+      "id": "java-network-outbound",
+      "scope": "NETWORK_OUTBOUND",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/Socket",
+          "namePattern": "<init>|connect|getOutputStream|getInputStream",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/channels/SocketChannel",
+          "namePattern": "open|connect|finishConnect",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/URL",
+          "namePattern": "openConnection|openStream",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpClient",
+          "namePattern": "send|sendAsync|newWebSocketBuilder",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/client/RestTemplate",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/reactive/function/client/WebClient",
+          "namePattern": ".*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-network-inbound",
+      "scope": "NETWORK_INBOUND",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/ServerSocket",
+          "namePattern": "<init>|bind|accept",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/channels/ServerSocketChannel",
+          "namePattern": "open|bind|accept",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/sun/net/httpserver/HttpServer",
+          "namePattern": "create|bind|start",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/web/embedded/.*",
+          "namePattern": "getWebServer|start",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-dns-resolve",
+      "scope": "DNS_RESOLVE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/InetAddress",
+          "namePattern": "getByName|getAllByName|getCanonicalHostName|getHostName|getHostAddress|getLocalHost",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "javax/naming/directory/InitialDirContext",
+          "namePattern": "getAttributes|search",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/xbill/DNS/Lookup",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-http-client",
+      "scope": "HTTP_CLIENT",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpClient",
+          "namePattern": "send|sendAsync|newBuilder|newHttpClient",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpRequest",
+          "namePattern": "newBuilder",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/HttpURLConnection",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/URLConnection",
+          "namePattern": "connect|getInputStream|getOutputStream",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/client/RestTemplate",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/reactive/function/client/WebClient",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "okhttp3/OkHttpClient",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/http/client/HttpClient",
+          "namePattern": ".*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-websocket-connect",
+      "scope": "WEBSOCKET_CONNECT",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/WebSocket$Builder",
+          "namePattern": "buildAsync",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpClient",
+          "namePattern": "newWebSocketBuilder",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/java_websocket/client/WebSocketClient",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/websocket/ContainerProvider",
+          "namePattern": "getWebSocketContainer",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "javax/websocket/ContainerProvider",
+          "namePattern": "getWebSocketContainer",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-database-read",
+      "scope": "DATABASE_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/Statement",
+          "namePattern": "executeQuery|execute",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/PreparedStatement",
+          "namePattern": "executeQuery|execute",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/CallableStatement",
+          "namePattern": "executeQuery|execute",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/ResultSet",
+          "namePattern": "get.*|next|findColumn",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/jdbc/core/JdbcTemplate",
+          "namePattern": "query.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/persistence/EntityManager",
+          "namePattern": "find|createQuery|createNamedQuery|createNativeQuery",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-database-write",
+      "scope": "DATABASE_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/Statement",
+          "namePattern": "executeUpdate|execute|addBatch|executeBatch",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/PreparedStatement",
+          "namePattern": "executeUpdate|execute|addBatch|executeBatch",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/jdbc/core/JdbcTemplate",
+          "namePattern": "update|batchUpdate",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/persistence/EntityManager",
+          "namePattern": "persist|merge|flush",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/hibernate/Session",
+          "namePattern": "persist|merge|save|update|flush",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-database-delete",
+      "scope": "DATABASE_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/persistence/EntityManager",
+          "namePattern": "remove",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/hibernate/Session",
+          "namePattern": "remove|delete",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/data/repository/CrudRepository",
+          "namePattern": "delete.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/data/jpa/repository/JpaRepository",
+          "namePattern": "delete.*|deleteAll.*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-database-schema-read",
+      "scope": "DATABASE_SCHEMA_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/Connection",
+          "namePattern": "getMetaData",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/DatabaseMetaData",
+          "namePattern": ".*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "javax/sql/DataSource",
+          "namePattern": "getConnection",
+          "confidence": "low"
+        }
+      ]
+    },
+    {
+      "id": "java-database-schema-write",
+      "scope": "DATABASE_SCHEMA_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/flywaydb/core/Flyway",
+          "namePattern": "migrate|repair|clean",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "liquibase/Liquibase",
+          "namePattern": "update|rollback|dropAll",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/persistence/SchemaManager",
+          "namePattern": ".*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/hibernate/tool/schema/.*",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-database-transaction-manage",
+      "scope": "DATABASE_TRANSACTION_MANAGE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/sql/Connection",
+          "namePattern": "setAutoCommit|commit|rollback|setSavepoint|releaseSavepoint",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/persistence/EntityTransaction",
+          "namePattern": "begin|commit|rollback|setRollbackOnly",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/transaction/PlatformTransactionManager",
+          "namePattern": "getTransaction|commit|rollback",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/transaction/support/TransactionTemplate",
+          "namePattern": "execute.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-database-admin",
+      "scope": "DATABASE_ADMIN",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/flywaydb/core/Flyway",
+          "namePattern": "clean|migrate|repair|baseline",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "liquibase/Liquibase",
+          "namePattern": "dropAll|tag|update|rollback|validate|clearCheckSums",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com.zaxxer.hikari.HikariDataSource",
+          "namePattern": "setJdbcUrl|setUsername|setPassword|close",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-process-read",
+      "scope": "PROCESS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/ProcessHandle",
+          "namePattern": "current|of|allProcesses|children|descendants|info|pid|isAlive",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Process",
+          "namePattern": "pid|info|isAlive|exitValue|onExit",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/management/ManagementFactory",
+          "namePattern": "getRuntimeMXBean| getOperatingSystemMXBean",
+          "confidence": "low"
+        }
+      ]
+    },
+    {
+      "id": "java-process-execute",
+      "scope": "PROCESS_EXECUTE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/ProcessBuilder",
+          "namePattern": "<init>|command|start|startPipeline",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Runtime",
+          "namePattern": "exec",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/commons/exec/DefaultExecutor",
+          "namePattern": "execute",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-process-kill",
+      "scope": "PROCESS_KILL",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Process",
+          "namePattern": "destroy|destroyForcibly",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/ProcessHandle",
+          "namePattern": "destroy|destroyForcibly",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-shell-execute",
+      "scope": "SHELL_EXECUTE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/Runtime",
+          "namePattern": "exec",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/ProcessBuilder",
+          "namePattern": "<init>|command|start|startPipeline",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/commons/exec/CommandLine",
+          "namePattern": "parse|<init>",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/shell/.*",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-email-send",
+      "scope": "EMAIL_SEND",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/mail/Transport",
+          "namePattern": "send|sendMessage",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "javax/mail/Transport",
+          "namePattern": "send|sendMessage",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/mail/javamail/JavaMailSender",
+          "namePattern": "send",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/mail/MailSender",
+          "namePattern": "send",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-notifications-read",
+      "scope": "NOTIFICATIONS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/notifications/.*",
+          "namePattern": "get.*|list.*|read.*|status.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/context/ApplicationEvent",
+          "namePattern": "get.*",
+          "confidence": "low"
+        }
+      ]
+    },
+    {
+      "id": "java-notifications-send",
+      "scope": "NOTIFICATIONS_SEND",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/notifications/.*",
+          "namePattern": "send.*|publish.*|notify.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/context/ApplicationEventPublisher",
+          "namePattern": "publishEvent",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-notifications-manage",
+      "scope": "NOTIFICATIONS_MANAGE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/notifications/.*",
+          "namePattern": "create.*|update.*|delete.*|configure.*|manage.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-user-read",
+      "scope": "USER_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/core/Authentication",
+          "namePattern": "get.*|isAuthenticated",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/core/context/SecurityContext",
+          "namePattern": "getAuthentication",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/core/userdetails/UserDetailsService",
+          "namePattern": "loadUserByUsername",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*User.*",
+          "namePattern": "get.*|find.*|read.*|list.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-user-write",
+      "scope": "USER_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*User.*",
+          "namePattern": "save.*|create.*|update.*|set.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/provisioning/UserDetailsManager",
+          "namePattern": "createUser|updateUser|changePassword",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-user-delete",
+      "scope": "USER_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*User.*",
+          "namePattern": "delete.*|remove.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/provisioning/UserDetailsManager",
+          "namePattern": "deleteUser",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-token-introspect",
+      "scope": "TOKEN_INTROSPECT",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/oauth2/jwt/JwtDecoder",
+          "namePattern": "decode",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/oauth2/server/resource/introspection/OpaqueTokenIntrospector",
+          "namePattern": "introspect",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "io/jsonwebtoken/JwtParser",
+          "namePattern": "parse.*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-token-issue",
+      "scope": "TOKEN_ISSUE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/oauth2/jwt/JwtEncoder",
+          "namePattern": "encode",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "io/jsonwebtoken/JwtBuilder",
+          "namePattern": "compact|signWith|set.*|claim",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Token.*",
+          "namePattern": "issue.*|create.*|generate.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-token-revoke",
+      "scope": "TOKEN_REVOKE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Token.*",
+          "namePattern": "revoke.*|invalidate.*|delete.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-token-rotate",
+      "scope": "TOKEN_ROTATE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Token.*",
+          "namePattern": "rotate.*|roll.*|refreshSigning.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Key.*",
+          "namePattern": "rotate.*|roll.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-config-read",
+      "scope": "CONFIG_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/core/env/Environment",
+          "namePattern": "getProperty|containsProperty|getActiveProfiles|getDefaultProfiles",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/Properties",
+          "namePattern": "get.*|propertyNames|stringPropertyNames|load",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/context/properties/bind/Binder",
+          "namePattern": "bind.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-config-write",
+      "scope": "CONFIG_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/Properties",
+          "namePattern": "setProperty|put|putAll|remove|store|save",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/core/env/ConfigurableEnvironment",
+          "namePattern": "set.*|merge|getPropertySources",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/core/env/MutablePropertySources",
+          "namePattern": "add.*|replace|remove",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-environment-read",
+      "scope": "ENVIRONMENT_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/System",
+          "namePattern": "getenv",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/core/env/Environment",
+          "namePattern": "getProperty|containsProperty",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-environment-write",
+      "scope": "ENVIRONMENT_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/lang/ProcessBuilder",
+          "namePattern": "environment",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/core/env/ConfigurableEnvironment",
+          "namePattern": "setActiveProfiles|addActiveProfile|setDefaultProfiles",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-secrets-use",
+      "scope": "SECRETS_USE",
+      "matchers": [
+        {
+          "type": "bytecode-annotation",
+          "owner": "dev/mrk/meshingress/api/tools/annotation/McpSecret",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/vault/core/VaultOperations",
+          "namePattern": "opsFor.*|read|write",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/azure/security/keyvault/secrets/SecretClient",
+          "namePattern": "getSecret|setSecret|beginDeleteSecret",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-secrets-read",
+      "scope": "SECRETS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/vault/core/VaultOperations",
+          "namePattern": "read",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/azure/security/keyvault/secrets/SecretClient",
+          "namePattern": "getSecret",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "software/amazon/awssdk/services/secretsmanager/SecretsManagerClient",
+          "namePattern": "getSecretValue",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/google/cloud/secretmanager/v1/SecretManagerServiceClient",
+          "namePattern": "accessSecretVersion",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-secrets-write",
+      "scope": "SECRETS_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/vault/core/VaultOperations",
+          "namePattern": "write",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/azure/security/keyvault/secrets/SecretClient",
+          "namePattern": "setSecret|updateSecretProperties",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "software/amazon/awssdk/services/secretsmanager/SecretsManagerClient",
+          "namePattern": "createSecret|putSecretValue|updateSecret",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-secrets-delete",
+      "scope": "SECRETS_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "com/azure/security/keyvault/secrets/SecretClient",
+          "namePattern": "beginDeleteSecret|purgeDeletedSecret",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "software/amazon/awssdk/services/secretsmanager/SecretsManagerClient",
+          "namePattern": "deleteSecret",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-keystore-use",
+      "scope": "KEYSTORE_USE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/security/KeyStore",
+          "namePattern": "getKey|getCertificate|getEntry",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "javax/crypto/Cipher",
+          "namePattern": "init|doFinal|wrap|unwrap",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/security/Signature",
+          "namePattern": "initSign|initVerify|sign|verify",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-keystore-read",
+      "scope": "KEYSTORE_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/security/KeyStore",
+          "namePattern": "load|getKey|getCertificate|getCertificateChain|getEntry|aliases",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/security/KeyFactory",
+          "namePattern": "generatePrivate|generatePublic",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-keystore-write",
+      "scope": "KEYSTORE_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/security/KeyStore",
+          "namePattern": "setKeyEntry|setCertificateEntry|setEntry|store",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/security/KeyPairGenerator",
+          "namePattern": "generateKeyPair",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-keystore-delete",
+      "scope": "KEYSTORE_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/security/KeyStore",
+          "namePattern": "deleteEntry",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-external-api-read",
+      "scope": "EXTERNAL_API_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpClient",
+          "namePattern": "send|sendAsync",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/client/RestTemplate",
+          "namePattern": "getFor.*|exchange|execute",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/reactive/function/client/WebClient.*",
+          "namePattern": "get|retrieve|exchange.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-external-api-write",
+      "scope": "EXTERNAL_API_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/client/RestTemplate",
+          "namePattern": "postFor.*|put|patchForObject|delete|exchange|execute",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/web/reactive/function/client/WebClient.*",
+          "namePattern": "post|put|patch|delete|retrieve|exchange.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/http/HttpRequest$Builder",
+          "namePattern": "POST|PUT|DELETE|method",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-logs-read",
+      "scope": "LOGS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "ch/qos/logback/core/read/ListAppender",
+          "namePattern": ".*",
+          "confidence": "low"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/file/Files",
+          "namePattern": "read.*|lines",
+          "confidence": "low"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Log.*",
+          "namePattern": "read.*|get.*|list.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-logs-append",
+      "scope": "LOGS_APPEND",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/slf4j/Logger",
+          "namePattern": "trace|debug|info|warn|error",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/logging/Logger",
+          "namePattern": "log|info|warning|severe|fine.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "ch/qos/logback/classic/Logger",
+          "namePattern": ".*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/apache/logging/log4j/Logger",
+          "namePattern": "trace|debug|info|warn|error|fatal|log",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-metrics-read",
+      "scope": "METRICS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "io/micrometer/core/instrument/MeterRegistry",
+          "namePattern": "get|find|getMeters",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/actuate/metrics/MetricsEndpoint",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-metrics-emit",
+      "scope": "METRICS_EMIT",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "io/micrometer/core/instrument/MeterRegistry",
+          "namePattern": "counter|timer|gauge|summary|more",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "io/micrometer/core/instrument/Counter",
+          "namePattern": "increment",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "io/micrometer/core/instrument/Timer",
+          "namePattern": "record",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "io/micrometer/core/instrument/DistributionSummary",
+          "namePattern": "record",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-telemetry-send",
+      "scope": "TELEMETRY_SEND",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "io/opentelemetry/api/trace/Tracer",
+          "namePattern": "spanBuilder",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "io/opentelemetry/api/metrics/Meter",
+          "namePattern": ".*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "io/opentelemetry/exporter/.*",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-schedule-read",
+      "scope": "SCHEDULE_READ",
+      "matchers": [
+        {
+          "type": "bytecode-annotation",
+          "owner": "org/springframework/scheduling/annotation/Scheduled",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/quartz/Scheduler",
+          "namePattern": "get.*|checkExists|getJobKeys|getTriggersOfJob",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-schedule-write",
+      "scope": "SCHEDULE_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/quartz/Scheduler",
+          "namePattern": "scheduleJob|rescheduleJob|addJob|pause.*|resume.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/scheduling/TaskScheduler",
+          "namePattern": "schedule.*",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-schedule-delete",
+      "scope": "SCHEDULE_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/quartz/Scheduler",
+          "namePattern": "deleteJob|unscheduleJob|clear",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-jobs-read",
+      "scope": "JOBS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/quartz/Scheduler",
+          "namePattern": "getJobDetail|getCurrentlyExecutingJobs|getTrigger.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/batch/core/explore/JobExplorer",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-jobs-execute",
+      "scope": "JOBS_EXECUTE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/quartz/Scheduler",
+          "namePattern": "triggerJob|start",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/batch/core/launch/JobLauncher",
+          "namePattern": "run",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/concurrent/Executor",
+          "namePattern": "execute",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/concurrent/ExecutorService",
+          "namePattern": "submit|invoke.*|execute",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-jobs-cancel",
+      "scope": "JOBS_CANCEL",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/quartz/Scheduler",
+          "namePattern": "interrupt|pauseJob|pauseTrigger|shutdown",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/concurrent/Future",
+          "namePattern": "cancel",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/concurrent/ExecutorService",
+          "namePattern": "shutdown|shutdownNow",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-tools-read",
+      "scope": "TOOLS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Tool.*",
+          "namePattern": "descriptor|get.*|list.*|find.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-annotation",
+          "owner": "dev/mrk/meshingress/api/tools/annotation/McpTool",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-tools-register",
+      "scope": "TOOLS_REGISTER",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Tool.*",
+          "namePattern": "register.*|add.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-annotation",
+          "owner": "dev/mrk/meshingress/api/tools/annotation/McpTool",
+          "confidence": "low"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-tools-update",
+      "scope": "TOOLS_UPDATE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Tool.*",
+          "namePattern": "update.*|replace.*|configure.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-tools-disable",
+      "scope": "TOOLS_DISABLE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Tool.*",
+          "namePattern": "disable.*|enable.*|setEnabled",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-tools-delete",
+      "scope": "TOOLS_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Tool.*",
+          "namePattern": "delete.*|remove.*|unregister.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-tools-call",
+      "scope": "TOOLS_CALL",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/api/McpDispatchHandler",
+          "namePattern": "call",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/api/tools/McpToolHandler",
+          "namePattern": "call",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Dispatcher",
+          "namePattern": "dispatch|call|invoke.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-policy-read",
+      "scope": "POLICY_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Policy.*",
+          "namePattern": "get.*|read.*|list.*|find.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-policy-write",
+      "scope": "POLICY_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Policy.*",
+          "namePattern": "write.*|save.*|create.*|update.*|delete.*|set.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-policy-evaluate",
+      "scope": "POLICY_EVALUATE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Policy.*",
+          "namePattern": "evaluate.*|decide.*|authorize.*|isAllowed|check.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/security/access/AccessDecisionManager",
+          "namePattern": "decide",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-deployments-read",
+      "scope": "DEPLOYMENTS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Deployment.*",
+          "namePattern": "get.*|read.*|list.*|find.*|status.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-deployments-deploy",
+      "scope": "DEPLOYMENTS_DEPLOY",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Deployment.*",
+          "namePattern": "deploy.*|install.*|start.*|activate.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-deployments-rollback",
+      "scope": "DEPLOYMENTS_ROLLBACK",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Deployment.*",
+          "namePattern": "rollback.*|revert.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-plugins-read",
+      "scope": "PLUGINS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Plugin.*",
+          "namePattern": "get.*|read.*|list.*|find.*|descriptor.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-plugins-install",
+      "scope": "PLUGINS_INSTALL",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Plugin.*",
+          "namePattern": "install.*|load.*|register.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/net/URLClassLoader",
+          "namePattern": "<init>|addURL",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-plugins-update",
+      "scope": "PLUGINS_UPDATE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Plugin.*",
+          "namePattern": "update.*|upgrade.*|replace.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-plugins-remove",
+      "scope": "PLUGINS_REMOVE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Plugin.*",
+          "namePattern": "remove.*|uninstall.*|delete.*|disable.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-backups-read",
+      "scope": "BACKUPS_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Backup.*",
+          "namePattern": "read.*|get.*|list.*|restorePreview.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/zip/ZipInputStream",
+          "namePattern": ".*",
+          "confidence": "low"
+        }
+      ]
+    },
+    {
+      "id": "java-backups-create",
+      "scope": "BACKUPS_CREATE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Backup.*",
+          "namePattern": "create.*|backup.*|snapshot.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/zip/ZipOutputStream",
+          "namePattern": ".*",
+          "confidence": "low"
+        }
+      ]
+    },
+    {
+      "id": "java-backups-restore",
+      "scope": "BACKUPS_RESTORE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Backup.*",
+          "namePattern": "restore.*|recover.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-backups-delete",
+      "scope": "BACKUPS_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Backup.*",
+          "namePattern": "delete.*|remove.*|purge.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-cache-read",
+      "scope": "CACHE_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/cache/Cache",
+          "namePattern": "get|getName|getNativeCache",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/github/benmanes/caffeine/cache/Cache",
+          "namePattern": "get|getIfPresent|asMap",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/google/common/cache/Cache",
+          "namePattern": "get|getIfPresent|asMap",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-cache-write",
       "scope": "CACHE_WRITE",
       "matchers": [
         {
           "type": "bytecode-annotation",
           "owner": "dev/mrk/meshingress/api/tools/annotation/McpCacheResult",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/cache/Cache",
+          "namePattern": "put|putIfAbsent",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/github/benmanes/caffeine/cache/Cache",
+          "namePattern": "put|get",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/google/common/cache/Cache",
+          "namePattern": "put",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "meshingress-cache-delete",
+      "scope": "CACHE_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/cache/Cache",
+          "namePattern": "evict|evictIfPresent|clear|invalidate",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/github/benmanes/caffeine/cache/Cache",
+          "namePattern": "invalidate.*|cleanUp",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "com/google/common/cache/Cache",
+          "namePattern": "invalidate.*|cleanUp",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-stream-read",
+      "scope": "STREAM_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/InputStream",
+          "namePattern": "read.*",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/channels/ReadableByteChannel",
+          "namePattern": "read",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/stream/Stream",
+          "namePattern": ".*",
+          "confidence": "low"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "reactor/core/publisher/Flux",
+          "namePattern": "subscribe|block.*|toIterable|collect.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-stream-write",
+      "scope": "STREAM_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/io/OutputStream",
+          "namePattern": "write.*|flush",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/nio/channels/WritableByteChannel",
+          "namePattern": "write",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "reactor/core/publisher/Sinks.*",
+          "namePattern": "emit.*|tryEmit.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-message-publish",
+      "scope": "MESSAGE_PUBLISH",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/context/ApplicationEventPublisher",
+          "namePattern": "publishEvent",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/kafka/core/KafkaTemplate",
+          "namePattern": "send.*",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/amqp/rabbit/core/RabbitTemplate",
+          "namePattern": "convertAndSend|send",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/jms/MessageProducer",
+          "namePattern": "send",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-message-subscribe",
+      "scope": "MESSAGE_SUBSCRIBE",
+      "matchers": [
+        {
+          "type": "bytecode-annotation",
+          "owner": "org/springframework/kafka/annotation/KafkaListener",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-annotation",
+          "owner": "org/springframework/amqp/rabbit/annotation/RabbitListener",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-annotation",
+          "owner": "jakarta/jms/JMSListener",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/jms/MessageConsumer",
+          "namePattern": "receive.*|setMessageListener",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-queue-read",
+      "scope": "QUEUE_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/Queue",
+          "namePattern": "peek|poll|element|size|iterator",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/concurrent/BlockingQueue",
+          "namePattern": "take|poll|peek|drainTo",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/jms/QueueBrowser",
+          "namePattern": ".*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-queue-write",
+      "scope": "QUEUE_WRITE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/Queue",
+          "namePattern": "add|offer",
+          "confidence": "medium"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "java/util/concurrent/BlockingQueue",
+          "namePattern": "put|offer|add",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/amqp/rabbit/core/RabbitTemplate",
+          "namePattern": "convertAndSend|send",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "java-queue-manage",
+      "scope": "QUEUE_MANAGE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/amqp/rabbit/core/RabbitAdmin",
+          "namePattern": "declare.*|delete.*|purgeQueue",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "jakarta/jms/Session",
+          "namePattern": "createQueue|createTemporaryQueue",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-health-check",
+      "scope": "HEALTH_CHECK",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/actuate/health/HealthIndicator",
+          "namePattern": "health",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/actuate/health/ReactiveHealthIndicator",
+          "namePattern": "health",
+          "confidence": "high"
+        },
+        {
+          "type": "bytecode-method",
+          "owner": "org/springframework/boot/actuate/health/HealthEndpoint",
+          "namePattern": "health",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-audit-read",
+      "scope": "AUDIT_READ",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Audit.*",
+          "namePattern": "read.*|get.*|list.*|find.*|search.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-audit-append",
+      "scope": "AUDIT_APPEND",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Audit.*",
+          "namePattern": "append.*|record.*|log.*|write.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-audit-export",
+      "scope": "AUDIT_EXPORT",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Audit.*",
+          "namePattern": "export.*|dump.*",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "id": "java-audit-delete",
+      "scope": "AUDIT_DELETE",
+      "matchers": [
+        {
+          "type": "bytecode-method",
+          "owner": "dev/mrk/meshingress/.*Audit.*",
+          "namePattern": "delete.*|purge.*|clear.*",
           "confidence": "medium"
         }
       ]

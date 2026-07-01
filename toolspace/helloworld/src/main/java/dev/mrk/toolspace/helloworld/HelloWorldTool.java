@@ -6,9 +6,9 @@ import dev.mrk.meshingress.api.result.ResultContent;
 import dev.mrk.meshingress.api.tools.annotation.*;
 import dev.mrk.meshingress.api.tools.annotation.cache.McpCacheKeyMode;
 import dev.mrk.meshingress.api.tools.annotation.cache.McpCacheStorage;
+import dev.mrk.meshingress.dispatch.text.PlainTextContent;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import dev.mrk.meshingress.tools.availability.enableondays.EnableOnDays;
-import tools.jackson.databind.ObjectMapper;
 
 import java.time.DayOfWeek;
 
@@ -20,12 +20,6 @@ import java.time.DayOfWeek;
 @McpToolScopes(McpToolScope.USER_WRITE)
 @McpToolMapping("tools")
 public class HelloWorldTool {
-
-    private final ObjectMapper objectMapper;
-
-    public HelloWorldTool(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     @McpCacheResult(
             enabled = true,
@@ -49,9 +43,12 @@ public class HelloWorldTool {
     @McpFunction(value = "greet", description = "Greet the Person.")
     public DispatchExecutionResult call(HelloWorldGreetArgs arguments, McpCallContext context) {
         String name = arguments.getName();
+        PlainTextContent structured = new PlainTextContent("Hello, " + name + "!");
+        structured.setTitle("Greeting");
+
         DispatchExecutionResult.Builder dispatch = DispatchExecutionResult.builder()
                 .appendContent(ResultContent.text("Hello, " + name + "!"))
-                .structuredContent(objectMapper.createObjectNode().put("message", "Hello, " + name + "!"))
+                .structuredContent(structured)
                 .error(false);
 
         return dispatch.build();

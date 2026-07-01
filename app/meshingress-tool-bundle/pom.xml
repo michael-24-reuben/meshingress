@@ -23,7 +23,7 @@
 
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>webtoon-downloader</artifactId>
+            <artifactId>omnivoice-tts</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -47,10 +47,16 @@
 
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>whatsapp-cobalt</artifactId>
+            <artifactId>cobalt</artifactId>
             <version>${project.version}</version>
         </dependency>
-    
+
+        <dependency>
+            <groupId>dev.mrk.toolspace</groupId>
+            <artifactId>video-loop</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>
             <artifactId>sample-module</artifactId>

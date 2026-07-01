@@ -4,12 +4,16 @@ import dev.mrk.meshingress.artifact.model.ArtifactAssessmentSummary;
 import dev.mrk.meshingress.artifact.model.ArtifactChecksum;
 import dev.mrk.meshingress.artifact.model.ArtifactCoordinate;
 import dev.mrk.meshingress.artifact.model.ArtifactPublicationRecord;
+import dev.mrk.meshingress.artifact.model.ArtifactProvenance;
 import dev.mrk.meshingress.artifact.model.ArtifactScopeDeclaration;
 import dev.mrk.meshingress.artifact.model.ArtifactTrustStatus;
 import dev.mrk.meshingress.artifact.model.MeshingressArtifactType;
 import dev.mrk.meshingress.artifact.publication.HmacPublicationRecordSigner;
+import dev.mrk.meshingress.artifact.publication.Ed25519PublicationRecordSigner;
 import dev.mrk.meshingress.artifact.publication.PublicationSignature;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +32,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.time.OffsetDateTime;
+import java.util.Base64;
+import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -48,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "meshingress.tools.registry.include-disabled=false",
         "meshingress.tools.registry.scan-on-startup=false",
         "meshingress.tools.registry.expose-private-tools=false",
+        "meshingress.repository.signing-key-id=test-publication-key",
         "meshingress.repository.signing-secret=test-publication-secret"
 })
 @AutoConfigureMockMvc
@@ -58,7 +68,12 @@ class McpPublicationInstallTests {
     private static final String GROUP_ID = "dev.mrk.tools";
     private static final String ARTIFACT_ID = "sample-module";
     private static final String VERSION = "0.0.1-SNAPSHOT";
+    private static final String SIGNING_KEY_ID = "test-publication-key";
     private static final String SIGNING_SECRET = "test-publication-secret";
+    private static final String ACTIVE_ED25519_KEY_ID = "test-ed25519-active";
+    private static final String REVOKED_ED25519_KEY_ID = "test-ed25519-revoked";
+    private static final KeyPair ACTIVE_ED25519_KEY_PAIR = ed25519KeyPair();
+    private static final KeyPair REVOKED_ED25519_KEY_PAIR = ed25519KeyPair();
 
     @TempDir
     static Path tempDir;
@@ -69,10 +84,66 @@ class McpPublicationInstallTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @BeforeEach
+    @AfterEach
+    void cleanPersistentRuntimeState() throws Exception {
+        deleteTree(tempDir.resolve("repository").resolve("runtime"));
+        deleteTree(tempDir.resolve("runtime-cache"));
+    }
+
     @DynamicPropertySource
     static void repositoryProperties(DynamicPropertyRegistry registry) {
         registry.add("meshingress.repository.root", () -> tempDir.resolve("repository").toString());
         registry.add("meshingress.repository.runtime-cache-root", () -> tempDir.resolve("runtime-cache").toString());
+        registry.add("meshingress.repository.verification-keys[0].key-id", () -> ACTIVE_ED25519_KEY_ID);
+        registry.add("meshingress.repository.verification-keys[0].algorithm", () -> "Ed25519");
+        registry.add("meshingress.repository.verification-keys[0].public-key", () -> Base64.getEncoder().encodeToString(ACTIVE_ED25519_KEY_PAIR.getPublic().getEncoded()));
+        registry.add("meshingress.repository.verification-keys[0].status", () -> "ACTIVE");
+        registry.add("meshingress.repository.verification-keys[1].key-id", () -> REVOKED_ED25519_KEY_ID);
+        registry.add("meshingress.repository.verification-keys[1].algorithm", () -> "Ed25519");
+        registry.add("meshingress.repository.verification-keys[1].public-key", () -> Base64.getEncoder().encodeToString(REVOKED_ED25519_KEY_PAIR.getPublic().getEncoded()));
+        registry.add("meshingress.repository.verification-keys[1].status", () -> "REVOKED");
+    }
+
+    @Test
+    void adminCanInstallPublicationSignedByActiveEd25519Key() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = ed25519SignedPublication(
+                repositoryJar,
+                ACTIVE_ED25519_KEY_ID,
+                ACTIVE_ED25519_KEY_PAIR
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(521, publication, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.installed", is(true)));
+    }
+
+    @Test
+    void installRejectsPublicationSignedByRevokedEd25519Key() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = ed25519SignedPublication(
+                repositoryJar,
+                REVOKED_ED25519_KEY_ID,
+                REVOKED_ED25519_KEY_PAIR
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(522, publication, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("Publication signing key is revoked.")));
     }
 
     @Test
@@ -115,6 +186,65 @@ class McpPublicationInstallTests {
     }
 
     @Test
+    void adminCanDeleteInstalledPublicationAndRemoveRuntimeCache() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = signedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                false
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(530, publication, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.installed", is(true)));
+
+        Path cachedJar = tempDir.resolve("runtime-cache")
+                .resolve(GROUP_ID.replace('.', '/'))
+                .resolve(ARTIFACT_ID)
+                .resolve(VERSION)
+                .resolve(SAMPLE_JAR_NAME);
+        assertThat(cachedJar).isRegularFile();
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(deleteRequest(531, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.deleted", is(true)))
+                .andExpect(jsonPath("$.result.runtimeDeactivated", is(1)))
+                .andExpect(jsonPath("$.result.runtimeCacheRemoved", is(1)))
+                .andExpect(jsonPath("$.result.registrations[0].status", is("deleted")))
+                .andExpect(jsonPath("$.result.registrations[0].runtimeDeactivated", is(true)))
+                .andExpect(jsonPath("$.result.registrations[0].runtimeCacheRemoved", is(true)));
+
+        assertThat(cachedJar).doesNotExist();
+
+        mockMvc.perform(post("/mcp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 532,
+                                  "method": "tools/call",
+                                  "params": {
+                                    "name": "helloworld.text",
+                                    "arguments": {}
+                                  }
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.INVALID_PARAMS)))
+                .andExpect(jsonPath("$.error.message", is("Tool function is not available.")));
+    }
+
+    @Test
     void installRejectsInvalidPublicationSignature() throws Exception {
         Path sampleJar = sampleJar();
         assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
@@ -137,6 +267,7 @@ class McpPublicationInstallTests {
                 publication.provenance(),
                 publication.revoked(),
                 publication.publishedAt(),
+                publication.signatureKeyId(),
                 publication.signatureAlgorithm(),
                 publication.signature()
         );
@@ -148,6 +279,80 @@ class McpPublicationInstallTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
                 .andExpect(jsonPath("$.error.message", is("Publication record signature is invalid.")));
+    }
+
+    @Test
+    void installRejectsTamperedPublicationProvenance() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = signedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                false
+        );
+        ArtifactPublicationRecord tampered = new ArtifactPublicationRecord(
+                publication.coordinate(),
+                publication.type(),
+                publication.trustStatus(),
+                publication.artifactUri(),
+                publication.artifactChecksum(),
+                publication.scopePolicy(),
+                publication.scanSummary(),
+                new ArtifactProvenance("https://example.invalid/repo.git", "tampered", "tampered-builder", ""),
+                publication.revoked(),
+                publication.publishedAt(),
+                publication.signatureKeyId(),
+                publication.signatureAlgorithm(),
+                publication.signature()
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(511, tampered, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("Publication record signature is invalid.")));
+    }
+
+    @Test
+    void installRejectsUnknownPublicationSigningKeyId() throws Exception {
+        Path sampleJar = sampleJar();
+        assumeTrue(Files.isRegularFile(sampleJar), "Smoke fixture is missing: " + sampleJar);
+        Path repositoryJar = installRepositoryArtifact(sampleJar);
+
+        ArtifactPublicationRecord publication = signedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                false
+        );
+        ArtifactPublicationRecord unknownKey = new ArtifactPublicationRecord(
+                publication.coordinate(),
+                publication.type(),
+                publication.trustStatus(),
+                publication.artifactUri(),
+                publication.artifactChecksum(),
+                publication.scopePolicy(),
+                publication.scanSummary(),
+                publication.provenance(),
+                publication.revoked(),
+                publication.publishedAt(),
+                "unknown-key",
+                publication.signatureAlgorithm(),
+                publication.signature()
+        );
+
+        mockMvc.perform(post("/mcp")
+                        .header("Authorization", "Bearer dev-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(installRequest(517, unknownKey, "helloworld.text")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error.code", is(JsonRpcErrorCodes.FORBIDDEN)))
+                .andExpect(jsonPath("$.error.message", is("Unsupported publication signing key id.")));
     }
 
     @Test
@@ -297,6 +502,20 @@ class McpPublicationInstallTests {
                 """.formatted(id, toolId, objectMapper.writeValueAsString(publication));
     }
 
+    private String deleteRequest(int id, String toolId) {
+        return """
+                {
+                  "jsonrpc": "2.0",
+                  "id": %d,
+                  "method": "roles/tools/delete",
+                  "params": {
+                    "name": "%s",
+                    "mode": "disable"
+                  }
+                }
+                """.formatted(id, toolId);
+    }
+
     private ArtifactPublicationRecord signedPublication(
             Path repositoryJar,
             List<String> approvedScopes,
@@ -325,10 +544,11 @@ class McpPublicationInstallTests {
                 null,
                 revoked,
                 OffsetDateTime.parse("2026-05-29T00:00:00-04:00"),
-                "",
+                SIGNING_KEY_ID,
+                "HmacSHA256",
                 ""
         );
-        PublicationSignature signature = new HmacPublicationRecordSigner(SIGNING_SECRET).sign(objectMapper.writeValueAsString(unsigned));
+        PublicationSignature signature = new HmacPublicationRecordSigner(SIGNING_KEY_ID, SIGNING_SECRET).sign(objectMapper.writeValueAsString(unsigned));
         return new ArtifactPublicationRecord(
                 unsigned.coordinate(),
                 unsigned.type(),
@@ -340,6 +560,7 @@ class McpPublicationInstallTests {
                 unsigned.provenance(),
                 unsigned.revoked(),
                 unsigned.publishedAt(),
+                signature.keyId(),
                 signature.algorithm(),
                 signature.value()
         );
@@ -352,6 +573,55 @@ class McpPublicationInstallTests {
             boolean revoked
     ) throws Exception {
         return unsignedPublication(repositoryJar, approvedScopes, trustStatus, revoked, ArtifactChecksum.sha256(sha256(repositoryJar)));
+    }
+
+    private ArtifactPublicationRecord ed25519SignedPublication(Path repositoryJar, String keyId, KeyPair keyPair) throws Exception {
+        ArtifactPublicationRecord unsigned = unsignedPublication(
+                repositoryJar,
+                List.of("USER_WRITE"),
+                ArtifactTrustStatus.APPROVED_LIMITED,
+                false
+        );
+        unsigned = new ArtifactPublicationRecord(
+                unsigned.coordinate(),
+                unsigned.type(),
+                unsigned.trustStatus(),
+                unsigned.artifactUri(),
+                unsigned.artifactChecksum(),
+                unsigned.scopePolicy(),
+                unsigned.scanSummary(),
+                unsigned.provenance(),
+                unsigned.revoked(),
+                unsigned.publishedAt(),
+                keyId,
+                "Ed25519",
+                ""
+        );
+        PublicationSignature signature = new Ed25519PublicationRecordSigner(keyId, keyPair.getPrivate())
+                .sign(objectMapper.writeValueAsString(unsigned));
+        return new ArtifactPublicationRecord(
+                unsigned.coordinate(),
+                unsigned.type(),
+                unsigned.trustStatus(),
+                unsigned.artifactUri(),
+                unsigned.artifactChecksum(),
+                unsigned.scopePolicy(),
+                unsigned.scanSummary(),
+                unsigned.provenance(),
+                unsigned.revoked(),
+                unsigned.publishedAt(),
+                signature.keyId(),
+                signature.algorithm(),
+                signature.value()
+        );
+    }
+
+    private static KeyPair ed25519KeyPair() {
+        try {
+            return KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
+        } catch (Exception exception) {
+            throw new IllegalStateException("Unable to create Ed25519 test key pair", exception);
+        }
     }
 
     private ArtifactPublicationRecord unsignedPublication(
@@ -373,6 +643,7 @@ class McpPublicationInstallTests {
                 null,
                 revoked,
                 OffsetDateTime.parse("2026-05-29T00:00:00-04:00"),
+                SIGNING_KEY_ID,
                 "HmacSHA256",
                 ""
         );
@@ -388,6 +659,17 @@ class McpPublicationInstallTests {
         Files.createDirectories(repositoryJar.getParent());
         Files.copy(sourceJar, repositoryJar, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         return repositoryJar;
+    }
+
+    private void deleteTree(Path path) throws Exception {
+        if (!Files.exists(path)) {
+            return;
+        }
+        try (var files = Files.walk(path)) {
+            for (Path file : files.sorted(Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(file);
+            }
+        }
     }
 
     private Path sampleJar() {

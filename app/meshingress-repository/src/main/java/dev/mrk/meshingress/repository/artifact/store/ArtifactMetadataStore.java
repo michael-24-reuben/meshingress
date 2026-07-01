@@ -28,5 +28,9 @@ public interface ArtifactMetadataStore {
 
     boolean hasLifecycleEvent(ArtifactCoordinate coordinate, String eventType);
 
+    int countLifecycleEvents(ArtifactCoordinate coordinate, String eventType);
+
+    Optional<ArtifactLifecycleEvent> findLatestLifecycleEvent(ArtifactCoordinate coordinate, String eventType);
+
     void appendLifecycleEvent(ArtifactLifecycleEvent event);
 }

@@ -54,47 +54,75 @@ public class ArtifactInstaller {
         verifier.verifySignature(publication);
         policyEvaluator.requireInstallable(publication);
         Path cachedJar = runtimeToolCache.install(publication);
-        ToolModuleHandle handle = runtimeLoader.activate(new LocalJarSource(cachedJar));
-        List<McpFunctionDescriptor> installedFunctions = resolveInstalledFunctions(handle.registeredFunctions());
+        ToolModuleHandle handle = null;
+        ToolRegistrationRecord savedRecord = null;
         try {
+            handle = runtimeLoader.activate(new LocalJarSource(cachedJar));
+            List<McpFunctionDescriptor> installedFunctions = resolveInstalledFunctions(handle.registeredFunctions());
             policyEvaluator.requireApprovedScopes(publication, installedFunctions);
+            String toolId = requestedToolId == null || requestedToolId.isBlank()
+                    ? handle.registeredFunctions().stream().findFirst().orElse(publication.coordinate().artifactId())
+                    : requestedToolId.trim();
+            Map<String, String> source = new LinkedHashMap<>();
+            source.put("coordinate", publication.coordinate().display());
+            source.put("artifactUri", publication.artifactUri());
+            source.put("artifactSha256", publication.artifactChecksum().value());
+            source.put("trustStatus", publication.trustStatus().name());
+            source.put("runtimeCachePath", cachedJar.toString());
+            source.put("signatureKeyId", publication.signatureKeyId());
+            source.put("signatureAlgorithm", publication.signatureAlgorithm());
+            source.put("approvedScopes", String.join(",", publication.scopePolicy().approvedScopes()));
+
+            ToolRegistrationRecord record = new ToolRegistrationRecord(
+                    "publication:" + publication.coordinate().artifactId() + ":" + Long.toUnsignedString(System.nanoTime(), 36),
+                    toolId,
+                    ToolRegistrationPhase.STAGING,
+                    ToolSourceKind.PUBLICATION_RECORD,
+                    "active",
+                    source,
+                    context == null ? "unknown" : actor(context),
+                    context == null ? null : context.requestId(),
+                    OffsetDateTime.now(),
+                    null,
+                    handle.moduleId().value(),
+                    handle.registeredFunctions()
+            );
+            savedRecord = registrationStore.saveActive(record);
+            return new ToolPublicationInstallResult(savedRecord, toolRegistry.registryVersion());
         } catch (RuntimeException exception) {
-            try {
-                runtimeLoader.deactivate(handle.moduleId());
-            } catch (RuntimeException suppressed) {
-                // Preserve original exception for install failures.
+            if (savedRecord != null) {
+                markRegistrationRolledBackAfterInstallFailure(savedRecord, exception);
             }
+            if (handle != null) {
+                deactivateAfterInstallFailure(handle, exception);
+            }
+            removeCachedJarAfterInstallFailure(cachedJar, exception);
             throw exception;
         }
+    }
 
-        String toolId = requestedToolId == null || requestedToolId.isBlank()
-                ? handle.registeredFunctions().stream().findFirst().orElse(publication.coordinate().artifactId())
-                : requestedToolId.trim();
-        Map<String, String> source = new LinkedHashMap<>();
-        source.put("coordinate", publication.coordinate().display());
-        source.put("artifactUri", publication.artifactUri());
-        source.put("artifactSha256", publication.artifactChecksum().value());
-        source.put("trustStatus", publication.trustStatus().name());
-        source.put("runtimeCachePath", cachedJar.toString());
-        source.put("signatureAlgorithm", publication.signatureAlgorithm());
-        source.put("approvedScopes", String.join(",", publication.scopePolicy().approvedScopes()));
+    private void markRegistrationRolledBackAfterInstallFailure(ToolRegistrationRecord record, RuntimeException exception) {
+        try {
+            registrationStore.markStatus(record.registrationId(), "install-rolled-back");
+        } catch (RuntimeException suppressed) {
+            exception.addSuppressed(suppressed);
+        }
+    }
 
-        ToolRegistrationRecord record = new ToolRegistrationRecord(
-                "publication:" + publication.coordinate().artifactId() + ":" + Long.toUnsignedString(System.nanoTime(), 36),
-                toolId,
-                ToolRegistrationPhase.STAGING,
-                ToolSourceKind.PUBLICATION_RECORD,
-                "active",
-                source,
-                context == null ? "unknown" : actor(context),
-                context == null ? null : context.requestId(),
-                OffsetDateTime.now(),
-                null,
-                handle.moduleId().value(),
-                handle.registeredFunctions()
-        );
-        registrationStore.saveActive(record);
-        return new ToolPublicationInstallResult(record, toolRegistry.registryVersion());
+    private void deactivateAfterInstallFailure(ToolModuleHandle handle, RuntimeException exception) {
+        try {
+            runtimeLoader.deactivate(handle.moduleId());
+        } catch (RuntimeException suppressed) {
+            exception.addSuppressed(suppressed);
+        }
+    }
+
+    private void removeCachedJarAfterInstallFailure(Path cachedJar, RuntimeException exception) {
+        try {
+            runtimeToolCache.remove(cachedJar);
+        } catch (RuntimeException suppressed) {
+            exception.addSuppressed(suppressed);
+        }
     }
 
     private List<McpFunctionDescriptor> resolveInstalledFunctions(List<String> functionNames) {

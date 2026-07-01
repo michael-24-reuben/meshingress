@@ -10,6 +10,7 @@ public record ScannerRequest(
         ArtifactCoordinate coordinate,
         Path artifactPath,
         Path quarantinePath,
+        Path rawReportDirectory,
         List<ArtifactFileEntry> fileEntries
 ) {
     public ScannerRequest {
@@ -20,5 +21,14 @@ public record ScannerRequest(
             throw new IllegalArgumentException("artifactPath must not be null");
         }
         fileEntries = fileEntries == null ? List.of() : List.copyOf(fileEntries);
+    }
+
+    public ScannerRequest(
+            ArtifactCoordinate coordinate,
+            Path artifactPath,
+            Path quarantinePath,
+            List<ArtifactFileEntry> fileEntries
+    ) {
+        this(coordinate, artifactPath, quarantinePath, null, fileEntries);
     }
 }

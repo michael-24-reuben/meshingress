@@ -139,8 +139,11 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("REVIEW_PENDING"))
                 .andExpect(jsonPath("$.assessment.scanners", hasItem("cyclonedx-sbom")))
+                .andExpect(jsonPath("$.assessment.scanners", hasItem("embedded-jar-sandbox")))
                 .andExpect(jsonPath("$.assessment.scanners", hasItem("bytecode-scope-scanner")))
                 .andExpect(jsonPath("$.assessment.summary.sbom.format").value("CycloneDX"))
+                .andExpect(jsonPath("$.assessment.summary.rawReportRetention.policy").value("retain-with-artifact"))
+                .andExpect(jsonPath("$.assessment.summary.sandbox.strategy").value("static-quarantine-inspection"))
                 .andReturn();
 
         JsonNode assessed = objectMapper.readTree(assessResult.getResponse().getContentAsByteArray());
@@ -155,8 +158,13 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andExpect(jsonPath("$[0].status").value("PASSED"))
                 .andExpect(jsonPath("$[0].rawSummary.rawReport").value("cyclonedx-sbom.json"))
                 .andExpect(jsonPath("$[0].rawReportPath").exists())
-                .andExpect(jsonPath("$[1].scanner").value("bytecode-scope-scanner"))
-                .andExpect(jsonPath("$[1].status").value("REVIEW"));
+                .andExpect(jsonPath("$[1].scanner").value("embedded-jar-sandbox"))
+                .andExpect(jsonPath("$[1].rawSummary.rawReport").value("embedded-jar-sandbox.json"))
+                .andExpect(jsonPath("$[1].rawSummary.isolation.networkAccess").value(false))
+                .andExpect(jsonPath("$[1].rawSummary.isolation.hostSecretsAccess").value(false))
+                .andExpect(jsonPath("$[1].rawReportPath").exists())
+                .andExpect(jsonPath("$[2].scanner").value("bytecode-scope-scanner"))
+                .andExpect(jsonPath("$[2].status").value("REVIEW"));
 
         MvcResult approveResult = mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/approve")
                         .header("X-Repository-Role", "admin")
@@ -185,7 +193,9 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
+                .andExpect(jsonPath("$.signatureKeyId").value("local-dev-hmac"))
                 .andExpect(jsonPath("$.signatureAlgorithm").value("HmacSHA256"))
+                .andExpect(jsonPath("$.provenance.generatedBy").value("meshingress-repository"))
                 .andExpect(jsonPath("$.signature", not(blankOrNullString())));
 
         mockMvc.perform(get("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publication")
@@ -193,14 +203,16 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
+                .andExpect(jsonPath("$.signatureKeyId").value("local-dev-hmac"))
                 .andExpect(jsonPath("$.signatureAlgorithm").value("HmacSHA256"));
 
         ArtifactMetadataEntry reviewedEntry = store.findArtifact(coordinate).orElseThrow();
         assertThat(reviewedEntry.record().trustStatus().name()).isEqualTo("APPROVED_LIMITED");
-        assertThat(store.findAssessment(coordinate)).hasSize(2);
+        assertThat(store.findAssessment(coordinate)).hasSize(3);
         assertThat(store.findPublication(coordinate)).isPresent();
         assertThat(Files.isRegularFile(artifactPath.getParent().resolve("assessment.json"))).isTrue();
         assertThat(Files.isRegularFile(artifactPath.getParent().resolve("cyclonedx-sbom.json"))).isTrue();
+        assertThat(Files.isRegularFile(artifactPath.getParent().resolve("embedded-jar-sandbox.json"))).isTrue();
         assertThat(Files.exists(repositoryRoot.resolve("assessments")
                 .resolve(GROUP_ID.replace('.', '/'))
                 .resolve(ARTIFACT_ID)

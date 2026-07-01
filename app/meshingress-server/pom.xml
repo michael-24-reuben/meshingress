@@ -49,6 +49,12 @@
 
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-native-metadata</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
             <artifactId>meshingress-artifact-model</artifactId>
             <version>${project.version}</version>
         </dependency>

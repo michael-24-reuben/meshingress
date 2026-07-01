@@ -1,0 +1,65 @@
+{
+  "id": "2026-06-14-repository-review-security-audit",
+  "title": "Repository Review Security and Audit",
+  "status": "resolved",
+  "createdAt": "2026-06-14T00:52:00-04:00",
+  "activatedAt": "2026-06-15T11:40:39-04:00",
+  "resolvedAt": "2026-06-17T11:04:23-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-17T11:04:23-04:00",
+  "tags": [
+    "artifact-repository",
+    "security",
+    "review",
+    "audit",
+    "authorization",
+    "observability",
+    "ui"
+  ],
+  "related": [
+    "2026-06-08-sql-tool-metadata-store",
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-06-14-publication-trust-provenance-policy"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "Grouped follow-up for securing repository upload, assessment, approval, and publication APIs and adding auditable review workflow around those state transitions."
+  },
+  "events": [
+    {
+      "at": "2026-06-14T00:52:00-04:00",
+      "type": "CREATED",
+      "note": "Created as a pending architect package for repository API auth, reviewer workflow, audit events, and review/operator visibility."
+    },
+    {
+      "at": "2026-06-15T11:40:39-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated for the first repository API role-gate and lifecycle audit metadata slice."
+    },
+    {
+      "at": "2026-06-15T11:44:41-04:00",
+      "type": "UPDATED",
+      "note": "Completed and verified first API role-gate/audit metadata slice; broader review queue and revoke/delete/restore events remain open."
+    },
+    {
+      "at": "2026-06-16T01:03:17-04:00",
+      "type": "UPDATED",
+      "note": "Completed and verified API-only pending review queue; reject/revoke/delete/restore lifecycle operations remain open."
+    },
+    {
+      "at": "2026-06-16T11:05:43-04:00",
+      "type": "UPDATED",
+      "note": "Completed and verified reviewer-gated reject transition for REVIEW_PENDING artifacts; revoke/delete/restore lifecycle operations remain open."
+    },
+    {
+      "at": "2026-06-17T01:03:26-04:00",
+      "type": "UPDATED",
+      "note": "Completed and verified publisher-gated revoke transition for published artifacts; delete/restore lifecycle operations remain open."
+    },
+    {
+      "at": "2026-06-17T11:04:23-04:00",
+      "type": "RESOLVED",
+      "note": "Completed and verified admin-gated soft delete and restore lifecycle transitions; repository review/security/audit API slice is complete."
+    }
+  ]
+}

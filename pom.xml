@@ -26,24 +26,25 @@
         <module>lib/meshingress-route-annotations</module>
         <module>lib/meshingress-route-api</module>
         <module>lib/meshingress-route-framework</module>
+        <module>lib/meshingress-tool-dispatch</module>
         <module>lib/meshingress-tool-api</module>
         <module>lib/meshingress-tool-annotations</module>
         <module>lib/meshingress-tool-framework</module>
+        <module>lib/meshingress-tool-native-metadata</module>
         <module>lib/meshingress-tool-runtime-loader</module>
         <module>lib/meshingress-artifact-model</module>
         <module>lib/meshingress-artifact-storage</module>
         <module>lib/meshingress-artifact-security</module>
         <module>lib/meshingress-artifact-publication</module>
         <module>lib/meshingress-artifact-scope-scanner</module>
-        <module>lib/meshingress-codeql-scope-sample</module>
 
         <module>app/meshingress-repository</module>
         <module>toolspace/helloworld</module>
         <module>toolspace/instagram-api</module>
         <module>toolspace/powershell-cli</module>
-        <module>toolspace/whatsapp-cobalt</module>
+        <module>toolspace/cobalt</module>
         <module>toolspace/voicebox</module>
-        <module>toolspace/webtoon-downloader</module>
+        <module>toolspace/omnivoice-tts</module>
     </modules>
 
     <properties>

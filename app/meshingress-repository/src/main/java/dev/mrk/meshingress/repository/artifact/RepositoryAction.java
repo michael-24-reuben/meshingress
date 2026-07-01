@@ -5,5 +5,9 @@ enum RepositoryAction {
     UPLOAD,
     ASSESS,
     APPROVE,
-    PUBLISH
+    REJECT,
+    PUBLISH,
+    REVOKE,
+    DELETE,
+    RESTORE
 }

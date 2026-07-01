@@ -1,0 +1,51 @@
+{
+  "id": "2026-06-14-publication-trust-provenance-policy",
+  "title": "Publication Trust Provenance Policy",
+  "status": "resolved",
+  "createdAt": "2026-06-14T00:52:00-04:00",
+  "activatedAt": "2026-06-17T11:04:23-04:00",
+  "resolvedAt": "2026-06-18T10:17:45-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-18T10:17:45-04:00",
+  "tags": [
+    "publication",
+    "trust",
+    "provenance",
+    "signature",
+    "policy",
+    "security",
+    "supply-chain"
+  ],
+  "related": [
+    "2026-06-08-sql-tool-metadata-store",
+    "2026-06-14-repository-review-security-audit",
+    "2026-06-14-repository-scanner-sandbox-pipeline",
+    "2026-06-14-runtime-publication-install-hardening"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "Grouped follow-up for replacing MVP HMAC-only publication trust with stronger signing, provenance, and configurable publication approval policy."
+  },
+  "events": [
+    {
+      "at": "2026-06-14T00:52:00-04:00",
+      "type": "CREATED",
+      "note": "Created as a pending architect package for asymmetric signing, provenance, key lifecycle, and policy-based publication decisions."
+    },
+    {
+      "at": "2026-06-17T11:04:23-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated after resolving the repository review/security/audit API slice; next work starts with publication signing and provenance inventory."
+    },
+    {
+      "at": "2026-06-18T01:08:43-04:00",
+      "type": "UPDATED",
+      "note": "Implemented first HMAC key-id and provenance signing slice with focused repository and runtime verifier tests."
+    },
+    {
+      "at": "2026-06-18T10:17:45-04:00",
+      "type": "RESOLVED",
+      "note": "Added Ed25519 signing and active/revoked verification-key handling while preserving HMAC compatibility; split remaining publication eligibility policy into a focused pending follow-up."
+    }
+  ]
+}

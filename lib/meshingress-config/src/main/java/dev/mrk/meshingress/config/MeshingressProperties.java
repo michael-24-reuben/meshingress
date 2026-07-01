@@ -26,6 +26,10 @@ public record MeshingressProperties(
         @Valid @NotNull Secrets secrets,
         @Valid @NotNull Repository repository
 ) {
+    private static final String DEFAULT_CACHE_LOCATION = ".cache/meshingress";
+    private static final String DEFAULT_CACHE_DIRECTORY = DEFAULT_CACHE_LOCATION + "/cache";
+    private static final String DEFAULT_RUNTIME_CACHE_ROOT = DEFAULT_CACHE_LOCATION + "/runtime-tools";
+
     public MeshingressProperties {
         identity = identity == null ? Identity.defaults() : identity;
         mcp = mcp == null ? Mcp.defaults() : mcp;
@@ -203,6 +207,7 @@ public record MeshingressProperties(
 
     public record Cache(
             boolean enabled,
+            @NotBlank String location,
             @NotBlank String defaultStorage,
             @NotBlank String directory,
             @NotNull Duration defaultTtl,
@@ -213,8 +218,9 @@ public record MeshingressProperties(
             boolean cleanupOnStartup
     ) {
         public Cache {
+            location = defaultString(location, DEFAULT_CACHE_LOCATION);
             defaultStorage = defaultString(defaultStorage, "file");
-            directory = defaultString(directory, ".cache/meshingress/cache");
+            directory = defaultString(directory, location + "/cache");
             defaultTtl = Objects.requireNonNullElse(defaultTtl, Duration.ofMinutes(5));
             maxTtl = Objects.requireNonNullElse(maxTtl, Duration.ofHours(1));
             maxEntrySize = Objects.requireNonNullElse(maxEntrySize, DataSize.ofMegabytes(1));
@@ -224,8 +230,9 @@ public record MeshingressProperties(
         static Cache defaults() {
             return new Cache(
                     true,
+                    DEFAULT_CACHE_LOCATION,
                     "file",
-                    ".cache/meshingress/cache",
+                    DEFAULT_CACHE_DIRECTORY,
                     Duration.ofMinutes(5),
                     Duration.ofHours(1),
                     DataSize.ofMegabytes(1),
@@ -306,16 +313,45 @@ public record MeshingressProperties(
     public record Repository(
             @NotBlank String root,
             @NotBlank String runtimeCacheRoot,
-            @NotBlank String signingSecret
+            @NotBlank String runtimeRegistrationStorePath,
+            String apiBaseUrl,
+            @NotBlank String apiRole,
+            @NotBlank String signingKeyId,
+            @NotBlank String signingSecret,
+            @Valid @NotNull List<PublicationVerificationKey> verificationKeys
     ) {
         public Repository {
             root = defaultString(root, "repository");
-            runtimeCacheRoot = defaultString(runtimeCacheRoot, ".cache/meshingress/runtime-tools");
+            runtimeCacheRoot = defaultString(runtimeCacheRoot, DEFAULT_RUNTIME_CACHE_ROOT);
+            runtimeRegistrationStorePath = defaultString(runtimeRegistrationStorePath, "runtime/tool-registrations.json");
+            apiBaseUrl = apiBaseUrl == null ? "" : apiBaseUrl.trim();
+            apiRole = defaultString(apiRole, "publisher");
+            signingKeyId = defaultString(signingKeyId, "local-dev-hmac");
             signingSecret = defaultString(signingSecret, "dev-repository-signing-key");
+            verificationKeys = verificationKeys == null ? List.of() : List.copyOf(verificationKeys);
         }
 
         static Repository defaults() {
-            return new Repository("repository", ".cache/meshingress/runtime-tools", "dev-repository-signing-key");
+            return new Repository("repository", DEFAULT_RUNTIME_CACHE_ROOT, "runtime/tool-registrations.json", "", "publisher", "local-dev-hmac", "dev-repository-signing-key", List.of());
+        }
+
+        public record PublicationVerificationKey(
+                @NotBlank String keyId,
+                @NotBlank String algorithm,
+                @NotBlank String publicKey,
+                @NotNull PublicationVerificationKeyStatus status
+        ) {
+            public PublicationVerificationKey {
+                keyId = keyId == null ? "" : keyId.trim();
+                algorithm = defaultString(algorithm, "Ed25519");
+                publicKey = publicKey == null ? "" : publicKey.trim();
+                status = status == null ? PublicationVerificationKeyStatus.ACTIVE : status;
+            }
+        }
+
+        public enum PublicationVerificationKeyStatus {
+            ACTIVE,
+            REVOKED
         }
     }
 

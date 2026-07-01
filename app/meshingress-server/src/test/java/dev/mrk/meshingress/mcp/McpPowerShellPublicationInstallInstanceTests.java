@@ -47,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "meshingress.tools.registry.include-disabled=false",
         "meshingress.tools.registry.scan-on-startup=false",
         "meshingress.tools.registry.expose-private-tools=false",
+        "meshingress.repository.signing-key-id=test-publication-key",
         "meshingress.repository.signing-secret=test-publication-secret",
         "meshingress.scopes.allow-shell-execute=true",
         "meshingress.scopes.allow-files-delete=true"
@@ -59,6 +60,7 @@ class McpPowerShellPublicationInstallInstanceTests {
     private static final String GROUP_ID = "dev.mrk.toolspace";
     private static final String ARTIFACT_ID = "powershell-cli";
     private static final String VERSION = "0.0.1-SNAPSHOT";
+    private static final String SIGNING_KEY_ID = "test-publication-key";
     private static final String SIGNING_SECRET = "test-publication-secret";
     private static final List<String> APPROVED_SCOPES = List.of("FILES_DELETE", "FILES_WRITE", "SHELL_EXECUTE");
 
@@ -131,10 +133,11 @@ class McpPowerShellPublicationInstallInstanceTests {
                 null,
                 false,
                 OffsetDateTime.parse("2026-06-14T00:00:00-04:00"),
-                "",
+                SIGNING_KEY_ID,
+                "HmacSHA256",
                 ""
         );
-        PublicationSignature signature = new HmacPublicationRecordSigner(SIGNING_SECRET)
+        PublicationSignature signature = new HmacPublicationRecordSigner(SIGNING_KEY_ID, SIGNING_SECRET)
                 .sign(objectMapper.writeValueAsString(unsigned));
         return new ArtifactPublicationRecord(
                 unsigned.coordinate(),
@@ -147,6 +150,7 @@ class McpPowerShellPublicationInstallInstanceTests {
                 unsigned.provenance(),
                 unsigned.revoked(),
                 unsigned.publishedAt(),
+                signature.keyId(),
                 signature.algorithm(),
                 signature.value()
         );

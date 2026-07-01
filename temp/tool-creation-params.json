@@ -1,0 +1,41 @@
+{
+  "params": {
+    "name": "Tool Creation Params",
+    "description": "Parameters for creating a tool",
+    "type": "object",
+    "properties": {
+      "tool_name": {
+        "type": "string",
+        "description": "The name of the tool to be created"
+      },
+      "tool_description": {
+        "type": "string",
+        "description": "A brief description of the tool's functionality"
+      },
+      "tool_type": {
+        "type": "string",
+        "description": "The type/category of the tool (e.g., 'utility', 'analysis', 'automation') comma separated if multiple types apply"
+      },
+      "tool_dependencies": {
+        "type": "array",
+        "description": "A list of dependencies required for the tool to function properly",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "description": "The group ID of the dependency (e.g., 'com.example')"
+          },
+          "artifactId": {
+            "type": "string",
+            "description": "The artifact ID of the dependency (e.g., 'example-library')"
+          },
+          "version": {
+            "type": "string",
+            "description": "The version of the dependency (e.g., '1.0.0'), if it is not a spring boot dependency"
+          }
+        },
+        "required": [ "groupId", "artifactId" ]
+      }
+    },
+    "required": [ "tool_name", "tool_description", "tool_dependencies" ]
+  }
+}

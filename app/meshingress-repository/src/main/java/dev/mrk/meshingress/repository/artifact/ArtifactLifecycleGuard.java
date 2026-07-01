@@ -21,11 +21,23 @@ public class ArtifactLifecycleGuard {
         requireEvent(coordinate, "ASSESS", "artifact must be assessed before approval");
     }
 
+    public void requireAssessedBeforeRejection(String groupId, String artifactId, String version) {
+        ArtifactCoordinate coordinate = coordinate(groupId, artifactId, version);
+        requireArtifact(coordinate);
+        requireEvent(coordinate, "ASSESS", "artifact must be assessed before rejection");
+    }
+
     public void requireReadyBeforePublication(String groupId, String artifactId, String version) {
         ArtifactCoordinate coordinate = coordinate(groupId, artifactId, version);
         requireArtifact(coordinate);
         requireEvent(coordinate, "ASSESS", "artifact must be assessed before publication");
         requireEvent(coordinate, "APPROVE", "artifact must be approved before publication");
+    }
+
+    public void requirePublishedBeforeRevocation(String groupId, String artifactId, String version) {
+        ArtifactCoordinate coordinate = coordinate(groupId, artifactId, version);
+        requireArtifact(coordinate);
+        requireEvent(coordinate, "PUBLISH", "artifact must be published before revocation");
     }
 
     private void requireArtifact(ArtifactCoordinate coordinate) {

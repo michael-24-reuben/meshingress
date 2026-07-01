@@ -14,6 +14,7 @@ import dev.mrk.meshingress.runtime.spring.SpringToolModuleApplicationContextFact
 import dev.mrk.meshingress.runtime.spring.ToolModuleApplicationContextFactory;
 import dev.mrk.meshingress.runtime.spring.ToolModuleClassLoaderFactory;
 import dev.mrk.meshingress.runtime.spring.UrlToolModuleClassLoaderFactory;
+import dev.mrk.meshingress.toolmetadata.McpToolMetadata;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,6 +49,11 @@ public class ToolRuntimeLoaderConfiguration {
     @Bean
     ToolModuleApplicationContextFactory toolModuleApplicationContextFactory() {
         return new SpringToolModuleApplicationContextFactory();
+    }
+
+    @Bean
+    McpToolMetadata mcpToolMetadata() {
+        return new McpToolMetadata();
     }
 
     @Bean
