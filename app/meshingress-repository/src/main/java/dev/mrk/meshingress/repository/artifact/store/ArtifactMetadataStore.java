@@ -16,6 +16,8 @@ public interface ArtifactMetadataStore {
 
     Optional<ArtifactMetadataEntry> findArtifact(ArtifactCoordinate coordinate);
 
+    List<ArtifactMetadataEntry> findArtifactsByPackaging(String packaging);
+
     void saveAssessment(ArtifactCoordinate coordinate, List<ScannerResult> results);
 
     List<ScannerResult> findAssessment(ArtifactCoordinate coordinate);

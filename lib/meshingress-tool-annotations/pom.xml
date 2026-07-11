@@ -11,6 +11,8 @@
     </parent>
 
     <artifactId>meshingress-tool-annotations</artifactId>
+    <packaging>jar</packaging>
+
     <name>meshingress-tool-annotations</name>
     <description>Annotation metadata helpers for Meshingress MCP tool modules</description>
 

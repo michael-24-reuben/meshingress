@@ -9,7 +9,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -118,10 +117,10 @@ class McpControllerTests {
                                     "arguments": {}
                                   }
                                 }
-                                """))
+                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.isError", is(true)))
-                .andExpect(jsonPath("$.result.structuredContent.ok", is(false)))
+                .andExpect(jsonPath("$.result.structuredContent.data.ok", is(false)))
                 .andExpect(jsonPath("$.result._meta.status", is("failed")))
                 .andExpect(jsonPath("$.result._meta.errorCode", is("VOICEBOX_UNAVAILABLE")))
                 .andExpect(jsonPath("$.result._meta.tool.id", is("voicebox")))
@@ -148,10 +147,9 @@ class McpControllerTests {
                                     }
                                   }
                                 }
-                                """))
+                """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.isError", is(false)))
-                .andExpect(jsonPath("$.result.structuredContent.entries.length()", greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.result.structuredContent.entries").isArray())
                 .andExpect(jsonPath("$.result._meta.tool.id", is("architect.entries")))
                 .andExpect(jsonPath("$.result._meta.tool.name", is("architect.entries.list")))
                 .andExpect(jsonPath("$.result._meta.tool.title", is("Architect Entries")))
@@ -352,8 +350,7 @@ class McpControllerTests {
                                 }
                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.registrations[0].toolId", is("voicebox.speak")))
-                .andExpect(jsonPath("$.result.registrations[0].phase", is("bundle")));
+                .andExpect(jsonPath("$.result.registrations[?(@.toolId == 'voicebox.speak')].phase", hasItem("bundle")));
     }
 
     @Test

@@ -211,7 +211,7 @@ public class RepositoryArtifactFetcher {
     private void downloadRepositoryResources(ArtifactPublicationRecord publication, Path targetDirectory, String apiBaseUrl) {
         try {
             Files.createDirectories(targetDirectory);
-            for (String resourceName : List.of("application.yaml", "README.md")) {
+            for (String resourceName : List.of("application.yaml", "README.md", "tool-manifest.json")) {
                 downloadRepositoryResource(publication, targetDirectory.resolve(resourceName), apiBaseUrl, resourceName);
             }
         } catch (JsonRpcException exception) {

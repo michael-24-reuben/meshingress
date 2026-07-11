@@ -1,7 +1,5 @@
 package dev.mrk.meshingress.repository.artifact;
 
-import dev.mrk.meshingress.toolmetadata.McpToolProperty;
-import dev.mrk.meshingress.toolmetadata.McpToolReadme;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -76,11 +74,18 @@ class ArtifactRepositoryNativeMetadataExportTests {
         org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/README.md")))
                 .contains("# Native Metadata Sample")
                 .contains("README content exported beside the assessed artifact.");
+        org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/tool-manifest.json")))
+                .contains("\"toolId\":\"sample.native\"")
+                .contains("\"meshingress.sample.native.command\"");
 
         mockMvc.perform(get("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/application.yaml")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("meshingress.sample.native.command: \"sample-tool\"")));
+        mockMvc.perform(get("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/tool-manifest.json")
+                        .header("X-Repository-Role", "reviewer"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("\"toolId\":\"sample.native\"")));
     }
 
     private byte[] sampleJarBytes() throws Exception {
@@ -88,6 +93,10 @@ class ArtifactRepositoryNativeMetadataExportTests {
         try (ZipOutputStream zip = new ZipOutputStream(output)) {
             zip.putNextEntry(new ZipEntry("META-INF/MANIFEST.MF"));
             zip.write("Manifest-Version: 1.0\n".getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+
+            zip.putNextEntry(new ZipEntry("META-INF/meshingress/tool-manifest.json"));
+            zip.write(nativeManifestJson().getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();
 
             String fixtureClass = NativeMetadataFixture.class.getName().replace('.', '/') + ".class";
@@ -106,16 +115,28 @@ class ArtifactRepositoryNativeMetadataExportTests {
         }
     }
 
-    @McpToolProperty(
-            name = "meshingress.sample.native.command",
-            description = "Host command used by the native sample tool.",
-            defaultValue = "sample-tool"
-    )
-    @McpToolReadme("""
-            # Native Metadata Sample
+    private String nativeManifestJson() {
+        return """
+                {
+                  "schemaVersion": 1,
+                  "toolId": "sample.native",
+                  "properties": [
+                    {
+                      "name": "meshingress.sample.native.command",
+                      "description": "Host command used by the native sample tool.",
+                      "defaultValue": "sample-tool",
+                      "valueType": "string",
+                      "required": false,
+                      "secret": false
+                    }
+                  ],
+                  "requirements": [],
+                  "links": [],
+                  "readme": "# Native Metadata Sample\\n\\nREADME content exported beside the assessed artifact."
+                }
+                """;
+    }
 
-            README content exported beside the assessed artifact.
-            """)
     private static final class NativeMetadataFixture {
     }
 }

@@ -4,6 +4,13 @@ Purpose
 -------
 This file gives an AI coding agent the minimal, high-value orientation required to be productive in this codebase.
 
+Branch policy (important)
+-------------------------
+- `main` is the official deployed branch and is reserved for owner-directed deployment state. Treat it as protected by default.
+- `development` is the active development branch. Unless the user explicitly permits work on `main`, make code, documentation, and cleanup changes on `development`.
+- If an agent starts on `main` without explicit permission to edit it, stop before making changes and ask whether to switch to `development`, create a work branch from `development`, or proceed on `main`.
+- Do not restore files deleted from `main` unless the user explicitly asks for that recovery. Deletions on `main` may be intentional deployment-branch pruning.
+
 High-level architecture (big picture)
 ------------------------------------
 - Maven reactor with three module families:

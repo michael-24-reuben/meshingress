@@ -76,6 +76,17 @@ public class ArtifactController {
         return artifactService.metadata(groupId, artifactId, version);
     }
 
+    @GetMapping("/artifacts/jars")
+    public List<ArtifactRecord> uploadedJarMetadata(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestHeader(value = "X-Repository-Role", required = false) String role,
+            @RequestHeader(value = "X-Repository-Actor", required = false) String actor,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
+    ) {
+        accessPolicy.require(context(authorization, role, actor, requestId), RepositoryAction.READ);
+        return artifactService.uploadedJarMetadata();
+    }
+
     @GetMapping(path = "/artifact/{groupId}/{artifactId}/{version}/file", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<Resource> file(
             @PathVariable String groupId,

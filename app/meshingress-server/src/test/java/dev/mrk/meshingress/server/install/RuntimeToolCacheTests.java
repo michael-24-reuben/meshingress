@@ -43,6 +43,7 @@ class RuntimeToolCacheTests {
     private static final String PUBLICATION_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/publication";
     private static final String APPLICATION_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/application.yaml";
     private static final String README_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/README.md";
+    private static final String MANIFEST_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/tool-manifest.json";
 
     @TempDir
     Path tempDir;
@@ -98,6 +99,10 @@ class RuntimeToolCacheTests {
                     .isRegularFile()
                     .content()
                     .contains("# Remote README");
+            assertThat(cached.getParent().resolve("resources/tool-manifest.json"))
+                    .isRegularFile()
+                    .content()
+                    .contains("\"toolId\":\"sample.module\"");
             assertThat(requestedRole.get()).isEqualTo("publisher");
         } finally {
             server.stop(0);
@@ -222,6 +227,16 @@ class RuntimeToolCacheTests {
         server.createContext(README_RESOURCE_PATH, exchange -> {
             requestedRole.set(exchange.getRequestHeaders().getFirst("X-Repository-Role"));
             byte[] resourceBody = "# Remote README\n".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "text/plain");
+            exchange.sendResponseHeaders(200, resourceBody.length);
+            try (OutputStream output = exchange.getResponseBody()) {
+                output.write(resourceBody);
+            }
+        });
+        server.createContext(MANIFEST_RESOURCE_PATH, exchange -> {
+            requestedRole.set(exchange.getRequestHeaders().getFirst("X-Repository-Role"));
+            byte[] resourceBody = "{\"schemaVersion\":1,\"toolId\":\"sample.module\",\"properties\":[],\"requirements\":[],\"links\":[],\"readme\":\"\"}\n"
+                    .getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "text/plain");
             exchange.sendResponseHeaders(200, resourceBody.length);
             try (OutputStream output = exchange.getResponseBody()) {

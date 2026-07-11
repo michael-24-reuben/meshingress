@@ -4,8 +4,6 @@ import dev.mrk.meshingress.artifact.model.ArtifactCoordinate;
 import dev.mrk.meshingress.repository.artifact.store.ArtifactMetadataEntry;
 import dev.mrk.meshingress.repository.artifact.store.SqlArtifactMetadataStore;
 import dev.mrk.meshingress.repository.config.MeshingressRepositoryProperties;
-import dev.mrk.meshingress.toolmetadata.McpToolProperty;
-import dev.mrk.meshingress.toolmetadata.McpToolReadme;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +102,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$.assessment.scanners", hasItem("embedded-jar-sandbox")))
                 .andExpect(jsonPath("$.assessment.scanners", hasItem("bytecode-scope-scanner")))
                 .andExpect(jsonPath("$.assessment.summary.sbom.format").value("CycloneDX"))
-                .andExpect(jsonPath("$.assessment.summary.sbom.componentCount").value(6))
+                .andExpect(jsonPath("$.assessment.summary.sbom.componentCount").value(7))
                 .andExpect(jsonPath("$.assessment.summary.sbom.dependencyComponentCount").value(1))
                 .andExpect(jsonPath("$.assessment.summary.pipeline.requiredScanners", hasItem("cyclonedx-sbom")))
                 .andExpect(jsonPath("$.assessment.summary.pipeline.requiredScanners", hasItem("embedded-jar-sandbox")))
@@ -129,7 +127,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$[1].rawSummary.isolation.hostSecretsAccess").value(false))
                 .andExpect(jsonPath("$[1].rawReportPath").exists())
                 .andExpect(jsonPath("$[2].scanner").value("bytecode-scope-scanner"))
-                .andExpect(jsonPath("$[2].status").value("REVIEW"));
+                .andExpect(jsonPath("$[2].status").value("PASSED"));
 
         mockMvc.perform(get("/artifact/reviews/pending"))
                 .andExpect(status().isForbidden())
@@ -251,6 +249,9 @@ class ArtifactRepositoryFlowTests {
         org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/README.md")))
                 .contains("# Generated Sample Tool")
                 .contains("README content exported from native tool metadata.");
+        org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/tool-manifest.json")))
+                .contains("\"toolId\":\"generated.sample\"")
+                .contains("\"meshingress.sample.file-read.root\"");
         JsonNode rawSbom = objectMapper.readTree(Files.readString(artifactDirectory.resolve("cyclonedx-sbom.json")));
         org.assertj.core.api.Assertions.assertThat(rawSbom.path("metadata").path("component").path("purl").asString())
                 .isEqualTo("pkg:maven/dev.mrk.tools/generated-sample@1.0.0");
@@ -264,6 +265,39 @@ class ArtifactRepositoryFlowTests {
         org.assertj.core.api.Assertions.assertThat(Files.exists(root.resolve("assessments/dev/mrk/tools/generated-sample/1.0.0"))).isFalse();
         org.assertj.core.api.Assertions.assertThat(Files.exists(root.resolve("quarantine/dev/mrk/tools/generated-sample/1.0.0"))).isFalse();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(root.resolve("publications/dev/mrk/tools/generated-sample/1.0.0/publication.json"))).isFalse();
+    }
+
+    @Test
+    void listsUploadedJarMetadata() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "listed-sample.jar",
+                "application/java-archive",
+                sampleJarBytes()
+        );
+
+        mockMvc.perform(multipart("/artifact/dev.mrk.tools/listed-sample/1.0.0")
+                        .file(file)
+                        .param("requestedScopes", "FILES_READ")
+                        .header("X-Repository-Role", "uploader")
+                        .header("X-Repository-Actor", "upload-agent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trustStatus").value("QUARANTINED"));
+
+        mockMvc.perform(get("/artifacts/jars"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.detail").value("repository role is not allowed to read"));
+
+        mockMvc.perform(get("/artifacts/jars")
+                        .header("X-Repository-Role", "reviewer"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')]").isNotEmpty())
+                .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')].coordinate.groupId", hasItem("dev.mrk.tools")))
+                .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')].coordinate.packaging", hasItem("jar")))
+                .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')].trustStatus", hasItem("QUARANTINED")))
+                .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')].artifactChecksum.algorithm", hasItem("SHA-256")))
+                .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')].scopes.requestedScopes[0]", hasItem("FILES_READ")))
+                .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')].files[0].path").isNotEmpty());
     }
 
     @Test
@@ -699,6 +733,10 @@ class ArtifactRepositoryFlowTests {
             zip.write("Manifest-Version: 1.0\n".getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();
 
+            zip.putNextEntry(new ZipEntry("META-INF/meshingress/tool-manifest.json"));
+            zip.write(generatedSampleManifestJson().getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+
             zip.putNextEntry(new ZipEntry("bin/run.ps1"));
             zip.write("Write-Output 'sample'\n".getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();
@@ -746,6 +784,44 @@ class ArtifactRepositoryFlowTests {
         }
     }
 
+    private String generatedSampleManifestJson() {
+        return """
+                {
+                  "schemaVersion": 1,
+                  "toolId": "generated.sample",
+                  "properties": [
+                    {
+                      "name": "meshingress.sample.file-read.root",
+                      "description": "Default root used by the sample tool when reading files.",
+                      "defaultValue": "./var/meshingress/sample",
+                      "valueType": "string",
+                      "required": false,
+                      "secret": false
+                    }
+                  ],
+                  "requirements": [
+                    {
+                      "kind": "scope",
+                      "name": "FILES_READ",
+                      "description": "Read files from the local filesystem.",
+                      "required": true,
+                      "label": "",
+                      "license": "",
+                      "vcs": "",
+                      "cloneUrl": "",
+                      "checkoutRef": "",
+                      "baseUrlProperty": "",
+                      "credentialProperty": "",
+                      "scope": "FILES_READ",
+                      "canonicalIdentity": ""
+                    }
+                  ],
+                  "links": [],
+                  "readme": "# Generated Sample Tool\\n\\nREADME content exported from native tool metadata."
+                }
+                """;
+    }
+
     private JsonNode componentNamed(JsonNode root, String name) {
         for (JsonNode component : root.path("components")) {
             if (component.path("name").asString().equals(name)) {
@@ -755,16 +831,6 @@ class ArtifactRepositoryFlowTests {
         throw new AssertionError("component not found: " + name);
     }
 
-    @McpToolProperty(
-            name = "meshingress.sample.file-read.root",
-            description = "Default root used by the sample tool when reading files.",
-            defaultValue = "./var/meshingress/sample"
-    )
-    @McpToolReadme("""
-            # Generated Sample Tool
-
-            README content exported from native tool metadata.
-            """)
     private static final class FileReadFixture {
         String read(Path path) throws IOException {
             return Files.readString(path);

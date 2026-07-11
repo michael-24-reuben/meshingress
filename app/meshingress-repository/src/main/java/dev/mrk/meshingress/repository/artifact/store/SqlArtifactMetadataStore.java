@@ -151,6 +151,19 @@ public class SqlArtifactMetadataStore implements ArtifactMetadataStore {
     }
 
     @Override
+    public List<ArtifactMetadataEntry> findArtifactsByPackaging(String packaging) {
+        return jdbcTemplate.query("""
+                        select payload_json, artifact_path
+                        from %s
+                        where lower(packaging) = lower(?)
+                        order by updated_at desc, group_id asc, artifact_id asc, version asc
+                        """.formatted(artifactsTable),
+                artifactMapper(),
+                clean(packaging)
+        );
+    }
+
+    @Override
     public void saveAssessment(ArtifactCoordinate coordinate, List<ScannerResult> results) {
         List<ScannerResult> safeResults = results == null ? List.of() : List.copyOf(results);
         String coordinateKey = key(coordinate);

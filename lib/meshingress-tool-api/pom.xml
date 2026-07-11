@@ -11,14 +11,12 @@
     </parent>
 
     <artifactId>meshingress-tool-api</artifactId>
+    <packaging>jar</packaging>
+
     <name>meshingress-tool-api</name>
     <description>Stable SPI for Meshingress MCP tool modules</description>
 
     <dependencies>
-        <!--<dependency>
-            <groupId>tools.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>-->
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
@@ -27,9 +25,10 @@
         </dependency>
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-tool-dispatch</artifactId>
+            <artifactId>meshingress-tool-api-dispatch</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+
     </dependencies>
 </project>

@@ -87,15 +87,14 @@ class OmniVoiceToolMvcTests {
                                     }
                                   }
                                 }
-                                """))
+                """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.isError", is(false)))
-                .andExpect(jsonPath("$.result.structuredContent.ok", is(true)))
-                .andExpect(jsonPath("$.result.structuredContent.request.operation", is("design")))
-                .andExpect(jsonPath("$.result.structuredContent.request.instruct", is("female, low pitch, british accent")))
-                .andExpect(jsonPath("$.result.structuredContent.wrapperResponse.operation", is("design")))
-                .andExpect(jsonPath("$.result.structuredContent.wrapperResponse.outputPath", startsWith(System.getProperty("java.io.tmpdir"))))
-                .andExpect(jsonPath("$.result.structuredContent.commandResult.command[0]", is("fake-omnivoice")));
+                .andExpect(jsonPath("$.result.structuredContent.data.ok", is(true)))
+                .andExpect(jsonPath("$.result.structuredContent.data.request.operation", is("design")))
+                .andExpect(jsonPath("$.result.structuredContent.data.request.instruct", is("female, low pitch, british accent")))
+                .andExpect(jsonPath("$.result.structuredContent.data.wrapperResponse.operation", is("design")))
+                .andExpect(jsonPath("$.result.structuredContent.data.wrapperResponse.outputPath", startsWith(System.getProperty("java.io.tmpdir"))))
+                .andExpect(jsonPath("$.result.structuredContent.data.commandResult.command[0]", is("fake-omnivoice")));
     }
 
     @Test
@@ -119,7 +118,7 @@ class OmniVoiceToolMvcTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.isError", is(true)))
                 .andExpect(jsonPath("$.result._meta.errorCode", is("OMNIVOICE_GENERATE_FAILED")))
-                .andExpect(jsonPath("$.result.structuredContent.message", is("outputPath must stay inside the configured OmniVoice output root")));
+                .andExpect(jsonPath("$.result.structuredContent.data.message", is("outputPath must stay inside the configured OmniVoice output root")));
     }
 
     @Test
@@ -143,7 +142,7 @@ class OmniVoiceToolMvcTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.isError", is(true)))
                 .andExpect(jsonPath("$.result._meta.errorCode", is("OMNIVOICE_PROVIDER_DOWNLOAD_DISABLED")))
-                .andExpect(jsonPath("$.result.structuredContent.providerDownloadsEnabled", is(false)));
+                .andExpect(jsonPath("$.result.structuredContent.data.details.providerDownloadsEnabled", is(false)));
     }
 
     @TestConfiguration

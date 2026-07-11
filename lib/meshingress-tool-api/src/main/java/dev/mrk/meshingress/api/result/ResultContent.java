@@ -37,7 +37,7 @@ public final class ResultContent {
 
     public static ResultContent text(JsonNode value) {
         Objects.requireNonNull(value, "value must not be null");
-        if (!value.isTextual()) {
+        if (!value.isString()) {
             throw new IllegalArgumentException("text content requires a textual JsonNode");
         }
         return new ResultContent(TYPE_TEXT, MimeTypeUtils.TEXT_PLAIN, value);

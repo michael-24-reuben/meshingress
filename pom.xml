@@ -26,11 +26,11 @@
         <module>lib/meshingress-route-annotations</module>
         <module>lib/meshingress-route-api</module>
         <module>lib/meshingress-route-framework</module>
-        <module>lib/meshingress-tool-dispatch</module>
         <module>lib/meshingress-tool-api</module>
+        <module>lib/meshingress-tool-api-dispatch</module>
+        <module>lib/meshingress-tool-api-manifest</module>
         <module>lib/meshingress-tool-annotations</module>
         <module>lib/meshingress-tool-framework</module>
-        <module>lib/meshingress-tool-native-metadata</module>
         <module>lib/meshingress-tool-runtime-loader</module>
         <module>lib/meshingress-artifact-model</module>
         <module>lib/meshingress-artifact-storage</module>

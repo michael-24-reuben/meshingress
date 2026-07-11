@@ -10,8 +10,7 @@ import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.dispatch.process.ProcessExecutionContent;
 import dev.mrk.meshingress.scopes.McpToolScope;
-import dev.mrk.meshingress.toolmetadata.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import dev.mrk.meshingress.toolmetadata.McpToolMetadata;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -42,35 +41,15 @@ import java.util.concurrent.atomic.AtomicLong;
         McpToolScope.SHELL_EXECUTE,
         McpToolScope.FILES_WRITE
 })
-@McpToolProperty(
-        name = "meshingress.powershell.executable",
-        description = "PowerShell executable used by native deployments when a call does not provide an executable argument.",
-        defaultValue = "pwsh"
-)
-@McpToolProperty(
-        name = "meshingress.powershell.timeout-ms",
-        description = "Default PowerShell execution timeout in milliseconds for native deployments.",
-        defaultValue = "20000",
-        valueType = "long"
-)
-@McpToolReadme("""
-        # PowerShell CLI
-        
-        Executes a PowerShell script through the `cli.powershell.execute` MCP function.
-        
-        Configure `resources/application.yaml` beside this artifact when a native deployment needs a host-specific PowerShell executable or timeout default.
-        """)
 @McpToolMapping("tools")
 public class PowerShellCliTool {
 
     private final ObjectMapper objectMapper;
+    private final McpToolMetadata mcpToolMetadata;
 
-    @Autowired
-    McpToolMetadata mcpToolMetadata;
-
-
-    public PowerShellCliTool(ObjectMapper objectMapper) {
+    public PowerShellCliTool(ObjectMapper objectMapper, McpToolMetadata mcpToolMetadata) {
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper must not be null");
+        this.mcpToolMetadata = Objects.requireNonNull(mcpToolMetadata, "mcpToolMetadata must not be null");
     }
 
     @McpConfigureMapping(
@@ -87,9 +66,6 @@ public class PowerShellCliTool {
         String executable = mcpToolMetadata
                 .toolProperty(PowerShellCliTool.class, "meshingress.powershell.executable")
                 .value();
-
-//        List<McpToolPropertyMetadata> properties = mcpToolMetadata.toolProperties(PowerShellCliTool.class);
-//        String readme = mcpToolMetadata.toolReadme(PowerShellCliTool.class);
 
         DispatchExecutionResult.Builder dispatch = DispatchExecutionResult.builder();
         ArrayNode tracks = objectMapper.createArrayNode();

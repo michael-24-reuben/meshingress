@@ -152,6 +152,12 @@ public class ArtifactService {
         return requireEntry(coordinate(groupId, artifactId, version, "jar")).record();
     }
 
+    public List<ArtifactRecord> uploadedJarMetadata() {
+        return metadataStore.findArtifactsByPackaging("jar").stream()
+                .map(ArtifactMetadataEntry::record)
+                .toList();
+    }
+
     public Path artifactFile(String groupId, String artifactId, String version) {
         Path artifactPath = requireEntry(coordinate(groupId, artifactId, version, "jar")).artifactPath();
         if (!Files.isRegularFile(artifactPath)) {
@@ -161,7 +167,7 @@ public class ArtifactService {
     }
 
     public Path artifactResourceFile(String groupId, String artifactId, String version, String resourceName) {
-        if (!"application.yaml".equals(resourceName) && !"README.md".equals(resourceName)) {
+        if (!"application.yaml".equals(resourceName) && !"README.md".equals(resourceName) && !"tool-manifest.json".equals(resourceName)) {
             throw new RepositoryException("artifact resource is not available");
         }
         ArtifactRecord record = requireEntry(coordinate(groupId, artifactId, version, "jar")).record();
@@ -197,6 +203,7 @@ public class ArtifactService {
         for (ScannerAdapter scanner : scanners) {
             results.add(withPipelineSummary(scanner.scan(scannerRequest)));
         }
+        McpToolNativeMetadata nativeMetadata = nativeMetadataExtractor.extract(storage.layout().quarantineDirectory(current.coordinate()));
         List<String> inferredScopes = current.scopes().inferredScopes();
         if (isJar(current.coordinate().packaging())) {
             results.add(withPipelineSummary(generateSbomResult(current, artifactPath)));
@@ -211,6 +218,7 @@ public class ArtifactService {
                     .toList();
             results.add(withPipelineSummary(toScannerResult(scopeScan)));
         }
+        inferredScopes = mergeInferredScopes(inferredScopes, manifestScopeRequirements(nativeMetadata));
 
         ArtifactTrustStatus nextStatus = statusFrom(results);
         ArtifactAssessmentSummary summary = summaryFrom(results);
@@ -235,7 +243,6 @@ public class ArtifactService {
                 "Artifact assessment completed."
         );
         writeJson(storage.layout().assessmentDirectory(current.coordinate()).resolve("assessment.json"), results);
-        McpToolNativeMetadata nativeMetadata = nativeMetadataExtractor.extract(storage.layout().quarantineDirectory(current.coordinate()));
         nativeMetadataExporter.export(nativeMetadata, storage.layout().artifactDirectory(current.coordinate()));
         storage.cleanQuarantine(current.coordinate());
         return updated;
@@ -587,6 +594,33 @@ public class ArtifactService {
         } catch (Exception exception) {
             throw new RepositoryException("artifact scope inference failed: " + exception.getMessage(), exception);
         }
+    }
+
+    private List<String> mergeInferredScopes(List<String> scannerScopes, List<String> manifestScopes) {
+        Set<String> merged = new LinkedHashSet<>();
+        if (scannerScopes != null) {
+            scannerScopes.stream()
+                    .filter(scope -> scope != null && !scope.isBlank())
+                    .forEach(merged::add);
+        }
+        if (manifestScopes != null) {
+            manifestScopes.stream()
+                    .filter(scope -> scope != null && !scope.isBlank())
+                    .forEach(merged::add);
+        }
+        return merged.stream().sorted().toList();
+    }
+
+    private List<String> manifestScopeRequirements(McpToolNativeMetadata nativeMetadata) {
+        if (nativeMetadata == null || nativeMetadata.requirements().isEmpty()) {
+            return List.of();
+        }
+        return nativeMetadata.requirements().stream()
+                .filter(requirement -> "scope".equals(requirement.kind()))
+                .map(requirement -> requirement.scope().isBlank() ? requirement.name() : requirement.scope())
+                .filter(scope -> scope != null && !scope.isBlank())
+                .distinct()
+                .toList();
     }
 
     private ScannerResult toScannerResult(CycloneDxSbom sbom, Path rawReportPath) {

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -10,22 +11,17 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>meshingress-tool-runtime-loader</artifactId>
+    <artifactId>meshingress-tool-api-manifest</artifactId>
     <packaging>jar</packaging>
 
-    <name>meshingress-tool-runtime-loader</name>
-    <description>Runtime artifact resolution and activation contracts for Meshingress tool modules</description>
+    <name>meshingress-tool-api-manifest</name>
+    <description>Manifest declarations and artifact exporters for Meshingress tool modules</description>
 
     <dependencies>
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-tool-api</artifactId>
+            <artifactId>meshingress-tool-annotations</artifactId>
             <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
         </dependency>
 
         <dependency>

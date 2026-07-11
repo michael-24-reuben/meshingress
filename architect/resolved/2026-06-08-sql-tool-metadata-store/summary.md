@@ -1,3 +1,0 @@
-# Summary
-
-The repository SQL metadata-store first slice is complete. Meshingress repository metadata now goes through an `ArtifactMetadataStore` interface with a SQL implementation. The SQL store persists artifact records, artifact file rows, assessment payloads, publication records, artifact paths, and lifecycle events using property-driven schema and table identities. Canonical JSON metadata snapshots were removed from the active repository path, while raw assessment and SBOM report files remain on disk. Focused repository and publication-install tests passed. Direct server registration SQL migration remains a follow-up.

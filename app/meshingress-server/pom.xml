@@ -49,7 +49,7 @@
 
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-tool-native-metadata</artifactId>
+            <artifactId>meshingress-tool-api-manifest</artifactId>
             <version>${project.version}</version>
         </dependency>
 

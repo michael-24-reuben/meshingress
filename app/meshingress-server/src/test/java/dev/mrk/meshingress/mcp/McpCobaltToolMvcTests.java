@@ -59,11 +59,11 @@ class McpCobaltToolMvcTests {
                                     "arguments": {}
                                   }
                                 }
-                                """))
+                """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.isError", is(true)))
-                .andExpect(jsonPath("$.result.structuredContent.ok", is(false)))
-                .andExpect(jsonPath("$.result.structuredContent.upstreamPath", is("toolspace/cobalt/upstream/cobalt")))
+                .andExpect(jsonPath("$.result.structuredContent.data.ok", is(false)))
+                .andExpect(jsonPath("$.result.structuredContent.data.details.upstreamPath", is("toolspace/cobalt/upstream/cobalt")))
                 .andExpect(jsonPath("$.result._meta.errorCode", is("COBALT_UNAVAILABLE")))
                 .andExpect(jsonPath("$.result._meta.errorMessage", containsString("Start a local Cobalt API instance")))
                 .andExpect(jsonPath("$.result._meta.tool.id", is("cobalt")))

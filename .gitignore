@@ -1,6 +1,7 @@
 HELP.md
 target/
 data/
+temp/
 /repository/**
 .cache/**
 .mvn/wrapper/maven-wrapper.jar

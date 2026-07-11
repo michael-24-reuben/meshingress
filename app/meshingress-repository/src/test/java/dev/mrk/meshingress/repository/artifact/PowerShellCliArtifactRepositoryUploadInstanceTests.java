@@ -171,7 +171,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "approvedScopes": ["FILES_DELETE", "FILES_WRITE", "SHELL_EXECUTE"],
+                                  "approvedScopes": ["ENVIRONMENT_WRITE", "FILES_DELETE", "FILES_WRITE", "SHELL_EXECUTE", "TOOLS_READ", "TOOLS_REGISTER"],
                                   "deniedScopes": [],
                                   "trustStatus": "APPROVED_LIMITED",
                                   "reviewer": "PowerShellCliArtifactRepositoryUploadInstanceTests"
@@ -180,9 +180,12 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
+                .andExpect(jsonPath("$.scopes.approvedScopes", hasItem("ENVIRONMENT_WRITE")))
                 .andExpect(jsonPath("$.scopes.approvedScopes", hasItem("FILES_DELETE")))
                 .andExpect(jsonPath("$.scopes.approvedScopes", hasItem("FILES_WRITE")))
                 .andExpect(jsonPath("$.scopes.approvedScopes", hasItem("SHELL_EXECUTE")))
+                .andExpect(jsonPath("$.scopes.approvedScopes", hasItem("TOOLS_READ")))
+                .andExpect(jsonPath("$.scopes.approvedScopes", hasItem("TOOLS_REGISTER")))
                 .andReturn();
 
         JsonNode approved = objectMapper.readTree(approveResult.getResponse().getContentAsByteArray());
