@@ -284,11 +284,11 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("QUARANTINED"));
 
-        mockMvc.perform(get("/artifacts/jars"))
+        mockMvc.perform(get("/artifact/jars"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to read"));
 
-        mockMvc.perform(get("/artifacts/jars")
+        mockMvc.perform(get("/artifact/jars")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')]").isNotEmpty())

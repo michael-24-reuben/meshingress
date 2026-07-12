@@ -38,7 +38,6 @@
         <module>lib/meshingress-artifact-publication</module>
         <module>lib/meshingress-artifact-scope-scanner</module>
 
-        <module>app/meshingress-repository</module>
         <module>toolspace/helloworld</module>
         <module>toolspace/powershell-cli</module>
         <module>toolspace/cobalt</module>

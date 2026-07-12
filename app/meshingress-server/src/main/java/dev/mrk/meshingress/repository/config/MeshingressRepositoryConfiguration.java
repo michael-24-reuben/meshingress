@@ -18,7 +18,6 @@ import dev.mrk.meshingress.artifact.security.ScannerProcessRunner;
 import dev.mrk.meshingress.artifact.storage.FileSystemArtifactStorage;
 import dev.mrk.meshingress.repository.artifact.store.ArtifactMetadataStore;
 import dev.mrk.meshingress.repository.artifact.store.SqlArtifactMetadataStore;
-import dev.mrk.meshingress.toolmetadata.McpToolMetadata;
 import dev.mrk.meshingress.toolmetadata.McpToolNativeMetadataExporter;
 import dev.mrk.meshingress.toolmetadata.McpToolNativeMetadataExtractor;
 import org.springframework.core.io.Resource;
@@ -65,11 +64,6 @@ public class MeshingressRepositoryConfiguration {
     @Bean
     McpToolNativeMetadataExporter mcpToolNativeMetadataExporter() {
         return new McpToolNativeMetadataExporter();
-    }
-
-    @Bean
-    McpToolMetadata mcpToolMetadata() {
-        return new McpToolMetadata();
     }
 
     @Bean

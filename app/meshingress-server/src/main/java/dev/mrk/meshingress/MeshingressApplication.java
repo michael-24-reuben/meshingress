@@ -8,11 +8,12 @@ import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.context.annotation.Bean;
 
 import dev.mrk.meshingress.config.MeshingressProperties;
+import dev.mrk.meshingress.repository.config.MeshingressRepositoryProperties;
 
 import java.util.Objects;
 
 @SpringBootApplication
-@EnableConfigurationProperties(MeshingressProperties.class)
+@EnableConfigurationProperties({MeshingressProperties.class, MeshingressRepositoryProperties.class})
 public class MeshingressApplication {
 
     static void main(String[] args) {
