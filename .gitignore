@@ -3,6 +3,10 @@ target/
 data/
 temp/
 /repository/**
+/var/
+tools/
+
+
 .cache/**
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

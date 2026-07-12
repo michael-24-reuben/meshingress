@@ -17,25 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>voicebox</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>omnivoice-tts</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
             <artifactId>helloworld</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>instagram-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -51,16 +33,5 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>video-loop</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>sample-module</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 </project>

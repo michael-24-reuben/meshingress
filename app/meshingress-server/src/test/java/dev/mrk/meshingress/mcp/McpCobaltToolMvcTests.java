@@ -18,7 +18,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = {
         "meshingress.architect.root=../../architect",
-        "meshingress.voicebox.base-url=http://127.0.0.1:1",
         "meshingress.cobalt.base-url=http://127.0.0.1:1"
 })
 @AutoConfigureMockMvc
