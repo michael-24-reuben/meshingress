@@ -1,6 +1,5 @@
 HELP.md
 target/
-data/
 temp/
 /repository/**
 /var/
@@ -60,4 +59,3 @@ build/
 /lib/meshingress-codeql-scope-sample/vendor/
 /temp/*.jar
 /temp/cobalt-sources-*/
-/temp/voicebox-upstream/
