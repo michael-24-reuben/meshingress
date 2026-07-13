@@ -1,0 +1,1195 @@
+openapi: "3.1.0"
+info:
+  title: "meshingress API"
+  description: "meshingress API"
+  version: "1.0.0"
+servers:
+  - url: "https://meshingress"
+paths:
+  /mcp:
+    post:
+      summary: "Dispatch MCP JSON-RPC requests"
+      description: "Accepts JSON-RPC 2.0 single requests, notifications, and batches\
+        \ for the Meshingress MCP transport."
+      operationId: ""
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          required: false
+          description: "Bearer admin token for role-gated MCP methods."
+          schema:
+            type: "string"
+        - name: "X-Mcp-Role"
+          in: "header"
+          required: false
+          description: "MCP role hint. Use admin for role-gated registry methods."
+          schema:
+            type: "string"
+        - name: "X-Mcp-Admin"
+          in: "header"
+          required: false
+          description: "Legacy admin flag accepted for compatibility."
+          schema:
+            type: "string"
+        - name: "Mcp-Session-Id"
+          in: "header"
+          required: false
+          description: "Client MCP session identifier."
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          description: "Caller request correlation identifier."
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "string"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonNode"
+    delete:
+      summary: "DELETE mcp"
+      operationId: "delete"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Void"
+    get:
+      summary: "GET mcp"
+      operationId: "get"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Void"
+  /artifact/{groupId}/{artifactId}/{version}:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}"
+      operationId: "upload"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "type"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            enum:
+              - "TOOL_MODULE"
+              - "GENERATED_TOOL_MODULE"
+              - "CLI_HARNESS"
+              - "AVAILABILITY_ANNOTATION"
+              - "AVAILABILITY_POLICY"
+              - "SCOPE_POLICY"
+              - "SECURITY_POLICY"
+              - "JSON_SCHEMA"
+              - "SBOM"
+              - "ATTESTATION"
+              - "TEMPLATE"
+              - "RUNTIME_PLUGIN"
+            default: "GENERATED_TOOL_MODULE"
+        - name: "packaging"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            default: "jar"
+        - name: "requestedScopes"
+          in: "query"
+          required: false
+          schema:
+            type: "array"
+            items:
+              type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: "object"
+              required:
+                - "file"
+              properties:
+                file:
+                  type: "string"
+                  format: "binary"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/assess:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}/assess"
+      operationId: "assess"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/approve:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}/approve"
+      operationId: "approve"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/reject:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}/reject"
+      operationId: "reject"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/publish:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}/publish"
+      operationId: "publish"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+  /artifact/{groupId}/{artifactId}/{version}/revoke:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}/revoke"
+      operationId: "revoke"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+  /artifact/{groupId}/{artifactId}/{version}/delete:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}/delete"
+      operationId: "delete"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/restore:
+    post:
+      summary: "POST artifact/{groupId}/{artifactId}/{version}/restore"
+      operationId: "restore"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/metadata:
+    get:
+      summary: "GET artifact/{groupId}/{artifactId}/{version}/metadata"
+      operationId: "metadata"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/jars:
+    get:
+      summary: "GET artifact/jars"
+      operationId: "uploadedJarMetadata"
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/file:
+    get:
+      summary: "GET artifact/{groupId}/{artifactId}/{version}/file"
+      operationId: "file"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/Resource"
+  /artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}:
+    get:
+      summary: "GET artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}"
+      operationId: "resource"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "resourceName"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/Resource"
+  /artifact/{groupId}/{artifactId}/{version}/assessment:
+    get:
+      summary: "GET artifact/{groupId}/{artifactId}/{version}/assessment"
+      operationId: "assessment"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ScannerResult"
+  /artifact/reviews/pending:
+    get:
+      summary: "GET artifact/reviews/pending"
+      operationId: "pendingReviewQueue"
+      parameters:
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ArtifactReviewQueueItem"
+  /artifact/{groupId}/{artifactId}/{version}/publication:
+    get:
+      summary: "GET artifact/{groupId}/{artifactId}/{version}/publication"
+      operationId: "publication"
+      parameters:
+        - name: "groupId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "artifactId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "version"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "Authorization"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Role"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Repository-Actor"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+        - name: "X-Request-Id"
+          in: "header"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+components:
+  schemas:
+    JsonNode:
+      type: "object"
+      properties: { }
+    Void:
+      type: "object"
+      properties: { }
+    ArtifactCoordinate:
+      type: "object"
+      properties:
+        groupId:
+          type: "string"
+          nullable: true
+        artifactId:
+          type: "string"
+          nullable: true
+        version:
+          type: "string"
+          nullable: true
+        classifier:
+          type: "string"
+          nullable: true
+        packaging:
+          type: "string"
+          nullable: true
+    ArtifactChecksum:
+      type: "object"
+      properties:
+        algorithm:
+          type: "string"
+          nullable: true
+        value:
+          type: "string"
+          nullable: true
+    ArtifactFileEntry:
+      type: "object"
+      properties:
+        path:
+          type: "string"
+          nullable: true
+        size:
+          type: "integer"
+          format: "int64"
+          nullable: true
+        checksum:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactChecksum"
+        executable:
+          type: "boolean"
+          nullable: true
+    DeniedScope:
+      type: "object"
+      properties:
+        scope:
+          type: "string"
+          nullable: true
+        reason:
+          type: "string"
+          nullable: true
+    ArtifactScopeDeclaration:
+      type: "object"
+      properties:
+        requestedScopes:
+          type: "array"
+          nullable: true
+          items:
+            type: "string"
+        inferredScopes:
+          type: "array"
+          nullable: true
+          items:
+            type: "string"
+        approvedScopes:
+          type: "array"
+          nullable: true
+          items:
+            type: "string"
+        deniedScopes:
+          type: "array"
+          nullable: true
+          items:
+            $ref: "#/components/schemas/DeniedScope"
+    ArtifactAssessmentSummary:
+      type: "object"
+      properties:
+        status:
+          type: "string"
+          nullable: true
+        scanners:
+          type: "array"
+          nullable: true
+          items:
+            type: "string"
+        findingCount:
+          type: "integer"
+          format: "int32"
+          nullable: true
+        summary:
+          type: "string"
+          nullable: true
+    ArtifactRecord:
+      type: "object"
+      properties:
+        coordinate:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactCoordinate"
+        type:
+          type: "string"
+          nullable: true
+          enum:
+            - "TOOL_MODULE"
+            - "GENERATED_TOOL_MODULE"
+            - "CLI_HARNESS"
+            - "AVAILABILITY_ANNOTATION"
+            - "AVAILABILITY_POLICY"
+            - "SCOPE_POLICY"
+            - "SECURITY_POLICY"
+            - "JSON_SCHEMA"
+            - "SBOM"
+            - "ATTESTATION"
+            - "TEMPLATE"
+            - "RUNTIME_PLUGIN"
+        trustStatus:
+          type: "string"
+          nullable: true
+          enum:
+            - "RECEIVED"
+            - "QUARANTINED"
+            - "SCANNING"
+            - "REVIEW_PENDING"
+            - "APPROVED_TRUSTED"
+            - "APPROVED_LIMITED"
+            - "REJECTED"
+            - "BLOCKED_MALWARE"
+            - "BLOCKED_POLICY"
+            - "BLOCKED_VULNERABILITY"
+            - "SUPERSEDED"
+            - "DELETED"
+            - "REVOKED"
+        artifactUri:
+          type: "string"
+          nullable: true
+        artifactChecksum:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactChecksum"
+        files:
+          type: "array"
+          nullable: true
+          items:
+            $ref: "#/components/schemas/ArtifactFileEntry"
+        scopes:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactScopeDeclaration"
+        assessment:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactAssessmentSummary"
+        createdAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+        updatedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+    ArtifactReviewRequest:
+      type: "object"
+      properties:
+        approvedScopes:
+          type: "array"
+          nullable: true
+          items:
+            type: "string"
+        deniedScopes:
+          type: "array"
+          nullable: true
+          items:
+            $ref: "#/components/schemas/DeniedScope"
+        trustStatus:
+          type: "string"
+          nullable: true
+          enum:
+            - "RECEIVED"
+            - "QUARANTINED"
+            - "SCANNING"
+            - "REVIEW_PENDING"
+            - "APPROVED_TRUSTED"
+            - "APPROVED_LIMITED"
+            - "REJECTED"
+            - "BLOCKED_MALWARE"
+            - "BLOCKED_POLICY"
+            - "BLOCKED_VULNERABILITY"
+            - "SUPERSEDED"
+            - "DELETED"
+            - "REVOKED"
+        reviewer:
+          type: "string"
+          nullable: true
+        notes:
+          type: "string"
+          nullable: true
+    ArtifactProvenance:
+      type: "object"
+      properties:
+        sourceRepo:
+          type: "string"
+          nullable: true
+        sourceCommit:
+          type: "string"
+          nullable: true
+        generatedBy:
+          type: "string"
+          nullable: true
+        generatorCommit:
+          type: "string"
+          nullable: true
+    PublicationEligibilityDecision:
+      type: "object"
+      properties:
+        eligible:
+          type: "boolean"
+          nullable: true
+        reasonCodes:
+          type: "array"
+          nullable: true
+          items:
+            type: "string"
+        evidence:
+          type: "string"
+          nullable: true
+    ArtifactPublicationRecord:
+      type: "object"
+      properties:
+        coordinate:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactCoordinate"
+        type:
+          type: "string"
+          nullable: true
+          enum:
+            - "TOOL_MODULE"
+            - "GENERATED_TOOL_MODULE"
+            - "CLI_HARNESS"
+            - "AVAILABILITY_ANNOTATION"
+            - "AVAILABILITY_POLICY"
+            - "SCOPE_POLICY"
+            - "SECURITY_POLICY"
+            - "JSON_SCHEMA"
+            - "SBOM"
+            - "ATTESTATION"
+            - "TEMPLATE"
+            - "RUNTIME_PLUGIN"
+        trustStatus:
+          type: "string"
+          nullable: true
+          enum:
+            - "RECEIVED"
+            - "QUARANTINED"
+            - "SCANNING"
+            - "REVIEW_PENDING"
+            - "APPROVED_TRUSTED"
+            - "APPROVED_LIMITED"
+            - "REJECTED"
+            - "BLOCKED_MALWARE"
+            - "BLOCKED_POLICY"
+            - "BLOCKED_VULNERABILITY"
+            - "SUPERSEDED"
+            - "DELETED"
+            - "REVOKED"
+        artifactUri:
+          type: "string"
+          nullable: true
+        artifactChecksum:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactChecksum"
+        scopePolicy:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactScopeDeclaration"
+        scanSummary:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactAssessmentSummary"
+        provenance:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactProvenance"
+        eligibilityDecision:
+          nullable: true
+          $ref: "#/components/schemas/PublicationEligibilityDecision"
+        revoked:
+          type: "boolean"
+          nullable: true
+        publishedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+        signatureKeyId:
+          type: "string"
+          nullable: true
+        signatureAlgorithm:
+          type: "string"
+          nullable: true
+        signature:
+          type: "string"
+          nullable: true
+    Resource:
+      type: "object"
+      properties: { }
+    Finding:
+      type: "object"
+      properties:
+        severity:
+          type: "string"
+          nullable: true
+        code:
+          type: "string"
+          nullable: true
+        message:
+          type: "string"
+          nullable: true
+        path:
+          type: "string"
+          nullable: true
+    Path:
+      type: "object"
+      properties: { }
+    ScannerResult:
+      type: "object"
+      properties:
+        scanner:
+          type: "string"
+          nullable: true
+        scannerVersion:
+          type: "string"
+          nullable: true
+        status:
+          type: "string"
+          nullable: true
+          enum:
+            - "PASSED"
+            - "REVIEW"
+            - "BLOCKED"
+            - "FAILED"
+        findings:
+          type: "array"
+          nullable: true
+          items:
+            $ref: "#/components/schemas/Finding"
+        rawSummary:
+          type: "string"
+          nullable: true
+        rawReportPath:
+          nullable: true
+          $ref: "#/components/schemas/Path"
+    ArtifactReviewQueueItem:
+      type: "object"
+      properties:
+        artifact:
+          nullable: true
+          $ref: "#/components/schemas/ArtifactRecord"
+        assessment:
+          type: "array"
+          nullable: true
+          items:
+            $ref: "#/components/schemas/ScannerResult"
