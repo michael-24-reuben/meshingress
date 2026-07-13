@@ -40,7 +40,6 @@
 
         <module>toolspace/helloworld</module>
         <module>toolspace/powershell-cli</module>
-        <module>toolspace/cobalt</module>
     </modules>
 
     <properties>
