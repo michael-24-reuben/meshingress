@@ -19,9 +19,9 @@ class McpToolMetadataTests {
         Path resourcesDirectory = artifactDirectory.resolve("resources");
         Files.createDirectories(resourcesDirectory);
         McpToolManifestJson.write(McpToolNativeMetadata.fromManifest(new SampleManifest()), resourcesDirectory.resolve("tool-manifest.json"));
-        Files.writeString(resourcesDirectory.resolve("application.yaml"), """
+        Files.writeString(resourcesDirectory.resolve("application.properties"), """
                 # generated
-                meshingress.sample.executable: "custom-tool"
+                meshingress.sample.executable=custom-tool
                 """);
         Files.writeString(resourcesDirectory.resolve("README.md"), "# Runtime README\n");
 
@@ -47,8 +47,8 @@ class McpToolMetadataTests {
         Path resourcesDirectory = artifactDirectory.resolve("resources");
         Files.createDirectories(resourcesDirectory);
         McpToolManifestJson.write(McpToolNativeMetadata.fromManifest(new SampleManifest()), resourcesDirectory.resolve("tool-manifest.json"));
-        Path applicationYaml = resourcesDirectory.resolve("application.yaml");
-        Files.writeString(applicationYaml, "meshingress.sample.executable: \"first\"\n");
+        Path applicationProperties = resourcesDirectory.resolve("application.properties");
+        Files.writeString(applicationProperties, "meshingress.sample.executable=first\n");
 
         McpToolMetadata metadata = new McpToolMetadata();
         metadata.registerArtifactDirectory(SampleTool.class, artifactDirectory);
@@ -56,7 +56,7 @@ class McpToolMetadataTests {
         assertThat(metadata.toolProperty(SampleTool.class, "meshingress.sample.executable").value())
                 .isEqualTo("first");
 
-        Files.writeString(applicationYaml, "meshingress.sample.executable: \"second\"\n");
+        Files.writeString(applicationProperties, "meshingress.sample.executable=second\n");
 
         assertThat(metadata.toolProperty(SampleTool.class, "meshingress.sample.executable").value())
                 .isEqualTo("first");
@@ -97,8 +97,8 @@ class McpToolMetadataTests {
         }
 
         @Override
-        public String readmeMarkdown() {
-            return "# Manifest README";
+        public ToolReadme readme() {
+            return ToolReadme.inline("# Manifest README");
         }
     }
 }

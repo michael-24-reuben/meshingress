@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meshingress Tool Call Client</title>
+  <link rel="stylesheet" href="./css/vars.css">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <div class="app-root">
+    <nav class="app-topbar">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Meshingress</p>
+          <h1>Tool Call Client</h1>
+        </div>
+        <div class="topbar-actions">
+          <button id="refreshToolsButton" class="button ghost" type="button">Refresh</button>
+          <button id="settingsButton" class="button secondary" type="button">Settings</button>
+        </div>
+      </header>
+    </nav>
+
+    <div class="app-scroll-region">
+      <main class="app-shell">
+        <aside id="toolTreePanel" class="tool-tree-panel" aria-label="Available tools">
+          <div class="tool-sidebar-heading">
+            <div>
+              <h2>Tools</h2>
+              <p class="muted">Function navigator</p>
+            </div>
+          </div>
+          <div class="tool-sidebar-tabs" role="tablist" aria-label="Tool navigation view">
+            <button class="tool-sidebar-tab active" type="button" data-tool-nav-mode="tree">Tree</button>
+            <button class="tool-sidebar-tab" type="button" data-tool-nav-mode="list">List</button>
+          </div>
+          <div id="toolNavigationMount" class="tool-navigation-mount">
+            <div class="empty-state">Loading tools...</div>
+          </div>
+        </aside>
+
+        <article class="workspace-main">
+          <section class="panel tool-panel" aria-labelledby="toolPanelTitle">
+            <div class="panel-heading">
+              <div>
+                <h2 id="toolPanelTitle">Call a Tool</h2>
+                <p id="toolStatus" class="muted">Loading available tools...</p>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="toolSelect">Tool</label>
+              <select id="toolSelect"></select>
+            </div>
+
+            <div id="toolDetails" class="tool-details empty-state">
+              Select a tool to inspect its schema and annotations.
+            </div>
+
+            <form id="toolCallForm" class="tool-form">
+              <div id="formFields" class="form-fields"></div>
+              <div class="form-actions">
+                <button id="submitButton" class="button primary" type="submit" disabled>Submit Call</button>
+                <button id="resetFormButton" class="button ghost" type="button">Reset</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel response-panel" aria-labelledby="responsesTitle">
+            <div class="panel-heading">
+              <div>
+                <h2 id="responsesTitle">Response History</h2>
+                <p class="muted">Newest responses appear first.</p>
+              </div>
+              <button id="clearHistoryButton" class="button ghost" type="button">Clear</button>
+            </div>
+            <div id="responseHistory" class="response-history">
+              <div class="empty-state">No tool calls yet.</div>
+            </div>
+          </section>
+        </article>
+
+        <aside id="inspectorPanel" class="panel inspector-panel" aria-labelledby="inspectorTitle">
+          <div class="inspector-collapsed-strip" aria-hidden="true">
+            <span>Inspector</span>
+          </div>
+          <div class="panel-heading inspector-heading">
+            <div>
+              <h2 id="inspectorTitle">Inspector</h2>
+              <p class="muted">Schema, annotations, and outgoing payload preview.</p>
+            </div>
+            <button id="inspectorToggleButton" class="icon-button" type="button" aria-label="Collapse inspector" aria-expanded="true">›</button>
+          </div>
+          <div class="inspector-content">
+            <div class="tabs" role="tablist" aria-label="Inspector views">
+              <button class="tab active" type="button" data-inspector-tab="schema">Schema</button>
+              <button class="tab" type="button" data-inspector-tab="annotations">Annotations</button>
+              <button class="tab" type="button" data-inspector-tab="payload">Payload</button>
+            </div>
+            <pre id="schemaView" class="code-view inspector-view"></pre>
+            <pre id="annotationsView" class="code-view inspector-view hidden"></pre>
+            <pre id="payloadPreview" class="code-view inspector-view hidden"></pre>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <footer class="status-bar" aria-live="polite">
+      <div class="status-item status-item-wide">
+        <span class="status-label">Endpoint</span>
+        <span id="endpointLabel" class="status-value"></span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Tools</span>
+        <span id="toolCountLabel" class="status-value">0 loaded</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Last refresh</span>
+        <span id="lastRefreshLabel" class="status-value">Not yet</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Selected</span>
+        <span id="selectedToolLabel" class="status-value">None</span>
+      </div>
+    </footer>
+  </div>
+
+  <div id="toolNodeHoverCard" class="tool-node-hover-card hidden" role="tooltip"></div>
+
+  <dialog id="settingsDialog" class="dialog">
+    <form id="settingsForm" method="dialog" class="dialog-body">
+      <div class="dialog-heading">
+        <h2>Settings</h2>
+        <button id="closeSettingsButton" class="icon-button" value="cancel" type="submit" aria-label="Close settings">X</button>
+      </div>
+      <div id="settingsMount"></div>
+      <div class="dialog-actions">
+        <button class="button ghost" type="button" id="resetSettingsButton">Reset Defaults</button>
+        <button class="button primary" value="default" type="submit">Apply</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="riskDialog" class="dialog risk-dialog">
+    <form id="riskForm" method="dialog" class="dialog-body">
+      <div class="dialog-heading">
+        <h2>High-Risk Tool</h2>
+      </div>
+      <p id="riskMessage" class="risk-message"></p>
+      <label class="checkbox-row">
+        <input id="riskDoNotAsk" type="checkbox">
+        <span>Do not ask again during this page session</span>
+      </label>
+      <div class="dialog-actions">
+        <button class="button ghost" value="cancel" type="submit">Cancel</button>
+        <button class="button danger" value="proceed" type="submit">Proceed</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./js/script.js"></script>
+</body>
+</html>

@@ -123,12 +123,15 @@ public class MeshingressRepositoryConfiguration {
     ArtifactMetadataStore artifactMetadataStore(
             JdbcTemplate jdbcTemplate,
             MeshingressRepositoryProperties properties,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            PublicationRecordSigner signer
     ) {
         if (!"sql".equalsIgnoreCase(properties.metadataStore())) {
             throw new IllegalStateException("Unsupported repository metadata store: " + properties.metadataStore());
         }
-        return new SqlArtifactMetadataStore(jdbcTemplate, properties.sql(), objectMapper);
+        SqlArtifactMetadataStore metadataStore = new SqlArtifactMetadataStore(jdbcTemplate, properties.sql(), objectMapper);
+        metadataStore.migrateLegacyArtifactTypes(signer);
+        return metadataStore;
     }
 
     private void addStages(

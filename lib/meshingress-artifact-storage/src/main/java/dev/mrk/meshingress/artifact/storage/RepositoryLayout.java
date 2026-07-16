@@ -16,6 +16,14 @@ public record RepositoryLayout(Path root) {
         return root.resolve("artifacts");
     }
 
+    /**
+     * Managed third-party source trees used by provisioned tools. This remains separate from
+     * artifacts and quarantine because it contains checked-out dependency source, not uploads.
+     */
+    public Path vendorRoot() {
+        return root.resolve("vendor");
+    }
+
     public Path metadataRoot() {
         return root.resolve("metadata");
     }

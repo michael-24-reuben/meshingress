@@ -535,7 +535,7 @@ class McpPublicationInstallTests {
         ArtifactCoordinate coordinate = new ArtifactCoordinate(GROUP_ID, ARTIFACT_ID, VERSION, null, "jar");
         ArtifactPublicationRecord unsigned = new ArtifactPublicationRecord(
                 coordinate,
-                MeshingressArtifactType.GENERATED_TOOL_MODULE,
+                MeshingressArtifactType.TOOL_MODULE,
                 trustStatus,
                 "meshingress-repository://artifact/%s/%s/%s/%s".formatted(GROUP_ID, ARTIFACT_ID, VERSION, SAMPLE_JAR_NAME),
                 checksum,
@@ -634,7 +634,7 @@ class McpPublicationInstallTests {
         ArtifactCoordinate coordinate = new ArtifactCoordinate(GROUP_ID, ARTIFACT_ID, VERSION, null, "jar");
         return new ArtifactPublicationRecord(
                 coordinate,
-                MeshingressArtifactType.GENERATED_TOOL_MODULE,
+                MeshingressArtifactType.TOOL_MODULE,
                 trustStatus,
                 "meshingress-repository://artifact/%s/%s/%s/%s".formatted(GROUP_ID, ARTIFACT_ID, VERSION, SAMPLE_JAR_NAME),
                 checksum,
@@ -676,13 +676,13 @@ class McpPublicationInstallTests {
         Path current = Path.of("").toAbsolutePath().normalize();
         Path cursor = current;
         for (int i = 0; i < 4 && cursor != null; i++) {
-            Path candidate = cursor.resolve("temp").resolve(SAMPLE_JAR_NAME);
+            Path candidate = cursor.resolve("temp").resolve("packages").resolve(SAMPLE_JAR_NAME);
             if (Files.isRegularFile(candidate)) {
                 return candidate;
             }
             cursor = cursor.getParent();
         }
-        return current.resolve("temp").resolve(SAMPLE_JAR_NAME);
+        return current.resolve("temp").resolve("packages").resolve(SAMPLE_JAR_NAME);
     }
 
     private String sha256(Path path) throws Exception {

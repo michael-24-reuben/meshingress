@@ -10,3 +10,4 @@ public record ToolRegistrationRequest(
         boolean replace
 ) {
 }
+

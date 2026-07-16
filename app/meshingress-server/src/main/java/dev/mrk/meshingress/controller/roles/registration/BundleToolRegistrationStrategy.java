@@ -14,19 +14,31 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.HexFormat;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 @Service
 class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
+
+    private static final List<String> RESERVED_MAVEN_GROUP_PREFIXES = List.of(
+            "dev.mrk.meshingress",
+            "org.meshingress"
+    );
+    private static final List<String> RESERVED_CLASS_PATH_PREFIXES = List.of(
+            "dev/mrk/meshingress/",
+            "org/meshingress/"
+    );
 
     private final MeshingressProperties properties;
     private final ToolArtifactResolutionContext resolutionContext;
@@ -105,6 +117,9 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
                     "TOOL_REGISTRATION_MAVEN_COORDINATES_REQUIRED"
             );
         }
+
+        // TODO: Approve ADMIN and OPERATOR scope types
+        rejectReservedMavenGroup(maven.groupId());
         if (properties.tools().registration().requireMavenVersionPin()
                 && (maven.version().equalsIgnoreCase("LATEST") || maven.version().equalsIgnoreCase("RELEASE"))) {
             throw ToolRegistrationErrors.invalidParams(
@@ -114,8 +129,9 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
         }
 
         boolean localArtifactInstalled = false;
+        String pomSource = "existing";
         if (request.localJar() != null) {
-            installLocalJarIntoMavenRepository(request.localJar(), maven);
+            pomSource = installLocalJarIntoMavenRepository(request.localJar(), maven);
             localArtifactInstalled = true;
         }
 
@@ -137,6 +153,7 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
         source.put("version", maven.version());
         source.put("localRepositoryArtifact", localArtifact.toString());
         source.put("localRepositoryArtifactInstalled", Boolean.toString(localArtifactInstalled));
+        source.put("mavenPomSource", pomSource);
         source.put("bundlePomPath", bundlePom.toString());
         source.put("dependencyAdded", Boolean.toString(dependencyAdded));
 
@@ -166,7 +183,7 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
                 .resolve(maven.artifactId() + "-" + maven.version() + ".jar");
     }
 
-    private void installLocalJarIntoMavenRepository(LocalJarSpec localJar, MavenCoordinatesSpec maven) {
+    private String installLocalJarIntoMavenRepository(LocalJarSpec localJar, MavenCoordinatesSpec maven) {
         if (localJar.path() == null || localJar.path().isBlank()) {
             throw ToolRegistrationErrors.invalidParams("localJar.path is required.", "TOOL_REGISTRATION_LOCAL_JAR_PATH_REQUIRED");
         }
@@ -181,6 +198,8 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
 
         Path sourceJar = resolveJar(localJar.path(), properties.tools().registration().localJarRoot());
         verifyChecksum(sourceJar, localJar.checksumSha256());
+        rejectReservedClasses(sourceJar);
+        PomMaterial pom = pomFor(localJar, sourceJar, maven);
         Path artifactDirectory = resolutionContext.localRepository()
                 .resolve(maven.groupId().replace('.', '/'))
                 .resolve(maven.artifactId())
@@ -190,12 +209,146 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
 
         try {
             Files.createDirectories(artifactDirectory);
-            Files.copy(sourceJar, artifactJar, StandardCopyOption.REPLACE_EXISTING);
-            Files.writeString(artifactPom, minimalPom(maven), StandardCharsets.UTF_8);
+            ensureSameArtifactOrCreate(sourceJar, artifactJar);
+            ensureSamePomOrCreate(pom.contents(), artifactPom);
+            return pom.source();
         } catch (IOException exception) {
             throw ToolRegistrationErrors.invalidParams(
                     "Unable to install local jar into the local Maven repository: " + exception.getMessage(),
                     "BUNDLE_LOCAL_JAR_MAVEN_INSTALL_FAILED"
+            );
+        }
+    }
+
+    private PomMaterial pomFor(LocalJarSpec localJar, Path sourceJar, MavenCoordinatesSpec maven) {
+        String pom;
+        String source;
+        if (localJar.pomPath() != null && !localJar.pomPath().isBlank()) {
+            Path sourcePom = resolvePom(localJar.pomPath(), properties.tools().registration().localJarRoot());
+            try {
+                pom = Files.readString(sourcePom, StandardCharsets.UTF_8);
+            } catch (IOException exception) {
+                throw ToolRegistrationErrors.invalidParams(
+                        "Unable to read localJar.pomPath: " + exception.getMessage(),
+                        "BUNDLE_LOCAL_JAR_POM_READ_FAILED"
+                );
+            }
+            source = "local-file";
+        } else {
+            pom = embeddedPom(sourceJar, maven);
+            source = pom == null ? "generated-minimal" : "embedded";
+            if (pom == null) {
+                pom = minimalPom(maven);
+            }
+        }
+        validatePomCoordinates(pom, maven);
+        return new PomMaterial(pom, source);
+    }
+
+    private String embeddedPom(Path sourceJar, MavenCoordinatesSpec maven) {
+        String entryName = "META-INF/maven/%s/%s/pom.xml".formatted(maven.groupId(), maven.artifactId());
+        try (JarFile jar = new JarFile(sourceJar.toFile())) {
+            JarEntry entry = jar.getJarEntry(entryName);
+            if (entry == null) {
+                return null;
+            }
+            try (InputStream input = jar.getInputStream(entry)) {
+                return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException exception) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Unable to read the embedded Maven POM: " + exception.getMessage(),
+                    "BUNDLE_EMBEDDED_POM_READ_FAILED"
+            );
+        }
+    }
+
+    private void validatePomCoordinates(String pom, MavenCoordinatesSpec maven) {
+        try {
+            DocumentBuilderFactory factory = secureDocumentBuilderFactory();
+            Document document = factory.newDocumentBuilder()
+                    .parse(new ByteArrayInputStream(pom.getBytes(StandardCharsets.UTF_8)));
+            Element project = document.getDocumentElement();
+            String groupId = childText(project, "groupId");
+            String artifactId = childText(project, "artifactId");
+            String version = childText(project, "version");
+            if (!maven.groupId().equals(groupId)
+                    || !maven.artifactId().equals(artifactId)
+                    || !maven.version().equals(version)) {
+                throw ToolRegistrationErrors.invalidParams(
+                        "The published Maven POM coordinates must match maven.groupId, maven.artifactId, and maven.version.",
+                        "BUNDLE_MAVEN_POM_COORDINATES_MISMATCH"
+                );
+            }
+        } catch (org.xml.sax.SAXException | IOException exception) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Unable to parse the published Maven POM: " + exception.getMessage(),
+                    "BUNDLE_MAVEN_POM_INVALID"
+            );
+        } catch (RuntimeException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Unable to parse the published Maven POM: " + exception.getMessage(),
+                    "BUNDLE_MAVEN_POM_INVALID"
+            );
+        }
+    }
+
+    private void ensureSameArtifactOrCreate(Path sourceJar, Path artifactJar) throws IOException {
+        if (Files.isRegularFile(artifactJar)) {
+            if (!sha256(sourceJar).equalsIgnoreCase(sha256(artifactJar))) {
+                throw ToolRegistrationErrors.invalidParams(
+                        "A different JAR is already stored for these Maven coordinates. Register a new version instead.",
+                        "BUNDLE_MAVEN_COORDINATE_CONFLICT"
+                );
+            }
+            return;
+        }
+        Files.copy(sourceJar, artifactJar);
+    }
+
+    private void ensureSamePomOrCreate(String pom, Path artifactPom) throws IOException {
+        if (Files.isRegularFile(artifactPom)) {
+            if (!Files.readString(artifactPom, StandardCharsets.UTF_8).equals(pom)) {
+                throw ToolRegistrationErrors.invalidParams(
+                        "A different Maven POM is already stored for these Maven coordinates. Register a new version instead.",
+                        "BUNDLE_MAVEN_COORDINATE_CONFLICT"
+                );
+            }
+            return;
+        }
+        Files.writeString(artifactPom, pom, StandardCharsets.UTF_8);
+    }
+
+    private void rejectReservedMavenGroup(String groupId) {
+        boolean reserved = RESERVED_MAVEN_GROUP_PREFIXES.stream()
+                .anyMatch(prefix -> groupId.equals(prefix) || groupId.startsWith(prefix + "."));
+        if (reserved) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "maven.groupId is reserved for native Meshingress modules.",
+                    "BUNDLE_RESERVED_MAVEN_GROUP"
+            );
+        }
+    }
+
+    private void rejectReservedClasses(Path sourceJar) {
+        try (JarFile jar = new JarFile(sourceJar.toFile())) {
+            Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                String entryName = entries.nextElement().getName();
+                if (entryName.endsWith(".class") && RESERVED_CLASS_PATH_PREFIXES.stream()
+                        .anyMatch(prefix -> entryName.startsWith(prefix) || entryName.contains("/" + prefix))) {
+                    throw ToolRegistrationErrors.invalidParams(
+                            "The tool JAR contains classes in a reserved native Meshingress package.",
+                            "BUNDLE_RESERVED_JAVA_PACKAGE"
+                    );
+                }
+            }
+        } catch (IOException exception) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "Unable to inspect the local JAR packages: " + exception.getMessage(),
+                    "BUNDLE_LOCAL_JAR_INSPECTION_FAILED"
             );
         }
     }
@@ -214,6 +367,25 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
             throw ToolRegistrationErrors.invalidParams(
                     "localJar.path must point to an existing .jar file.",
                     "TOOL_REGISTRATION_LOCAL_JAR_NOT_FOUND"
+            );
+        }
+        return resolved;
+    }
+
+    private Path resolvePom(String pomPath, String root) {
+        Path rootPath = Path.of(root).toAbsolutePath().normalize();
+        Path requested = Path.of(pomPath);
+        Path resolved = requested.isAbsolute() ? requested.toAbsolutePath().normalize() : rootPath.resolve(requested).normalize();
+        if (!resolved.startsWith(rootPath)) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "localJar.pomPath must resolve under meshingress.tools.registration.local-jar-root.",
+                    "TOOL_REGISTRATION_LOCAL_POM_OUTSIDE_ROOT"
+            );
+        }
+        if (!Files.isRegularFile(resolved)) {
+            throw ToolRegistrationErrors.invalidParams(
+                    "localJar.pomPath must point to an existing Maven POM file.",
+                    "TOOL_REGISTRATION_LOCAL_POM_NOT_FOUND"
             );
         }
         return resolved;
@@ -266,8 +438,7 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
             );
         }
         try (InputStream input = Files.newInputStream(bundlePom)) {
-            DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
-            documentFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            DocumentBuilderFactory documentFactory = secureDocumentBuilderFactory();
             Document document = documentFactory.newDocumentBuilder().parse(input);
             document.getDocumentElement().normalize();
 
@@ -358,5 +529,14 @@ class BundleToolRegistrationStrategy implements ToolRegistrationStrategy {
                 + "            <artifactId>" + maven.artifactId() + "</artifactId>" + newline
                 + "            <version>" + maven.version() + "</version>" + newline
                 + "        </dependency>" + newline;
+    }
+
+    private DocumentBuilderFactory secureDocumentBuilderFactory() throws Exception {
+        DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
+        documentFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        return documentFactory;
+    }
+
+    private record PomMaterial(String contents, String source) {
     }
 }

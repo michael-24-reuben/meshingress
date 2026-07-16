@@ -18,7 +18,7 @@ public interface McpToolManifestDefinition {
         return List.of();
     }
 
-    default String readmeMarkdown() {
-        return "";
+    default ToolReadme readme() {
+        return ToolReadme.none();
     }
 }

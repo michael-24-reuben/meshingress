@@ -118,3 +118,4 @@ class StagingToolRegistrationStrategy implements ToolRegistrationStrategy {
         return toolId.startsWith("meshingress.") || toolId.startsWith("system.") || toolId.startsWith("runtime.");
     }
 }
+

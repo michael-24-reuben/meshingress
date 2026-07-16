@@ -1,16 +1,10 @@
 package dev.mrk.meshingress.artifact.model;
 
+// TODO: The enums (CLI_HARNESS, AVAILABILITY_ANNOTATION, AVAILABILITY_POLICY) need to be implemented
 public enum MeshingressArtifactType {
     TOOL_MODULE,
-    GENERATED_TOOL_MODULE,
     CLI_HARNESS,
     AVAILABILITY_ANNOTATION,
     AVAILABILITY_POLICY,
-    SCOPE_POLICY,
-    SECURITY_POLICY,
-    JSON_SCHEMA,
-    SBOM,
-    ATTESTATION,
-    TEMPLATE,
-    RUNTIME_PLUGIN
+    SCOPE_POLICY
 }

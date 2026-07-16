@@ -1,0 +1,44 @@
+{
+  "id": "2026-05-23-runtime-tool-creation-and-registry",
+  "title": "Runtime Tool Creation and Registry",
+  "status": "pending",
+  "createdAt": "2026-05-23T00:00:00-04:00",
+  "activatedAt": null,
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-05-23T00:00:00-04:00",
+  "tags": [
+    "toolspace",
+    "runtime-tools",
+    "registry",
+    "maven-repository",
+    "scaffold",
+    "security",
+    "configuration",
+    "environment-variables",
+    "scopes",
+    "future",
+    "scope-integrity",
+    "jar-scanning",
+    "bytecode-analysis",
+    "ai-review",
+    "end-phase"
+  ],
+  "related": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Design discussion for separating source toolspace modules from runtime-installed tools, adding a Meshingress artifact registry/API, and supporting runtime environment variables with explicit scope control."
+  },
+  "events": [
+    {
+      "at": "2026-05-23T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created as pending design package for runtime tool creation and registry infrastructure."
+    },
+    {
+      "at": "2026-05-23T00:00:00-04:00",
+      "type": "UPDATED",
+      "note": "Added end-phase scope integrity verification design for runtime-installable JAR tools, including deterministic scanning, AI-assisted review, and limitations."
+    }
+  ]
+}

@@ -56,7 +56,7 @@ Upload, metadata, assess, approve, reject, delete, and restore return an `Artifa
     "classifier": null,
     "packaging": "jar"
   },
-  "type": "GENERATED_TOOL_MODULE",
+  "type": "TOOL_MODULE",
   "trustStatus": "REVIEW_PENDING",
   "artifactUri": "meshingress-repository://artifact/dev.mrk.tools/powershell-cli/1.0.0/powershell-cli-1.0.0.jar",
   "artifactChecksum": {
@@ -102,17 +102,10 @@ Possible `type` values:
 
 ```text
 TOOL_MODULE
-GENERATED_TOOL_MODULE
 CLI_HARNESS
 AVAILABILITY_ANNOTATION
 AVAILABILITY_POLICY
 SCOPE_POLICY
-SECURITY_POLICY
-JSON_SCHEMA
-SBOM
-ATTESTATION
-TEMPLATE
-RUNTIME_PLUGIN
 ```
 
 Possible `trustStatus` values:
@@ -167,7 +160,7 @@ Publish, revoke, and publication lookup return an `ArtifactPublicationRecord`:
     "classifier": null,
     "packaging": "jar"
   },
-  "type": "GENERATED_TOOL_MODULE",
+  "type": "TOOL_MODULE",
   "trustStatus": "APPROVED_LIMITED",
   "artifactUri": "meshingress-repository://artifact/dev.mrk.tools/powershell-cli/1.0.0/powershell-cli-1.0.0.jar",
   "artifactChecksum": {
@@ -210,7 +203,7 @@ Publish, revoke, and publication lookup return an `ArtifactPublicationRecord`:
 ### 1. Upload an artifact
 
 ```http
-POST /artifact/dev.mrk.tools/powershell-cli/1.0.0?type=GENERATED_TOOL_MODULE&packaging=jar&requestedScopes=SHELL_EXECUTE&requestedScopes=FILES_READ
+POST /artifact/dev.mrk.tools/powershell-cli/1.0.0?type=TOOL_MODULE&packaging=jar&requestedScopes=SHELL_EXECUTE&requestedScopes=FILES_READ
 Content-Type: multipart/form-data
 X-Repository-Role: uploader
 X-Repository-Actor: build-agent
@@ -232,7 +225,7 @@ $form = @{
 
 Invoke-RestMethod `
     -Method Post `
-    -Uri 'http://localhost:8080/artifact/dev.mrk.tools/powershell-cli/1.0.0?type=GENERATED_TOOL_MODULE&packaging=jar&requestedScopes=SHELL_EXECUTE&requestedScopes=FILES_READ' `
+    -Uri 'http://localhost:8080/artifact/dev.mrk.tools/powershell-cli/1.0.0?type=TOOL_MODULE&packaging=jar&requestedScopes=SHELL_EXECUTE&requestedScopes=FILES_READ' `
     -Headers $headers `
     -Form $form
 ```
@@ -241,7 +234,7 @@ Response: `200 OK` with an `ArtifactRecord`. The current flow returns `trustStat
 
 Defaults:
 
-- `type=GENERATED_TOOL_MODULE`
+- `type=TOOL_MODULE`
 - `packaging=jar`
 - no requested scopes
 - multipart limit: 256 MB
@@ -329,7 +322,7 @@ Response: `200 OK` with review queue items:
         "classifier": null,
         "packaging": "jar"
       },
-      "type": "GENERATED_TOOL_MODULE",
+      "type": "TOOL_MODULE",
       "trustStatus": "REVIEW_PENDING",
       "artifactUri": "meshingress-repository://artifact/dev.mrk.tools/powershell-cli/1.0.0/powershell-cli-1.0.0.jar",
       "artifactChecksum": {

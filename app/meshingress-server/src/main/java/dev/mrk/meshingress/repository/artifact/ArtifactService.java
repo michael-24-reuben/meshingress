@@ -167,7 +167,7 @@ public class ArtifactService {
     }
 
     public Path artifactResourceFile(String groupId, String artifactId, String version, String resourceName) {
-        if (!"application.yaml".equals(resourceName) && !"README.md".equals(resourceName) && !"tool-manifest.json".equals(resourceName)) {
+        if (!"application.properties".equals(resourceName) && !"README.md".equals(resourceName) && !"tool-manifest.json".equals(resourceName)) {
             throw new RepositoryException("artifact resource is not available");
         }
         ArtifactRecord record = requireEntry(coordinate(groupId, artifactId, version, "jar")).record();

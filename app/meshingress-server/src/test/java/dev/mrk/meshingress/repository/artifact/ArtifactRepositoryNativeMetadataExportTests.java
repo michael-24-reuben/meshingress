@@ -46,7 +46,7 @@ class ArtifactRepositoryNativeMetadataExportTests {
     }
 
     @Test
-    void assessExportsNativeApplicationYamlAndReadmeResourcesBesideArtifact() throws Exception {
+    void assessExportsNativeApplicationPropertiesAndReadmeResourcesBesideArtifact() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "native-metadata-sample.jar",
@@ -65,8 +65,8 @@ class ArtifactRepositoryNativeMetadataExportTests {
                 .andExpect(status().isOk());
 
         Path artifactDirectory = tempDir.resolve("repository/artifacts/dev/mrk/tools/native-metadata-sample/1.0.0");
-        org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/application.yaml")))
-                .contains("meshingress.sample.native.command: \"sample-tool\"")
+        org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/application.properties")))
+                .contains("meshingress.sample.native.command=sample-tool")
                 .contains("Host command used by the native sample tool.");
         org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("README.md")))
                 .contains("# Native Metadata Sample")
@@ -78,10 +78,10 @@ class ArtifactRepositoryNativeMetadataExportTests {
                 .contains("\"toolId\":\"sample.native\"")
                 .contains("\"meshingress.sample.native.command\"");
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/application.yaml")
+        mockMvc.perform(get("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/application.properties")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("meshingress.sample.native.command: \"sample-tool\"")));
+                .andExpect(content().string(containsString("meshingress.sample.native.command=sample-tool")));
         mockMvc.perform(get("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/tool-manifest.json")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())

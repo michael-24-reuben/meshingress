@@ -5,3 +5,4 @@ public enum ToolLoadingStrategy {
     LOCAL_MAVEN_COORDINATES,
     CLASSPATH_BUNDLE
 }
+

@@ -1,0 +1,80 @@
+{
+  "id": "2026-05-27-meshingress-repository-artifact-implementation",
+  "title": "Meshingress Repository Artifact Implementation",
+  "status": "active",
+  "createdAt": "2026-05-27T16:30:00-04:00",
+  "activatedAt": "2026-05-28T21:00:57-04:00",
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-05-29T14:05:00-04:00",
+  "tags": [
+    "repository",
+    "artifact-registry",
+    "security-assessment",
+    "tool-installation",
+    "cli-anything",
+    "mcp-runtime",
+    "supply-chain",
+    "sbom",
+    "signing",
+    "policy",
+    "future"
+  ],
+  "related": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User decided to split generated tool handling into a Meshingress Repository that ingests, scans, reviews, signs, and publishes artifacts separately from the official MCP runtime. The repository should support more than tool installables, including availability annotations and future artifact types."
+  },
+  "events": [
+    {
+      "at": "2026-05-27T16:30:00-04:00",
+      "type": "CREATED",
+      "note": "Created implementation package for app/meshingress-repository and supporting artifact libraries."
+    },
+    {
+      "at": "2026-05-28T21:00:57-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation started with a property-backed repository root, fake scanner MVP, and follow-up hardening record for direct registration gaps."
+    },
+    {
+      "at": "2026-05-29T00:35:00-04:00",
+      "type": "UPDATED",
+      "note": "Added server-side publication install path with signature verification, checksum validation, runtime cache copying, and focused MCP tests."
+    },
+    {
+      "at": "2026-05-29T00:40:00-04:00",
+      "type": "UPDATED",
+      "note": "Clarified that repository review must infer scopes from artifact behavior, including file, process, network, environment, and secrets API usage."
+    },
+    {
+      "at": "2026-05-29T00:45:00-04:00",
+      "type": "UPDATED",
+      "note": "Added preference for analyzer-backed scope inference rules with regex matching reserved as a low-confidence fallback."
+    },
+    {
+      "at": "2026-05-29T00:50:00-04:00",
+      "type": "UPDATED",
+      "note": "Reviewed CodeQL scope-integration analysis and recorded CodeQL as a source/build-aware backend generated from the repository scope rule catalog."
+    },
+    {
+      "at": "2026-05-29T12:58:00-04:00",
+      "type": "UPDATED",
+      "note": "Added todo items to preserve ArtifactScopeDeclaration parameter semantics: requested scopes as claims, inferred scopes from scanners, and approved scopes from review."
+    },
+    {
+      "at": "2026-05-29T13:10:00-04:00",
+      "type": "UPDATED",
+      "note": "Added standalone-first embedded library todos for SootUp reachability, SpotBugs, FindSecBugs, and CycloneDX SBOM generation."
+    },
+    {
+      "at": "2026-05-29T13:50:00-04:00",
+      "type": "UPDATED",
+      "note": "Implemented SootUp CHA reachability filtering for bytecode scope inference and switched repository assessment to the reachable tool-entrypoint scan mode."
+    },
+    {
+      "at": "2026-05-29T14:05:00-04:00",
+      "type": "UPDATED",
+      "note": "Added immediate-objective.md to focus the next phase on closing the repository-to-runtime acceptance gate."
+    }
+  ]
+}

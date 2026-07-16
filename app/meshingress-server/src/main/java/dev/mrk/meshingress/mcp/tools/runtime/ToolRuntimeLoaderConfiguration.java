@@ -1,6 +1,9 @@
 package dev.mrk.meshingress.mcp.tools.runtime;
 
-import dev.mrk.meshingress.config.MeshingressProperties;
+import dev.mrk.meshingress.artifact.storage.FileSystemArtifactStorage;
+import dev.mrk.meshingress.provisioning.ToolProvisioningService;
+import dev.mrk.meshingress.provisioning.git.GitSourceProvisioner;
+import dev.mrk.meshingress.provisioning.python.PythonVenvProvisioner;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarArtifactResolver;
 import dev.mrk.meshingress.runtime.artifacts.LocalMavenRepositoryArtifactResolver;
 import dev.mrk.meshingress.runtime.artifacts.ToolArtifactResolutionContext;
@@ -9,6 +12,8 @@ import dev.mrk.meshingress.runtime.artifacts.ToolArtifactResolverChain;
 import dev.mrk.meshingress.runtime.loader.DefaultToolRuntimeLoader;
 import dev.mrk.meshingress.runtime.loader.ToolModuleHandlerFactory;
 import dev.mrk.meshingress.runtime.loader.ToolRuntimeLoader;
+import dev.mrk.meshingress.runtime.provisioning.StaticManifestToolProvisioningGate;
+import dev.mrk.meshingress.runtime.provisioning.ToolProvisioningGate;
 import dev.mrk.meshingress.runtime.registry.ToolRegistrationBridge;
 import dev.mrk.meshingress.runtime.spring.SpringToolModuleApplicationContextFactory;
 import dev.mrk.meshingress.runtime.spring.ToolModuleApplicationContextFactory;
@@ -19,18 +24,19 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.nio.file.Path;
 import java.util.List;
 
 @Configuration
 public class ToolRuntimeLoaderConfiguration {
 
     @Bean
-    ToolArtifactResolutionContext toolArtifactResolutionContext(MeshingressProperties properties) {
-        Path localRepository = Path.of(properties.tools().registration().localMavenRepositoryPath())
-                .toAbsolutePath()
-                .normalize();
-        return new ToolArtifactResolutionContext(localRepository, null, false, List.of());
+    ToolArtifactResolutionContext toolArtifactResolutionContext(FileSystemArtifactStorage artifactStorage) {
+        return new ToolArtifactResolutionContext(
+                artifactStorage.layout().artifactsRoot(),
+                null,
+                false,
+                List.of()
+        );
     }
 
     @Bean
@@ -52,6 +58,19 @@ public class ToolRuntimeLoaderConfiguration {
     }
 
     @Bean
+    ToolProvisioningService toolProvisioningService() {
+        return new ToolProvisioningService(List.of(new GitSourceProvisioner(), new PythonVenvProvisioner()));
+    }
+
+    @Bean
+    ToolProvisioningGate toolProvisioningGate(
+            FileSystemArtifactStorage artifactStorage,
+            ToolProvisioningService provisioningService
+    ) {
+        return new StaticManifestToolProvisioningGate(artifactStorage.layout().root(), provisioningService);
+    }
+
+    @Bean
     McpToolMetadata mcpToolMetadata() {
         return new McpToolMetadata();
     }
@@ -64,7 +83,8 @@ public class ToolRuntimeLoaderConfiguration {
             ToolModuleApplicationContextFactory applicationContextFactory,
             ToolModuleHandlerFactory handlerFactory,
             ToolRegistrationBridge registrationBridge,
-            ApplicationContext applicationContext
+            ApplicationContext applicationContext,
+            ToolProvisioningGate provisioningGate
     ) {
         return new DefaultToolRuntimeLoader(
                 toolArtifactResolver,
@@ -73,7 +93,8 @@ public class ToolRuntimeLoaderConfiguration {
                 applicationContextFactory,
                 handlerFactory,
                 registrationBridge,
-                applicationContext
+                applicationContext,
+                provisioningGate
         );
     }
 }

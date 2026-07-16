@@ -114,7 +114,7 @@ class McpPowerShellPublicationInstallInstanceTests {
         ArtifactCoordinate coordinate = new ArtifactCoordinate(GROUP_ID, ARTIFACT_ID, VERSION, null, "jar");
         ArtifactPublicationRecord unsigned = new ArtifactPublicationRecord(
                 coordinate,
-                MeshingressArtifactType.GENERATED_TOOL_MODULE,
+                MeshingressArtifactType.TOOL_MODULE,
                 ArtifactTrustStatus.APPROVED_LIMITED,
                 "meshingress-repository://artifact/%s/%s/%s/%s".formatted(GROUP_ID, ARTIFACT_ID, VERSION, JAR_NAME),
                 ArtifactChecksum.sha256(sha256(repositoryJar)),
@@ -171,7 +171,7 @@ class McpPowerShellPublicationInstallInstanceTests {
     private Path packagedPowerShellJar() {
         Path current = Path.of("").toAbsolutePath().normalize();
         for (Path cursor = current; cursor != null; cursor = cursor.getParent()) {
-            Path candidate = cursor.resolve("temp")
+            Path candidate = cursor.resolve("temp").resolve("packages")
                     .resolve("powershell-cli")
                     .resolve("target")
                     .resolve(JAR_NAME);
@@ -179,7 +179,7 @@ class McpPowerShellPublicationInstallInstanceTests {
                 return candidate;
             }
         }
-        return current.resolve("temp").resolve("powershell-cli").resolve("target").resolve(JAR_NAME);
+        return current.resolve("temp").resolve("packages").resolve("powershell-cli").resolve("target").resolve(JAR_NAME);
     }
 
     private String sha256(Path path) throws Exception {

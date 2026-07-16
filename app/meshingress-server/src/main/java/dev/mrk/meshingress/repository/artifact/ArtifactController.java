@@ -51,7 +51,7 @@ public class ArtifactController {
             @PathVariable String artifactId,
             @PathVariable String version,
             @RequestPart("file") MultipartFile file,
-            @RequestParam(defaultValue = "GENERATED_TOOL_MODULE") MeshingressArtifactType type,
+            @RequestParam(defaultValue = "TOOL_MODULE") MeshingressArtifactType type,
             @RequestParam(defaultValue = "jar") String packaging,
             @RequestParam(required = false) List<String> requestedScopes,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,

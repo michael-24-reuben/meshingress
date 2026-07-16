@@ -14,6 +14,19 @@
     <name>meshingress-tool-bundle</name>
     <description>Classpath tool dependency bundle for Meshingress server startup discovery</description>
 
+    <repositories>
+        <repository>
+            <id>meshingress-artifacts</id>
+            <url>file:${maven.multiModuleProjectDirectory}/repository/artifacts</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>dev.mrk.toolspace</groupId>

@@ -41,7 +41,7 @@ class RuntimeToolCacheTests {
     private static final String JAR_NAME = "sample-module.jar";
     private static final String DOWNLOAD_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/file";
     private static final String PUBLICATION_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/publication";
-    private static final String APPLICATION_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/application.yaml";
+    private static final String APPLICATION_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/application.properties";
     private static final String README_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/README.md";
     private static final String MANIFEST_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/tool-manifest.json";
 
@@ -63,7 +63,7 @@ class RuntimeToolCacheTests {
         Files.write(repositoryJar, artifactBytes);
         Path repositoryResources = repositoryJar.getParent().resolve("resources");
         Files.createDirectories(repositoryResources);
-        Files.writeString(repositoryResources.resolve("application.yaml"), "meshingress.sample.executable: \"sample-tool\"\n");
+        Files.writeString(repositoryResources.resolve("application.properties"), "meshingress.sample.executable=sample-tool\n");
         RuntimeToolCache cache = cache("");
 
         Path cached = cache.install(publication(sha256(artifactBytes)));
@@ -71,7 +71,7 @@ class RuntimeToolCacheTests {
         assertThat(cached).isRegularFile();
         assertThat(cached.getFileName().toString()).isEqualTo(JAR_NAME);
         assertThat(Files.readAllBytes(cached)).isEqualTo(artifactBytes);
-        assertThat(cached.getParent().resolve("resources/application.yaml"))
+        assertThat(cached.getParent().resolve("resources/application.properties"))
                 .isRegularFile()
                 .content()
                 .contains("meshingress.sample.executable");
@@ -91,7 +91,7 @@ class RuntimeToolCacheTests {
             assertThat(cached).isRegularFile();
             assertThat(cached.getFileName().toString()).isEqualTo(JAR_NAME);
             assertThat(Files.readAllBytes(cached)).isEqualTo(artifactBytes);
-            assertThat(cached.getParent().resolve("resources/application.yaml"))
+        assertThat(cached.getParent().resolve("resources/application.properties"))
                     .isRegularFile()
                     .content()
                     .contains("meshingress.sample.remote");

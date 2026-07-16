@@ -1,0 +1,2174 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://100.121.15.11:4737
+  description: Generated server url
+paths:
+  /mcp:
+    get:
+      tags:
+      - mcp-controller
+      operationId: get
+      responses:
+        "200":
+          description: OK
+    post:
+      tags:
+      - mcp-controller
+      summary: Dispatch MCP JSON-RPC requests
+      description: "Accepts JSON-RPC 2.0 single requests, notifications, and batches\
+        \ for the Meshingress MCP transport."
+      operationId: post
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer admin token for role-gated MCP methods.
+        required: false
+        schema:
+          type: string
+        example: Bearer dev-admin
+      - name: X-Mcp-Role
+        in: header
+        description: MCP role hint. Use admin for role-gated registry methods.
+        required: false
+        schema:
+          type: string
+        example: admin
+      - name: X-Mcp-Admin
+        in: header
+        description: Legacy admin flag accepted for compatibility.
+        required: false
+        schema:
+          type: string
+        example: true
+      - name: Mcp-Session-Id
+        in: header
+        description: Client MCP session identifier.
+        required: false
+        schema:
+          type: string
+        example: session-123
+      - name: X-Request-Id
+        in: header
+        description: Caller request correlation identifier.
+        required: false
+        schema:
+          type: string
+        example: req-123
+      requestBody:
+        description: "JSON-RPC 2.0 payload. Use a single request object for ordinary\
+          \ calls, omit id for notifications, or send an array of request objects\
+          \ for batches."
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: "#/components/schemas/McpInitializeRequest"
+              - $ref: "#/components/schemas/McpInitializedNotification"
+              - $ref: "#/components/schemas/McpPingRequest"
+              - $ref: "#/components/schemas/McpToolsListRequest"
+              - $ref: "#/components/schemas/McpToolsCallRequest"
+              - $ref: "#/components/schemas/McpRolesToolsCheckRequest"
+              - $ref: "#/components/schemas/McpRolesToolsRegisterRequest"
+              - $ref: "#/components/schemas/McpRolesToolsInstallPublicationRequest"
+              - $ref: "#/components/schemas/McpRolesToolsAliasRequest"
+              - $ref: "#/components/schemas/McpRolesToolsUpdateRequest"
+              - $ref: "#/components/schemas/McpRolesToolsDeleteRequest"
+              - $ref: "#/components/schemas/McpRolesToolsListRequest"
+              - $ref: "#/components/schemas/McpRolesToolsReloadRequest"
+              - $ref: "#/components/schemas/McpJsonRpcBatchRequest"
+            examples:
+              tools/list:
+                summary: List public tools
+                description: tools/list
+                value:
+                  jsonrpc: "2.0"
+                  id: 1
+                  method: tools/list
+                  params: {}
+              tools/call:
+                summary: Invoke a tool
+                description: tools/call
+                value:
+                  jsonrpc: "2.0"
+                  id: 2
+                  method: tools/call
+                  params:
+                    name: helloworld.greet
+                    arguments:
+                      name: Meshingress
+              roles/tools/register:
+                summary: Register a phase-aware local JAR tool
+                description: roles/tools/register
+                value:
+                  jsonrpc: "2.0"
+                  id: 3
+                  method: roles/tools/register
+                  params:
+                    phase: install
+                    toolId: sample.local
+                    localJar:
+                      path: C:/tools/sample.jar
+                      checksumSha256: <sha256>
+                    replace: false
+              batch:
+                summary: Batch request
+                description: batch
+                value:
+                - jsonrpc: "2.0"
+                  id: 4
+                  method: ping
+                - jsonrpc: "2.0"
+                  id: 5
+                  method: tools/list
+                  params: {}
+        required: true
+      responses:
+        "200":
+          description: JSON-RPC response object or response batch. JSON-RPC method
+            failures are represented in the response body error object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonNode"
+        "204":
+          description: Notification-only request or batch produced no JSON-RPC response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonNode"
+        "415":
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonNode"
+    delete:
+      tags:
+      - mcp-controller
+      operationId: delete
+      responses:
+        "200":
+          description: OK
+  /artifact/{groupId}/{artifactId}/{version}:
+    post:
+      tags:
+      - artifact-controller
+      operationId: upload
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+          default: TOOL_MODULE
+          enum:
+          - TOOL_MODULE
+          - CLI_HARNESS
+          - AVAILABILITY_ANNOTATION
+          - AVAILABILITY_POLICY
+          - SCOPE_POLICY
+      - name: packaging
+        in: query
+        required: false
+        schema:
+          type: string
+          default: jar
+      - name: requestedScopes
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/revoke:
+    post:
+      tags:
+      - artifact-controller
+      operationId: revoke
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+  /artifact/{groupId}/{artifactId}/{version}/restore:
+    post:
+      tags:
+      - artifact-controller
+      operationId: restore
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/reject:
+    post:
+      tags:
+      - artifact-controller
+      operationId: reject
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/publish:
+    post:
+      tags:
+      - artifact-controller
+      operationId: publish
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+  /artifact/{groupId}/{artifactId}/{version}/delete:
+    post:
+      tags:
+      - artifact-controller
+      operationId: delete_1
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/assess:
+    post:
+      tags:
+      - artifact-controller
+      operationId: assess
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/approve:
+    post:
+      tags:
+      - artifact-controller
+      operationId: approve
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtifactReviewRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}:
+    get:
+      tags:
+      - artifact-controller
+      operationId: resource
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: resourceName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+  /artifact/{groupId}/{artifactId}/{version}/publication:
+    get:
+      tags:
+      - artifact-controller
+      operationId: publication
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+  /artifact/{groupId}/{artifactId}/{version}/metadata:
+    get:
+      tags:
+      - artifact-controller
+      operationId: metadata
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /artifact/{groupId}/{artifactId}/{version}/file:
+    get:
+      tags:
+      - artifact-controller
+      operationId: file
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /artifact/{groupId}/{artifactId}/{version}/assessment:
+    get:
+      tags:
+      - artifact-controller
+      operationId: assessment
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScannerResult"
+  /artifact/reviews/pending:
+    get:
+      tags:
+      - artifact-controller
+      operationId: pendingReviewQueue
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArtifactReviewQueueItem"
+  /artifact/jars:
+    get:
+      tags:
+      - artifact-controller
+      operationId: uploadedJarMetadata
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Repository-Actor
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArtifactRecord"
+components:
+  schemas:
+    McpClientInfo:
+      type: object
+      description: MCP client identity metadata.
+      properties:
+        name:
+          type: string
+          description: Client name.
+          example: test-client
+        version:
+          type: string
+          description: Client version.
+          example: 0.1.0
+    McpInitializeParams:
+      type: object
+      description: MCP initialize parameters.
+      properties:
+        protocolVersion:
+          type: string
+          description: Protocol version requested by the client.
+          example: 2025-11-25
+        capabilities:
+          description: Client capabilities object.
+          example: {}
+        clientInfo:
+          $ref: "#/components/schemas/McpClientInfo"
+          description: Client identity.
+    McpInitializeRequest:
+      type: object
+      description: Initializes an MCP session and returns server capabilities.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - initialize
+          example: initialize
+        params:
+          $ref: "#/components/schemas/McpInitializeParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    McpInitializedNotification:
+      type: object
+      description: Notification sent after the client accepts initialization. Notifications
+        omit id and do not produce a response body.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - notifications/initialized
+          example: notifications/initialized
+        params:
+          description: Optional notification params.
+      required:
+      - jsonrpc
+      - method
+    McpPingRequest:
+      type: object
+      description: Health-style JSON-RPC ping routed through the MCP dispatcher.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 2
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - ping
+          example: ping
+        params:
+          description: Optional ping params.
+      required:
+      - id
+      - jsonrpc
+      - method
+    McpToolsListRequest:
+      type: object
+      description: Lists public enabled MCP tools.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 3
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - tools/list
+          example: tools/list
+        params:
+          description: Optional empty object.
+          example: {}
+      required:
+      - id
+      - jsonrpc
+      - method
+    McpToolsCallParams:
+      type: object
+      description: Parameters for tools/call.
+      properties:
+        name:
+          type: string
+          description: Name of the MCP tool function to invoke.
+          example: helloworld.greet
+        arguments:
+          type: object
+          additionalProperties: {}
+          description: Tool-specific arguments object. Its schema is supplied by tools/list
+            for each tool.
+          example:
+            name: Meshingress
+      required:
+      - name
+    McpToolsCallRequest:
+      type: object
+      description: Invokes a public MCP tool by function name.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 4
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - tools/call
+          example: tools/call
+        params:
+          $ref: "#/components/schemas/McpToolsCallParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    McpRolesToolsCheckRequest:
+      type: object
+      description: Admin request that validates a proposed dynamic tool descriptor.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 5
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/check
+          example: roles/tools/check
+        params:
+          $ref: "#/components/schemas/RolesToolCheckParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    RolesToolCheckParams:
+      type: object
+      description: Parameters for roles/tools/check.
+      properties:
+        tool:
+          $ref: "#/components/schemas/ToolDescriptorParams"
+          description: Proposed dynamic tool descriptor to validate.
+        mode:
+          type: string
+          description: Validation mode. Use update to validate changes to an existing
+            tool.
+          enum:
+          - create
+          - update
+          example: create
+      required:
+      - tool
+    ToolDescriptorParams:
+      type: object
+      description: Dynamic MCP tool descriptor accepted by role-gated registry methods.
+      properties:
+        name:
+          type: string
+          description: Public MCP tool name.
+          example: architect.entries.copy
+        title:
+          type: string
+          description: Human-readable tool title.
+          example: List architect entries
+        description:
+          type: string
+          description: Human-readable tool description.
+          example: List architect entries through a dynamic alias.
+        version:
+          type: integer
+          format: int32
+          description: Descriptor version. Defaults to 1 when omitted.
+          example: 1
+        enabled:
+          type: boolean
+          description: Whether the tool is enabled. Defaults to true when omitted.
+          example: true
+        visibility:
+          type: string
+          description: Registry visibility for the tool.
+          enum:
+          - public
+          - private
+          - admin
+          example: public
+        handlerKey:
+          type: string
+          description: Handler key used by the runtime registry to route calls.
+          example: architect.entries.list
+        inputSchema:
+          type: string
+          additionalProperties: true
+          description: JSON Schema object describing accepted input arguments.
+          example:
+            type: object
+            properties:
+              status:
+                type: string
+        outputSchema:
+          type: string
+          additionalProperties: true
+          description: Optional JSON Schema object describing structured output.
+        annotations:
+          type: string
+          additionalProperties: true
+          description: Optional MCP annotations object such as readOnlyHint or destructiveHint.
+        functions:
+          type: array
+          description: "Optional function-level descriptors. If omitted, the tool\
+            \ descriptor is used as a single function."
+          items:
+            $ref: "#/components/schemas/ToolFunctionParams"
+      required:
+      - description
+      - handlerKey
+      - name
+    ToolFunctionParams:
+      type: object
+      description: Function descriptor nested inside a dynamic MCP tool descriptor.
+      properties:
+        name:
+          type: string
+          description: Public MCP function name.
+          example: architect.entries.copy
+        title:
+          type: string
+          description: Human-readable function title.
+          example: List architect entries
+        description:
+          type: string
+          description: Human-readable function description.
+          example: List architect entries through a dynamic alias.
+        version:
+          type: integer
+          format: int32
+          description: Function version. Defaults to the parent tool version or 1.
+          example: 1
+        enabled:
+          type: boolean
+          description: Whether the function is enabled. Defaults to true when omitted.
+          example: true
+        visibility:
+          type: string
+          description: Function visibility. Defaults to the parent tool visibility
+            when omitted.
+          enum:
+          - public
+          - private
+          - admin
+          example: public
+        handlerKey:
+          type: string
+          description: Handler key used by the runtime registry to route calls.
+          example: architect.entries.list
+        inputSchema:
+          type: string
+          additionalProperties: true
+          description: JSON Schema object describing accepted input arguments.
+          example:
+            type: object
+        outputSchema:
+          type: string
+          additionalProperties: true
+          description: Optional JSON Schema object describing structured output.
+        annotations:
+          type: string
+          additionalProperties: true
+          description: Optional MCP annotations object such as readOnlyHint or destructiveHint.
+      required:
+      - handlerKey
+      - name
+    McpRolesToolsRegisterRequest:
+      type: object
+      description: Admin request that registers a phase-aware runtime tool.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 6
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/register
+          example: roles/tools/register
+        params:
+          $ref: "#/components/schemas/ToolRegistrationParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    ToolRegistrationBundleParams:
+      type: object
+      description: Bundle-backed tool registration source.
+      properties:
+        bundleId:
+          type: string
+          description: Bundle identifier that contains the tool.
+          example: meshingress-tool-bundle
+        artifactId:
+          type: string
+          description: Artifact id inside the bundle.
+          example: helloworld
+    ToolRegistrationLocalJarParams:
+      type: object
+      description: Local JAR registration source for a runtime tool module.
+      properties:
+        path:
+          type: string
+          description: Filesystem path to the local tool JAR. Either path or jarPath
+            may be supplied.
+          example: C:/tools/sample-tool.jar
+        jarPath:
+          type: string
+          description: Legacy filesystem path to the local tool JAR. Prefer path for
+            new callers.
+          example: C:/tools/sample-tool.jar
+        pomPath:
+          type: string
+          description: Optional filesystem path to the published Maven POM. If omitted,
+            Meshingress uses the JAR's embedded Maven POM when available.
+          example: C:/tools/sample-tool.pom
+        checksumSha256:
+          type: string
+          description: Expected SHA-256 checksum for the JAR.
+          example: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        sha256:
+          type: string
+          description: Legacy SHA-256 checksum field. Prefer checksumSha256 for new
+            callers.
+          example: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    ToolRegistrationNativeParams:
+      type: object
+      description: Native built-in registration source.
+      properties:
+        namespace:
+          type: string
+          description: Native namespace to register.
+          example: architect
+    ToolRegistrationParams:
+      type: object
+      description: Phase-aware parameters for roles/tools/register.
+      properties:
+        phase:
+          type: string
+          description: Registration lifecycle phase. Phase registration requires this
+            field.
+          enum:
+          - check
+          - install
+          - activate
+          - deactivate
+          - delete
+          example: install
+        toolId:
+          type: string
+          description: Stable registry tool id.
+          example: sample.local
+        name:
+          type: string
+          description: Human-readable registration name.
+          example: Sample Local Tool
+        tool:
+          $ref: "#/components/schemas/ToolRegistrationToolParams"
+          description: Existing tool reference for lifecycle operations.
+        localJar:
+          $ref: "#/components/schemas/ToolRegistrationLocalJarParams"
+          description: Local JAR source details.
+        bundle:
+          $ref: "#/components/schemas/ToolRegistrationBundleParams"
+          description: Bundle source details.
+        nativeTool:
+          $ref: "#/components/schemas/ToolRegistrationNativeParams"
+          description: Native built-in source details.
+        replace:
+          type: boolean
+          description: Replace an existing dynamic registration when true.
+          example: false
+      required:
+      - phase
+    ToolRegistrationToolParams:
+      type: object
+      description: Existing registered tool reference.
+      properties:
+        name:
+          type: string
+          description: Registered tool name.
+          example: architect.entries.list
+    ArtifactAssessmentSummary:
+      type: object
+      properties:
+        status:
+          type: string
+        scanners:
+          type: array
+          items:
+            type: string
+        findingCount:
+          type: integer
+          format: int32
+        summary:
+          type: object
+          additionalProperties: {}
+    ArtifactChecksum:
+      type: object
+      properties:
+        algorithm:
+          type: string
+        value:
+          type: string
+    ArtifactCoordinate:
+      type: object
+      properties:
+        groupId:
+          type: string
+        artifactId:
+          type: string
+        version:
+          type: string
+        classifier:
+          type: string
+        packaging:
+          type: string
+    ArtifactProvenance:
+      type: object
+      properties:
+        sourceRepo:
+          type: string
+        sourceCommit:
+          type: string
+        generatedBy:
+          type: string
+        generatorCommit:
+          type: string
+    ArtifactPublicationRecord:
+      type: object
+      properties:
+        coordinate:
+          $ref: "#/components/schemas/ArtifactCoordinate"
+        type:
+          type: string
+          enum:
+          - TOOL_MODULE
+          - CLI_HARNESS
+          - AVAILABILITY_ANNOTATION
+          - AVAILABILITY_POLICY
+          - SCOPE_POLICY
+        trustStatus:
+          type: string
+          enum:
+          - RECEIVED
+          - QUARANTINED
+          - SCANNING
+          - REVIEW_PENDING
+          - APPROVED_TRUSTED
+          - APPROVED_LIMITED
+          - REJECTED
+          - BLOCKED_MALWARE
+          - BLOCKED_POLICY
+          - BLOCKED_VULNERABILITY
+          - SUPERSEDED
+          - DELETED
+          - REVOKED
+        artifactUri:
+          type: string
+        artifactChecksum:
+          $ref: "#/components/schemas/ArtifactChecksum"
+        scopePolicy:
+          $ref: "#/components/schemas/ArtifactScopeDeclaration"
+        scanSummary:
+          $ref: "#/components/schemas/ArtifactAssessmentSummary"
+        provenance:
+          $ref: "#/components/schemas/ArtifactProvenance"
+        eligibilityDecision:
+          $ref: "#/components/schemas/PublicationEligibilityDecision"
+        revoked:
+          type: boolean
+        publishedAt:
+          type: string
+          format: date-time
+        signatureKeyId:
+          type: string
+        signatureAlgorithm:
+          type: string
+        signature:
+          type: string
+    ArtifactScopeDeclaration:
+      type: object
+      properties:
+        requestedScopes:
+          type: array
+          items:
+            type: string
+        inferredScopes:
+          type: array
+          items:
+            type: string
+        approvedScopes:
+          type: array
+          items:
+            type: string
+        deniedScopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeniedScope"
+    DeniedScope:
+      type: object
+      properties:
+        scope:
+          type: string
+        reason:
+          type: string
+    McpRolesToolsInstallPublicationRequest:
+      type: object
+      description: Admin request that installs a signed artifact publication and registers
+        its tool.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 7
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/installPublication
+          example: roles/tools/installPublication
+        params:
+          $ref: "#/components/schemas/RolesToolInstallPublicationParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    PublicationEligibilityDecision:
+      type: object
+      properties:
+        eligible:
+          type: boolean
+        reasonCodes:
+          type: array
+          items:
+            type: string
+        evidence:
+          type: object
+          additionalProperties: {}
+    RolesToolInstallPublicationParams:
+      type: object
+      description: Parameters for roles/tools/installPublication.
+      properties:
+        toolId:
+          type: string
+          description: Optional tool id override to use during installation.
+          example: sample.tool
+        publication:
+          $ref: "#/components/schemas/ArtifactPublicationRecord"
+          description: Signed artifact publication to install.
+        coordinate:
+          $ref: "#/components/schemas/ArtifactCoordinate"
+          description: Repository coordinate to fetch a signed publication record
+            from when publication is omitted.
+    McpRolesToolsAliasRequest:
+      type: object
+      description: Admin request that registers a dynamic alias for a tool descriptor.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 8
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/alias
+          example: roles/tools/alias
+        params:
+          $ref: "#/components/schemas/RolesToolAliasParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    RolesToolAliasParams:
+      type: object
+      description: Parameters for roles/tools/alias.
+      properties:
+        tool:
+          $ref: "#/components/schemas/ToolDescriptorParams"
+          description: Dynamic tool descriptor to register as an alias.
+      required:
+      - tool
+    McpRolesToolsUpdateRequest:
+      type: object
+      description: Admin request that applies a patch to an existing registry tool.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 9
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/update
+          example: roles/tools/update
+        params:
+          $ref: "#/components/schemas/RolesToolUpdateParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    RolesToolUpdateParams:
+      type: object
+      description: Parameters for roles/tools/update.
+      properties:
+        name:
+          type: string
+          description: Name of the existing tool to update.
+          example: architect.entries.copy
+        patch:
+          $ref: "#/components/schemas/ToolPatchParams"
+          description: Patch to apply to the registry tool entry.
+      required:
+      - name
+      - patch
+    ToolPatchParams:
+      type: object
+      description: Patch object for roles/tools/update.
+      properties:
+        title:
+          type: string
+          description: Replacement human-readable title.
+          example: List architect entries
+        description:
+          type: string
+          description: Replacement human-readable description.
+          example: List architect entries through a dynamic alias.
+        enabled:
+          type: boolean
+          description: Replacement enabled flag.
+          example: true
+        visibility:
+          type: string
+          description: Replacement registry visibility.
+          enum:
+          - public
+          - private
+          - admin
+          example: public
+        handlerKey:
+          type: string
+          description: Replacement handler key.
+          example: architect.entries.list
+        inputSchema:
+          type: string
+          additionalProperties: true
+          description: Replacement JSON Schema object describing accepted input arguments.
+        outputSchema:
+          type: string
+          additionalProperties: true
+          description: Replacement JSON Schema object describing structured output.
+        annotations:
+          type: string
+          additionalProperties: true
+          description: Replacement MCP annotations object.
+    McpRolesToolsDeleteRequest:
+      type: object
+      description: Admin request that disables a registry tool.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 10
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/delete
+          example: roles/tools/delete
+        params:
+          $ref: "#/components/schemas/RolesToolDeleteParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    RolesToolDeleteParams:
+      type: object
+      description: Parameters for roles/tools/delete.
+      properties:
+        name:
+          type: string
+          description: Name of the tool to disable.
+          example: architect.entries.copy
+        mode:
+          type: string
+          description: Deletion mode. The current server supports disable only.
+          enum:
+          - disable
+          example: disable
+      required:
+      - name
+    McpRolesToolsListRequest:
+      type: object
+      description: "Admin request that lists role-visible tools, audit events, and\
+        \ registrations."
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 11
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/list
+          example: roles/tools/list
+        params:
+          $ref: "#/components/schemas/RolesToolListParams"
+      required:
+      - id
+      - jsonrpc
+      - method
+      - params
+    RolesToolListParams:
+      type: object
+      description: Parameters for roles/tools/list.
+      properties:
+        includeDisabled:
+          type: boolean
+          description: Include disabled registry entries in the listing.
+          example: false
+        includePrivate:
+          type: boolean
+          description: Include private role-visible tools in the listing.
+          example: false
+    McpRolesToolsReloadRequest:
+      type: object
+      description: Admin request that reports current runtime reload support and registration
+        state.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier.
+          example: 12
+        method:
+          type: string
+          description: MCP method name.
+          enum:
+          - roles/tools/reload
+          example: roles/tools/reload
+        params:
+          description: Optional empty object.
+          example: {}
+      required:
+      - id
+      - jsonrpc
+      - method
+    McpJsonRpcRequest:
+      type: object
+      description: Generic JSON-RPC 2.0 request accepted by the MCP transport.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: Client-supplied request identifier. Omit this field for JSON-RPC
+            notifications.
+          example: 1
+        method:
+          type: string
+          description: MCP method name routed by the server dispatcher.
+          example: tools/list
+        params:
+          description: Method-specific parameters. See the method-specific request
+            schemas for concrete shapes.
+          oneOf:
+          - $ref: "#/components/schemas/McpInitializeParams"
+          - $ref: "#/components/schemas/McpToolsCallParams"
+          - $ref: "#/components/schemas/RolesToolCheckParams"
+          - $ref: "#/components/schemas/ToolRegistrationParams"
+          - $ref: "#/components/schemas/RolesToolInstallPublicationParams"
+          - $ref: "#/components/schemas/RolesToolAliasParams"
+          - $ref: "#/components/schemas/RolesToolUpdateParams"
+          - $ref: "#/components/schemas/RolesToolDeleteParams"
+          - $ref: "#/components/schemas/RolesToolListParams"
+      required:
+      - jsonrpc
+      - method
+    McpJsonRpcBatchRequest:
+      type: array
+      description: JSON-RPC 2.0 batch request containing one or more request or notification
+        objects.
+      items:
+        $ref: "#/components/schemas/McpJsonRpcRequest"
+      properties:
+        empty:
+          type: boolean
+        first:
+          $ref: "#/components/schemas/McpJsonRpcRequest"
+        last:
+          $ref: "#/components/schemas/McpJsonRpcRequest"
+    JsonNode:
+      type: object
+      properties:
+        empty:
+          type: boolean
+        array:
+          type: boolean
+        "null":
+          type: boolean
+        object:
+          type: boolean
+        float:
+          type: boolean
+        int:
+          type: boolean
+        long:
+          type: boolean
+        string:
+          type: boolean
+        textual:
+          type: boolean
+          deprecated: true
+        short:
+          type: boolean
+        boolean:
+          type: boolean
+        double:
+          type: boolean
+        binary:
+          type: boolean
+        pojo:
+          type: boolean
+        number:
+          type: boolean
+        missingNode:
+          type: boolean
+        bigInteger:
+          type: boolean
+        valueNode:
+          type: boolean
+        bigDecimal:
+          type: boolean
+        integralNumber:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        container:
+          type: boolean
+        nodeType:
+          type: string
+          enum:
+          - ARRAY
+          - BINARY
+          - BOOLEAN
+          - MISSING
+          - "NULL"
+          - NUMBER
+          - OBJECT
+          - POJO
+          - STRING
+        embeddedValue:
+          type: boolean
+    ArtifactFileEntry:
+      type: object
+      properties:
+        path:
+          type: string
+        size:
+          type: integer
+          format: int64
+        checksum:
+          $ref: "#/components/schemas/ArtifactChecksum"
+        executable:
+          type: boolean
+    ArtifactRecord:
+      type: object
+      properties:
+        coordinate:
+          $ref: "#/components/schemas/ArtifactCoordinate"
+        type:
+          type: string
+          enum:
+          - TOOL_MODULE
+          - CLI_HARNESS
+          - AVAILABILITY_ANNOTATION
+          - AVAILABILITY_POLICY
+          - SCOPE_POLICY
+        trustStatus:
+          type: string
+          enum:
+          - RECEIVED
+          - QUARANTINED
+          - SCANNING
+          - REVIEW_PENDING
+          - APPROVED_TRUSTED
+          - APPROVED_LIMITED
+          - REJECTED
+          - BLOCKED_MALWARE
+          - BLOCKED_POLICY
+          - BLOCKED_VULNERABILITY
+          - SUPERSEDED
+          - DELETED
+          - REVOKED
+        artifactUri:
+          type: string
+        artifactChecksum:
+          $ref: "#/components/schemas/ArtifactChecksum"
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArtifactFileEntry"
+        scopes:
+          $ref: "#/components/schemas/ArtifactScopeDeclaration"
+        assessment:
+          $ref: "#/components/schemas/ArtifactAssessmentSummary"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ArtifactReviewRequest:
+      type: object
+      properties:
+        approvedScopes:
+          type: array
+          items:
+            type: string
+        deniedScopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeniedScope"
+        trustStatus:
+          type: string
+          enum:
+          - RECEIVED
+          - QUARANTINED
+          - SCANNING
+          - REVIEW_PENDING
+          - APPROVED_TRUSTED
+          - APPROVED_LIMITED
+          - REJECTED
+          - BLOCKED_MALWARE
+          - BLOCKED_POLICY
+          - BLOCKED_VULNERABILITY
+          - SUPERSEDED
+          - DELETED
+          - REVOKED
+        reviewer:
+          type: string
+        notes:
+          type: string
+    Finding:
+      type: object
+      properties:
+        severity:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+    ScannerResult:
+      type: object
+      properties:
+        scanner:
+          type: string
+        scannerVersion:
+          type: string
+        status:
+          type: string
+          enum:
+          - PASSED
+          - REVIEW
+          - BLOCKED
+          - FAILED
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Finding"
+        rawSummary:
+          type: object
+          additionalProperties: {}
+        rawReportPath:
+          type: object
+          properties:
+            absolute:
+              type: boolean
+            parent:
+              type: object
+              properties:
+                absolute:
+                  type: boolean
+                root:
+                  type: object
+                  properties:
+                    absolute:
+                      type: boolean
+                    fileName:
+                      type: object
+                      properties:
+                        absolute:
+                          type: boolean
+                        fileSystem:
+                          type: object
+                          properties:
+                            open:
+                              type: boolean
+                            readOnly:
+                              type: boolean
+                            separator:
+                              type: string
+                            rootDirectories: {}
+                            fileStores: {}
+                            userPrincipalLookupService: {}
+                        nameCount:
+                          type: integer
+                          format: int32
+                    fileSystem:
+                      type: object
+                      properties:
+                        open:
+                          type: boolean
+                        readOnly:
+                          type: boolean
+                        separator:
+                          type: string
+                        rootDirectories: {}
+                        fileStores: {}
+                        userPrincipalLookupService: {}
+                    nameCount:
+                      type: integer
+                      format: int32
+                fileName:
+                  type: object
+                  properties:
+                    absolute:
+                      type: boolean
+                    fileSystem:
+                      type: object
+                      properties:
+                        open:
+                          type: boolean
+                        readOnly:
+                          type: boolean
+                        separator:
+                          type: string
+                        rootDirectories: {}
+                        fileStores: {}
+                        userPrincipalLookupService: {}
+                    nameCount:
+                      type: integer
+                      format: int32
+                fileSystem:
+                  type: object
+                  properties:
+                    open:
+                      type: boolean
+                    readOnly:
+                      type: boolean
+                    separator:
+                      type: string
+                    rootDirectories: {}
+                    fileStores: {}
+                    userPrincipalLookupService: {}
+                nameCount:
+                  type: integer
+                  format: int32
+            root:
+              type: object
+              properties:
+                absolute:
+                  type: boolean
+                fileName:
+                  type: object
+                  properties:
+                    absolute:
+                      type: boolean
+                    fileSystem:
+                      type: object
+                      properties:
+                        open:
+                          type: boolean
+                        readOnly:
+                          type: boolean
+                        separator:
+                          type: string
+                        rootDirectories: {}
+                        fileStores: {}
+                        userPrincipalLookupService: {}
+                    nameCount:
+                      type: integer
+                      format: int32
+                fileSystem:
+                  type: object
+                  properties:
+                    open:
+                      type: boolean
+                    readOnly:
+                      type: boolean
+                    separator:
+                      type: string
+                    rootDirectories: {}
+                    fileStores: {}
+                    userPrincipalLookupService: {}
+                nameCount:
+                  type: integer
+                  format: int32
+            fileName:
+              type: object
+              properties:
+                absolute:
+                  type: boolean
+                fileSystem:
+                  type: object
+                  properties:
+                    open:
+                      type: boolean
+                    readOnly:
+                      type: boolean
+                    separator:
+                      type: string
+                    rootDirectories: {}
+                    fileStores: {}
+                    userPrincipalLookupService: {}
+                nameCount:
+                  type: integer
+                  format: int32
+            fileSystem:
+              type: object
+              properties:
+                open:
+                  type: boolean
+                readOnly:
+                  type: boolean
+                separator:
+                  type: string
+                rootDirectories: {}
+                fileStores: {}
+                userPrincipalLookupService: {}
+            nameCount:
+              type: integer
+              format: int32
+    ArtifactReviewQueueItem:
+      type: object
+      properties:
+        artifact:
+          $ref: "#/components/schemas/ArtifactRecord"
+        assessment:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScannerResult"

@@ -46,7 +46,7 @@ Get-MeshingressPendingReviews -BaseUri $BaseUri |
   ConvertTo-Json -Depth 20
 
 Write-Host '7. Try downloading exported resources'
-foreach ($resourceName in @('application.yaml', 'README.md')) {
+foreach ($resourceName in @('application.properties', 'README.md')) {
   try {
     Save-MeshingressArtifactResource @common -ResourceName $resourceName -OutFile (Join-Path $OutDir $resourceName)
   } catch {
