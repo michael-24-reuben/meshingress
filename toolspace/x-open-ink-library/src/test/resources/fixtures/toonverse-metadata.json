@@ -1,0 +1,16 @@
+{
+  "id": "series-1",
+  "slug": "solo-leveling",
+  "title": "Solo Leveling",
+  "alternativeNames": ["Only I Level Up"],
+  "description": "A hunter story",
+  "author": "Chugong",
+  "artist": "Redice Studio",
+  "publisher": "Daum",
+  "year": "2018",
+  "type": "manhwa",
+  "status": "ongoing",
+  "genres": [{"name": "Fantasy"}, {"name": "Action"}],
+  "coverUrl": "https://cdn.example/cover.webp",
+  "chapterCount": 205
+}
