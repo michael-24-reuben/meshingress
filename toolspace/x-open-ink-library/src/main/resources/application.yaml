@@ -1,0 +1,2 @@
+open-ink-library:
+  toonverse-profile: classpath:/open-ink-library/toonverse.yaml

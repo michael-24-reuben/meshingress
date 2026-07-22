@@ -1,0 +1,18 @@
+{
+  "baseUrl": "https://source.example.com/solo-leveling",
+  "name": "Solo Leveling",
+  "sources": [
+    {
+      "url": "/cover.jpg",
+      "outlet": {
+        "path": "/cover.jpg"
+      }
+    },
+    {
+      "url": "/chapters/001-the-beginning/page1.jpg",
+      "outlet": {
+        "path": "/chapters/001-the-beginning/page1.jpg"
+      }
+    }
+  ]
+}
