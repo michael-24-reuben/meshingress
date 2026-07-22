@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.framework.scanning;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpFunctionParam;
@@ -75,6 +76,18 @@ class McpToolAnnotationScannerTests {
         );
     }
 
+    @Test
+    void excludesProgressReporterFromFunctionParametersAndInputSchema() {
+        AnnotatedMcpTool tool = scanner.scan(ProgressAwareAnnotatedTool.class);
+
+        assertEquals(1, tool.functions().getFirst().parameters().size());
+        assertEquals("args", tool.functions().getFirst().parameters().getFirst().name());
+        assertEquals(HelloWorldGreetArgs.class, tool.functions().getFirst().parameters().getFirst().bindType());
+        assertEquals(1, tool.functions().getFirst().inputSchema().path("properties").size());
+        assertEquals(true, tool.functions().getFirst().descriptor().annotations().path("progressReporter").asBoolean());
+        assertEquals("string", tool.functions().getFirst().inputSchema().path("properties").path("name").path("type").asString());
+    }
+
     @McpTool(
             value = "helloworld",
             title = "Hello World",
@@ -130,6 +143,15 @@ class McpToolAnnotationScannerTests {
         @McpFunction(value = "call", description = "Function fallback description.")
         @McpInputSchema(description = "Method-level input schema description.")
         ObjectNode call(@McpFunctionParam("name") String name) {
+            return null;
+        }
+    }
+
+    @McpTool(value = "helloworld.progress")
+    static class ProgressAwareAnnotatedTool {
+
+        @McpFunction("call")
+        ObjectNode call(HelloWorldGreetArgs arguments, McpCallContext context, McpProgressReporter progress) {
             return null;
         }
     }

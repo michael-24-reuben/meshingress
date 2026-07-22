@@ -3,10 +3,12 @@ package dev.mrk.meshingress.server.install;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationRecord;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationStore;
 import dev.mrk.meshingress.controller.roles.registration.ToolSourceKind;
+import dev.mrk.meshingress.artifact.storage.ProjectRootResolver;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarSource;
 import dev.mrk.meshingress.runtime.loader.ToolRuntimeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
@@ -21,10 +23,22 @@ class RuntimePublicationRegistrationReconciler implements ApplicationRunner {
 
     private final ToolRegistrationStore registrationStore;
     private final ToolRuntimeLoader runtimeLoader;
+    private final Path projectRoot;
 
+    @Autowired
     RuntimePublicationRegistrationReconciler(ToolRegistrationStore registrationStore, ToolRuntimeLoader runtimeLoader) {
+        this(registrationStore, runtimeLoader,
+                ProjectRootResolver.resolve(RuntimePublicationRegistrationReconciler.class, null));
+    }
+
+    RuntimePublicationRegistrationReconciler(
+            ToolRegistrationStore registrationStore,
+            ToolRuntimeLoader runtimeLoader,
+            Path projectRoot
+    ) {
         this.registrationStore = registrationStore;
         this.runtimeLoader = runtimeLoader;
+        this.projectRoot = ProjectRootResolver.resolve(RuntimePublicationRegistrationReconciler.class, projectRoot);
     }
 
     @Override
@@ -82,7 +96,13 @@ class RuntimePublicationRegistrationReconciler implements ApplicationRunner {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return Path.of(value).toAbsolutePath().normalize();
+        try {
+            return ProjectRootResolver.resolveRelative(projectRoot, value);
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Runtime publication registration {} has an invalid project-relative cache path: {}",
+                    record.registrationId(), value);
+            return null;
+        }
     }
 
     record RuntimePublicationReconciliationResult(int candidates, int reconciled, int missingCache, int failed) {

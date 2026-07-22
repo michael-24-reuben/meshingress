@@ -9,9 +9,9 @@ public record McpToolNativeMetadata(
         List<ToolProperty> properties,
         List<ToolRequirement> requirements,
         List<ToolLink> links,
-        String readme
+        ToolReadme readme
 ) {
-    public McpToolNativeMetadata(List<ToolProperty> properties, String readme) {
+    public McpToolNativeMetadata(List<ToolProperty> properties, ToolReadme readme) {
         this(McpToolManifestJson.SCHEMA_VERSION, "", properties, List.of(), List.of(), readme);
     }
 
@@ -25,7 +25,7 @@ public record McpToolNativeMetadata(
                 .toList();
         requirements = requirements == null ? List.of() : List.copyOf(requirements);
         links = links == null ? List.of() : List.copyOf(links);
-        readme = readme == null ? "" : readme.strip();
+        readme = readme == null ? ToolReadme.none() : readme;
     }
 
     public static McpToolNativeMetadata fromManifest(McpToolManifestDefinition definition) {
@@ -38,12 +38,12 @@ public record McpToolNativeMetadata(
                 definition.properties(),
                 definition.requirements(),
                 definition.links(),
-                definition.readmeMarkdown()
+                definition.readme()
         );
     }
 
     public static McpToolNativeMetadata empty() {
-        return new McpToolNativeMetadata(List.of(), "");
+        return new McpToolNativeMetadata(List.of(), ToolReadme.none());
     }
 
     public boolean hasProperties() {
@@ -59,6 +59,6 @@ public record McpToolNativeMetadata(
     }
 
     public boolean hasReadme() {
-        return !readme.isBlank();
+        return readme.getMetadata().type() != ToolReadme.ReadmeType.None;
     }
 }

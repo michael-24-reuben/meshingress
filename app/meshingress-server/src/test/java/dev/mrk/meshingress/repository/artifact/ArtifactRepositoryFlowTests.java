@@ -240,8 +240,8 @@ class ArtifactRepositoryFlowTests {
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("assessment.json"))).isTrue();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("cyclonedx-sbom.json"))).isTrue();
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(artifactDirectory.resolve("embedded-jar-sandbox.json"))).isTrue();
-        org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/application.yaml")))
-                .contains("meshingress.sample.file-read.root: \"./var/meshingress/sample\"")
+        org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/application.properties")))
+                .contains("meshingress.sample.file-read.root=./var/meshingress/sample")
                 .contains("Default root used by the sample tool when reading files.");
         org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("README.md")))
                 .contains("# Generated Sample Tool")

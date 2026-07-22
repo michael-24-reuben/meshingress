@@ -4,6 +4,7 @@ import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationPhase;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationRecord;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationStore;
 import dev.mrk.meshingress.controller.roles.registration.ToolSourceKind;
+import dev.mrk.meshingress.artifact.storage.ProjectRootResolver;
 import dev.mrk.meshingress.runtime.artifacts.ResolvedToolArtifact;
 import dev.mrk.meshingress.runtime.artifacts.ToolArtifactSource;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleHandle;
@@ -31,13 +32,14 @@ class RuntimePublicationRegistrationReconcilerTests {
 
     @Test
     void reconcilesActivePublicationRegistrationFromCachedJar() throws Exception {
-        Path cachedJar = tempDir.resolve("runtime-cache").resolve("sample-module.jar");
+        Path projectRoot = projectRoot();
+        Path cachedJar = projectRoot.resolve("repository/runtime-cache/sample-module.jar");
         Files.createDirectories(cachedJar.getParent());
         Files.writeString(cachedJar, "jar bytes");
-        RecordingRegistrationStore registrationStore = new RecordingRegistrationStore(registration("active", cachedJar));
+        RecordingRegistrationStore registrationStore = new RecordingRegistrationStore(registration("active", projectRoot, cachedJar));
         RecordingRuntimeLoader runtimeLoader = new RecordingRuntimeLoader();
         RuntimePublicationRegistrationReconciler reconciler =
-                new RuntimePublicationRegistrationReconciler(registrationStore, runtimeLoader);
+                new RuntimePublicationRegistrationReconciler(registrationStore, runtimeLoader, projectRoot);
 
         RuntimePublicationRegistrationReconciler.RuntimePublicationReconciliationResult result = reconciler.reconcile();
 
@@ -51,12 +53,13 @@ class RuntimePublicationRegistrationReconcilerTests {
     }
 
     @Test
-    void marksPublicationRegistrationMissingCacheWhenCachedJarIsGone() {
-        Path missingJar = tempDir.resolve("runtime-cache").resolve("missing-module.jar");
-        RecordingRegistrationStore registrationStore = new RecordingRegistrationStore(registration("active", missingJar));
+    void marksPublicationRegistrationMissingCacheWhenCachedJarIsGone() throws Exception {
+        Path projectRoot = projectRoot();
+        Path missingJar = projectRoot.resolve("repository/runtime-cache/missing-module.jar");
+        RecordingRegistrationStore registrationStore = new RecordingRegistrationStore(registration("active", projectRoot, missingJar));
         RecordingRuntimeLoader runtimeLoader = new RecordingRuntimeLoader();
         RuntimePublicationRegistrationReconciler reconciler =
-                new RuntimePublicationRegistrationReconciler(registrationStore, runtimeLoader);
+                new RuntimePublicationRegistrationReconciler(registrationStore, runtimeLoader, projectRoot);
 
         RuntimePublicationRegistrationReconciler.RuntimePublicationReconciliationResult result = reconciler.reconcile();
 
@@ -68,10 +71,34 @@ class RuntimePublicationRegistrationReconcilerTests {
         assertThat(registrationStore.record.status()).isEqualTo("missing-cache");
     }
 
-    private ToolRegistrationRecord registration(String status, Path cachedJar) {
+    @Test
+    void rejectsAbsoluteRuntimeCachePaths() throws Exception {
+        Path projectRoot = projectRoot();
+        Path outsideJar = tempDir.resolve("outside-cache/sample-module.jar");
+        Files.createDirectories(outsideJar.getParent());
+        Files.writeString(outsideJar, "jar bytes");
         Map<String, String> source = new LinkedHashMap<>();
         source.put("coordinate", "dev.mrk.tools:sample-module:0.0.1-SNAPSHOT");
-        source.put("runtimeCachePath", cachedJar.toString());
+        source.put("runtimeCachePath", outsideJar.toString());
+        RecordingRegistrationStore registrationStore = new RecordingRegistrationStore(record("active", source));
+        RecordingRuntimeLoader runtimeLoader = new RecordingRuntimeLoader();
+
+        RuntimePublicationRegistrationReconciler.RuntimePublicationReconciliationResult result =
+                new RuntimePublicationRegistrationReconciler(registrationStore, runtimeLoader, projectRoot).reconcile();
+
+        assertThat(result.missingCache()).isEqualTo(1);
+        assertThat(runtimeLoader.activatedSource).isNull();
+        assertThat(registrationStore.record.status()).isEqualTo("missing-cache");
+    }
+
+    private ToolRegistrationRecord registration(String status, Path projectRoot, Path cachedJar) {
+        Map<String, String> source = new LinkedHashMap<>();
+        source.put("coordinate", "dev.mrk.tools:sample-module:0.0.1-SNAPSHOT");
+        source.put("runtimeCachePath", ProjectRootResolver.relativize(projectRoot, cachedJar));
+        return record(status, source);
+    }
+
+    private ToolRegistrationRecord record(String status, Map<String, String> source) {
         return new ToolRegistrationRecord(
                 "publication:sample-module:test",
                 "sample.echo",
@@ -86,6 +113,13 @@ class RuntimePublicationRegistrationReconcilerTests {
                 "dev.mrk.tools:sample-module:0.0.1-SNAPSHOT",
                 List.of("sample.echo")
         );
+    }
+
+    private Path projectRoot() throws Exception {
+        Path projectRoot = tempDir.resolve("meshingress");
+        Files.createDirectories(projectRoot);
+        Files.writeString(projectRoot.resolve("pom.xml"), "<project><artifactId>meshingress</artifactId></project>");
+        return projectRoot;
     }
 
     private static class RecordingRegistrationStore implements ToolRegistrationStore {

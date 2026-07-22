@@ -5,13 +5,18 @@ import dev.mrk.meshingress.artifact.model.ArtifactFileEntry;
 import dev.mrk.meshingress.artifact.model.ArtifactPublicationRecord;
 import dev.mrk.meshingress.artifact.model.ArtifactRecord;
 import dev.mrk.meshingress.artifact.model.ArtifactTrustStatus;
+import dev.mrk.meshingress.artifact.model.MeshingressArtifactType;
+import dev.mrk.meshingress.artifact.publication.PublicationRecordSigner;
+import dev.mrk.meshingress.artifact.publication.PublicationSignature;
 import dev.mrk.meshingress.artifact.security.ScannerResult;
 import dev.mrk.meshingress.repository.artifact.ArtifactReviewQueueItem;
 import dev.mrk.meshingress.repository.artifact.RepositoryException;
 import dev.mrk.meshingress.repository.config.MeshingressRepositoryProperties;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -48,6 +53,16 @@ public class SqlArtifactMetadataStore implements ArtifactMetadataStore {
         if (properties.initializeSchema()) {
             initializeSchema();
         }
+    }
+
+    /**
+     * Converts the former GENERATED_TOOL_MODULE label into TOOL_MODULE before
+     * enum-backed JSON records are read. Publication payloads are re-signed so
+     * the migration does not leave an invalid signature behind.
+     */
+    public void migrateLegacyArtifactTypes(PublicationRecordSigner signer) {
+        migrateArtifacts();
+        migratePublications(signer);
     }
 
     @Override
@@ -148,6 +163,152 @@ public class SqlArtifactMetadataStore implements ArtifactMetadataStore {
                 key(coordinate)
         );
         return entries.stream().findFirst();
+    }
+
+    private void migrateArtifacts() {
+        List<LegacyArtifactRow> rows = jdbcTemplate.query(
+                "select coordinate_key, type, payload_json from %s".formatted(artifactsTable),
+                (rs, rowNum) -> new LegacyArtifactRow(
+                        rs.getString("coordinate_key"),
+                        rs.getString("type"),
+                        rs.getString("payload_json")
+                )
+        );
+        for (LegacyArtifactRow row : rows) {
+            String canonicalType = canonicalType(row.type());
+            String migratedPayload = rewriteType(row.payloadJson(), canonicalType);
+            if (!canonicalType.equals(row.type()) || !migratedPayload.equals(row.payloadJson())) {
+                jdbcTemplate.update(
+                        "update %s set type = ?, payload_json = ?, updated_at = ? where coordinate_key = ?".formatted(artifactsTable),
+                        canonicalType,
+                        migratedPayload,
+                        OffsetDateTime.now().toString(),
+                        row.coordinateKey()
+                );
+            }
+        }
+    }
+
+    private void migratePublications(PublicationRecordSigner signer) {
+        List<LegacyPublicationRow> rows = jdbcTemplate.query(
+                "select coordinate_key, payload_json from %s".formatted(publicationsTable),
+                (rs, rowNum) -> new LegacyPublicationRow(
+                        rs.getString("coordinate_key"),
+                        rs.getString("payload_json")
+                )
+        );
+        for (LegacyPublicationRow row : rows) {
+            String persistedType = typeFromPayload(row.payloadJson());
+            String canonicalType = canonicalType(persistedType);
+            if (canonicalType.equals(persistedType)) {
+                continue;
+            }
+            ArtifactPublicationRecord publication = fromJson(
+                    rewriteType(row.payloadJson(), canonicalType),
+                    ArtifactPublicationRecord.class
+            );
+            if (!signer.keyId().equals(publication.signatureKeyId())
+                    || !signer.algorithm().equals(publication.signatureAlgorithm())) {
+                throw new RepositoryException("legacy publication type migration requires its original signing key: "
+                        + row.coordinateKey());
+            }
+            ArtifactPublicationRecord migrated = resign(publication, signer);
+            jdbcTemplate.update("""
+                            update %s
+                            set trust_status = ?,
+                                artifact_uri = ?,
+                                signature_key_id = ?,
+                                signature_algorithm = ?,
+                                signature = ?,
+                                revoked = ?,
+                                payload_json = ?,
+                                published_at = ?,
+                                updated_at = ?
+                            where coordinate_key = ?
+                            """.formatted(publicationsTable),
+                    migrated.trustStatus().name(),
+                    migrated.artifactUri(),
+                    migrated.signatureKeyId(),
+                    migrated.signatureAlgorithm(),
+                    migrated.signature(),
+                    migrated.revoked(),
+                    toJson(migrated),
+                    migrated.publishedAt().toString(),
+                    OffsetDateTime.now().toString(),
+                    row.coordinateKey()
+            );
+        }
+    }
+
+    private ArtifactPublicationRecord resign(ArtifactPublicationRecord publication, PublicationRecordSigner signer) {
+        ArtifactPublicationRecord unsigned = new ArtifactPublicationRecord(
+                publication.coordinate(),
+                publication.type(),
+                publication.trustStatus(),
+                publication.artifactUri(),
+                publication.artifactChecksum(),
+                publication.scopePolicy(),
+                publication.scanSummary(),
+                publication.provenance(),
+                publication.eligibilityDecision(),
+                publication.revoked(),
+                publication.publishedAt(),
+                signer.keyId(),
+                signer.algorithm(),
+                ""
+        );
+        PublicationSignature signature = signer.sign(toJson(unsigned));
+        return new ArtifactPublicationRecord(
+                unsigned.coordinate(),
+                unsigned.type(),
+                unsigned.trustStatus(),
+                unsigned.artifactUri(),
+                unsigned.artifactChecksum(),
+                unsigned.scopePolicy(),
+                unsigned.scanSummary(),
+                unsigned.provenance(),
+                unsigned.eligibilityDecision(),
+                unsigned.revoked(),
+                unsigned.publishedAt(),
+                signature.keyId(),
+                signature.algorithm(),
+                signature.value()
+        );
+    }
+
+    private String canonicalType(String persistedType) {
+        if ("GENERATED_TOOL_MODULE".equals(persistedType)) {
+            return MeshingressArtifactType.TOOL_MODULE.name();
+        }
+        try {
+            return MeshingressArtifactType.valueOf(persistedType).name();
+        } catch (IllegalArgumentException exception) {
+            throw new RepositoryException("unsupported legacy artifact type requires manual migration: " + persistedType, exception);
+        }
+    }
+
+    private String typeFromPayload(String payload) {
+        return objectPayload(payload).path("type").asString("");
+    }
+
+    private String rewriteType(String payload, String type) {
+        ObjectNode object = objectPayload(payload);
+        object.put("type", type);
+        return toJson(object);
+    }
+
+    private ObjectNode objectPayload(String payload) {
+        try {
+            JsonNode node = objectMapper.readTree(payload);
+            if (!node.isObject()) {
+                throw new RepositoryException("legacy repository metadata payload must be a JSON object");
+            }
+            return (ObjectNode) node;
+        } catch (RepositoryException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw new RepositoryException("unable to read legacy repository metadata: " + exception.getMessage(), exception);
+        }
     }
 
     @Override
@@ -519,5 +680,11 @@ public class SqlArtifactMetadataStore implements ArtifactMetadataStore {
 
     private String clean(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private record LegacyArtifactRow(String coordinateKey, String type, String payloadJson) {
+    }
+
+    private record LegacyPublicationRow(String coordinateKey, String payloadJson) {
     }
 }

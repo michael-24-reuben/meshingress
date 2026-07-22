@@ -2,6 +2,7 @@ package dev.mrk.meshingress.tools.framework.scanning;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
+import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.annotation.*;
@@ -142,7 +143,7 @@ public class McpToolAnnotationScanner {
             McpFunctionAvailabilityState availabilityState = evalFunctionAvailability(tool, toolClass, method, name, functionMapping, availabilityMessages);
             McpFunctionAvailability functionAvailabilityPolicy = newMcpFunctionAvailability(tool, function, functionMapping, availabilityState);
             ObjectNode inputSchema = inputSchemaFor(method, function.description());
-            ObjectNode functionAnnotations = functionScopes(toolClass, method);
+            ObjectNode functionAnnotations = functionAnnotations(toolClass, method, functionMapping);
             McpFunctionDescriptor descriptor = newMcpFunctionDescriptor(
                     tool,
                     function,
@@ -408,11 +409,11 @@ public class McpToolAnnotationScanner {
         boolean canInferArgsParam = functionParameters.size() == 1 && !functionParameters.getFirst().isAnnotationPresent(McpFunctionParam.class);
 
         for (Parameter parameter : functionParameters) {
-            if (McpCallContext.class.isAssignableFrom(parameter.getType())) {
+            if (isInfrastructureParameter(parameter)) {
                 continue;
             }
             if (!canInferArgsParam && !parameter.isAnnotationPresent(McpFunctionParam.class)) {
-                throw new IllegalStateException("MCP tool function parameter requires @McpFunctionParam or McpCallContext type: "
+                throw new IllegalStateException("MCP tool function parameter requires @McpFunctionParam, McpCallContext, or McpProgressReporter type: "
                         + method.toGenericString());
             }
         }
@@ -464,11 +465,16 @@ public class McpToolAnnotationScanner {
     private List<Parameter> bindableParameters(Method method) {
         List<Parameter> parameters = new ArrayList<>();
         for (Parameter parameter : method.getParameters()) {
-            if (!McpCallContext.class.isAssignableFrom(parameter.getType())) {
+            if (!isInfrastructureParameter(parameter)) {
                 parameters.add(parameter);
             }
         }
         return parameters;
+    }
+
+    private static boolean isInfrastructureParameter(Parameter parameter) {
+        return McpCallContext.class.isAssignableFrom(parameter.getType())
+                || McpProgressReporter.class.equals(parameter.getType());
     }
 
     private ObjectNode inputSchemaFor(Method method, String fallbackDescription) {
@@ -594,6 +600,17 @@ public class McpToolAnnotationScanner {
     private ObjectNode functionScopes(Class<?> toolClass, Method method) {
         McpToolScopes functionScopes = method.getAnnotation(McpToolScopes.class);
         return scopesJson(functionScopes == null ? toolClass.getAnnotation(McpToolScopes.class) : functionScopes);
+    }
+
+    private ObjectNode functionAnnotations(Class<?> toolClass, Method method, McpConfigureMapping configuration) {
+        ObjectNode annotations = functionScopes(toolClass, method);
+        if (configuration.timeoutMs() > 0) {
+            annotations.put("timeoutMs", configuration.timeoutMs());
+        }
+        if (Arrays.stream(method.getParameterTypes()).anyMatch(McpProgressReporter.class::equals)) {
+            annotations.put("progressReporter", true);
+        }
+        return annotations;
     }
 
     private ObjectNode scopesJson(McpToolScopes scopes) {

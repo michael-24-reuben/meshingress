@@ -2,6 +2,7 @@ package dev.mrk.meshingress.mcp.tools.annotation;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
+import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.annotation.*;
@@ -175,6 +176,10 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
             Parameter parameter = parameters[index];
             if (McpCallContext.class.isAssignableFrom(parameter.getType())) {
                 values[index] = context;
+                continue;
+            }
+            if (McpProgressReporter.class.equals(parameter.getType())) {
+                values[index] = context.progressReporter();
                 continue;
             }
 

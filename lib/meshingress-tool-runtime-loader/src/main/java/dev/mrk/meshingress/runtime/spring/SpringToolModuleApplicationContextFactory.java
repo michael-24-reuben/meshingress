@@ -3,8 +3,11 @@ package dev.mrk.meshingress.runtime.spring;
 import dev.mrk.meshingress.runtime.artifacts.ResolvedToolArtifact;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.env.MapPropertySource;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class SpringToolModuleApplicationContextFactory implements ToolModuleApplicationContextFactory {
 
@@ -13,6 +16,16 @@ public class SpringToolModuleApplicationContextFactory implements ToolModuleAppl
             ResolvedToolArtifact artifact,
             ClassLoader classLoader,
             ApplicationContext parentContext
+    ) {
+        return create(artifact, classLoader, parentContext, Map.of());
+    }
+
+    @Override
+    public AnnotationConfigApplicationContext create(
+            ResolvedToolArtifact artifact,
+            ClassLoader classLoader,
+            ApplicationContext parentContext,
+            Map<String, String> runtimeProperties
     ) {
         List<String> autoConfigurationClasses = AutoConfigurationImports.read(classLoader);
         if (autoConfigurationClasses.isEmpty()) {
@@ -24,6 +37,11 @@ public class SpringToolModuleApplicationContextFactory implements ToolModuleAppl
         context.setDisplayName("meshingress-tool-module:" + artifact.moduleId().value());
         if (parentContext != null) {
             context.setParent(parentContext);
+        }
+        if (runtimeProperties != null && !runtimeProperties.isEmpty()) {
+            context.getEnvironment().getPropertySources().addFirst(
+                    new MapPropertySource("meshingress-tool-provisioning", new LinkedHashMap<>(runtimeProperties))
+            );
         }
         for (String className : autoConfigurationClasses) {
             context.register(loadClass(classLoader, className));

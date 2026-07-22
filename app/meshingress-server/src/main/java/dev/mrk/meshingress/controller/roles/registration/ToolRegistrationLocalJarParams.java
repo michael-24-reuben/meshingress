@@ -8,6 +8,8 @@ public record ToolRegistrationLocalJarParams(
         String path,
         @Schema(description = "Legacy filesystem path to the local tool JAR. Prefer path for new callers.", example = "C:/tools/sample-tool.jar")
         String jarPath,
+        @Schema(description = "Optional filesystem path to the published Maven POM. If omitted, Meshingress uses the JAR's embedded Maven POM when available.", example = "C:/tools/sample-tool.pom")
+        String pomPath,
         @Schema(description = "Expected SHA-256 checksum for the JAR.", example = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
         String checksumSha256,
         @Schema(description = "Legacy SHA-256 checksum field. Prefer checksumSha256 for new callers.", example = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")

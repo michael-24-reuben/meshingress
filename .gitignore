@@ -1,17 +1,15 @@
 HELP.md
-target/
 temp/
 /repository/**
-/var/
 tools/
 
 
-.cache/**
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
 ### Architect ###
+architect/
 architect/**/env.yaml
 architect/**/env.local.yaml
 architect/**/secrets.json
@@ -48,8 +46,21 @@ build/
 .vscode/
 
 ### AI plugin - Antigravity ###
-.env
 .antigravity/
+
+### Toolspace ###
+# Exclude tool modules and their build artifacts
+toolspace/x-*
+
+### Secure Files ###
+*.pem
+*.env
+
+### Logging and Tracing ###
+*.log
+/var/
+.cache/**
+
 
 ### ETC ###
 /tools/**/*.jar
@@ -59,3 +70,11 @@ build/
 /lib/meshingress-codeql-scope-sample/vendor/
 /temp/*.jar
 /temp/cobalt-sources-*/
+
+/architect-v1/
+/generated/meshingress-html-client/v1.0/
+/generated/meshingress-java-client/
+/generated/meshingress-html-client/vendor/**
+
+### Temporary Exclusions ###
+/packages/

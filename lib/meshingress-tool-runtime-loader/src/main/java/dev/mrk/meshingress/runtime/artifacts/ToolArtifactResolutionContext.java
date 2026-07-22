@@ -12,7 +12,7 @@ public record ToolArtifactResolutionContext(
 ) {
     public ToolArtifactResolutionContext {
         localRepository = localRepository == null
-                ? Path.of(System.getProperty("user.home"), ".m2", "repository")
+                ? Path.of("repository", "maven")
                 : localRepository;
         cacheDirectory = cacheDirectory == null ? Path.of("data", "tool-artifacts") : cacheDirectory;
         allowedRepositories = allowedRepositories == null ? List.of() : List.copyOf(allowedRepositories);

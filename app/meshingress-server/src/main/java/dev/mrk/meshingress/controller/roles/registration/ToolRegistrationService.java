@@ -2,11 +2,13 @@ package dev.mrk.meshingress.controller.roles.registration;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.config.MeshingressProperties;
+import dev.mrk.meshingress.artifact.storage.ProjectRootResolver;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.server.install.RuntimeToolCache;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleId;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleStatus;
 import dev.mrk.meshingress.runtime.loader.ToolRuntimeLoader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -34,8 +36,10 @@ public class ToolRegistrationService {
     private final RuntimeToolCache runtimeToolCache;
     private final ToolRegistry toolRegistry;
     private final Map<ToolRegistrationPhase, ToolRegistrationStrategy> strategies;
+    private final Path projectRoot;
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
 
+    @Autowired
     public ToolRegistrationService(
             ObjectMapper objectMapper,
             MeshingressProperties properties,
@@ -45,12 +49,27 @@ public class ToolRegistrationService {
             ToolRegistry toolRegistry,
             List<ToolRegistrationStrategy> strategies
     ) {
+        this(objectMapper, properties, store, runtimeLoader, runtimeToolCache, toolRegistry, strategies,
+                ProjectRootResolver.resolve(ToolRegistrationService.class, null));
+    }
+
+    ToolRegistrationService(
+            ObjectMapper objectMapper,
+            MeshingressProperties properties,
+            ToolRegistrationStore store,
+            ToolRuntimeLoader runtimeLoader,
+            RuntimeToolCache runtimeToolCache,
+            ToolRegistry toolRegistry,
+            List<ToolRegistrationStrategy> strategies,
+            Path projectRoot
+    ) {
         this.objectMapper = objectMapper;
         this.properties = properties;
         this.store = store;
         this.runtimeLoader = runtimeLoader;
         this.runtimeToolCache = runtimeToolCache;
         this.toolRegistry = toolRegistry;
+        this.projectRoot = ProjectRootResolver.resolve(ToolRegistrationService.class, projectRoot);
         this.strategies = new EnumMap<>(ToolRegistrationPhase.class);
         for (ToolRegistrationStrategy strategy : strategies) {
             this.strategies.put(strategy.phase(), strategy);
@@ -235,8 +254,12 @@ public class ToolRegistrationService {
         if (runtimeCachePath.isBlank()) {
             return false;
         }
-        runtimeToolCache.remove(Path.of(runtimeCachePath));
-        return true;
+        try {
+            runtimeToolCache.remove(ProjectRootResolver.resolveRelative(projectRoot, runtimeCachePath));
+            return true;
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
     }
 
     private DeleteOutcome deleteMavenBundleRecord(ToolRegistrationRecord record) {
@@ -401,7 +424,8 @@ public class ToolRegistrationService {
         }
         return new LocalJarSpec(
                 firstText(localJar.path(), localJar.jarPath()),
-                firstText(localJar.checksumSha256(), localJar.sha256())
+                firstText(localJar.checksumSha256(), localJar.sha256()),
+                localJar.pomPath()
         );
     }
 

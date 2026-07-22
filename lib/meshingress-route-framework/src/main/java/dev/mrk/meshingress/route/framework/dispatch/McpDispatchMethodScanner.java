@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.route.framework.dispatch;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
 import dev.mrk.meshingress.route.annotations.McpDispatchParam;
@@ -73,12 +74,13 @@ public class McpDispatchMethodScanner {
 
     private void validateParameters(Method method) {
         for (Parameter parameter : method.getParameters()) {
-            if (McpCallContext.class.isAssignableFrom(parameter.getType())) {
+            if (McpCallContext.class.isAssignableFrom(parameter.getType())
+                    || McpProgressReporter.class.equals(parameter.getType())) {
                 continue;
             }
             McpDispatchParam dispatchParam = parameter.getAnnotation(McpDispatchParam.class);
             if (dispatchParam == null) {
-                throw new IllegalStateException("MCP dispatch parameter requires @McpDispatchParam or McpCallContext type: "
+                throw new IllegalStateException("MCP dispatch parameter requires @McpDispatchParam, McpCallContext, or McpProgressReporter type: "
                         + method.toGenericString());
             }
             Class<?> implementation = dispatchParam.implementation();

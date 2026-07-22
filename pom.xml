@@ -32,6 +32,7 @@
         <module>lib/meshingress-tool-annotations</module>
         <module>lib/meshingress-tool-framework</module>
         <module>lib/meshingress-tool-runtime-loader</module>
+        <module>lib/meshingress-tool-provisioning</module>
         <module>lib/meshingress-artifact-model</module>
         <module>lib/meshingress-artifact-storage</module>
         <module>lib/meshingress-artifact-security</module>
@@ -40,6 +41,9 @@
 
         <module>toolspace/helloworld</module>
         <module>toolspace/powershell-cli</module>
+        <module>toolspace/x-faster-whisper</module>
+        <module>packages/aegis</module>
+        <module>toolspace/x-open-ink-library</module>
     </modules>
 
     <properties>

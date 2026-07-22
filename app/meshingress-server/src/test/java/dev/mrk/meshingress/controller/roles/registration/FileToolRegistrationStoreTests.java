@@ -85,7 +85,7 @@ class FileToolRegistrationStoreTests {
     }
 
     private MeshingressProperties meshingressProperties() {
-        MeshingressProperties defaults = new MeshingressProperties(null, null, null, null, null, null, null, null, null, null);
+        MeshingressProperties defaults = new MeshingressProperties(null, null, null, null, null, null, null, null, null, null, null);
         MeshingressProperties.Repository defaultsRepository = defaults.repository();
         MeshingressProperties.Repository repository = new MeshingressProperties.Repository(
                 tempDir.resolve("repository").toString(),
@@ -107,7 +107,8 @@ class FileToolRegistrationStoreTests {
                 defaults.scopes(),
                 defaults.audit(),
                 defaults.secrets(),
-                repository
+                repository,
+                defaults.storage()
         );
     }
 

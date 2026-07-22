@@ -131,7 +131,7 @@ function Send-MeshingressArtifact {
     [Parameter(Mandatory = $true)] [string] $ArtifactId,
     [Parameter(Mandatory = $true)] [string] $Version,
     [Parameter(Mandatory = $true)] [string] $JarPath,
-    [string] $Type = 'GENERATED_TOOL_MODULE',
+    [string] $Type = 'TOOL_MODULE',
     [string] $Packaging = 'jar',
     [string[]] $RequestedScopes = @(),
     [string] $Role = 'uploader',
@@ -220,7 +220,7 @@ function Save-MeshingressArtifactResource {
     [Parameter(Mandatory = $true)] [string] $GroupId,
     [Parameter(Mandatory = $true)] [string] $ArtifactId,
     [Parameter(Mandatory = $true)] [string] $Version,
-    [Parameter(Mandatory = $true)] [ValidateSet('application.yaml', 'README.md')] [string] $ResourceName,
+    [Parameter(Mandatory = $true)] [ValidateSet('application.properties', 'README.md')] [string] $ResourceName,
     [Parameter(Mandatory = $true)] [string] $OutFile,
     [string] $Role = 'reviewer',
     [string] $Actor = 'manual-download'

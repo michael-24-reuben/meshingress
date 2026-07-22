@@ -6,6 +6,7 @@ import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.McpToolPatch;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.config.MeshingressProperties;
+import dev.mrk.meshingress.artifact.storage.ProjectRootResolver;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
 import dev.mrk.meshingress.mcp.tools.ToolCheckResult;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
@@ -105,16 +106,17 @@ class ToolRegistrationServiceTests {
     }
 
     @Test
-    void deleteDeactivatesPublicationRuntimeModuleAndRemovesRuntimeCache() {
+    void deleteDeactivatesPublicationRuntimeModuleAndRemovesRuntimeCache() throws Exception {
         ToolRegistrationStore store = new InMemoryToolRegistrationStore();
-        Path cachedJar = tempDir.resolve("runtime-cache").resolve("sample-module.jar");
+        Path projectRoot = projectRoot();
+        Path cachedJar = projectRoot.resolve("repository/runtime-cache/sample-module.jar");
         store.saveActive(new ToolRegistrationRecord(
                 "publication-reg-1",
                 "sample.tool",
                 ToolRegistrationPhase.STAGING,
                 ToolSourceKind.PUBLICATION_RECORD,
                 "active",
-                Map.of("runtimeCachePath", cachedJar.toString()),
+                Map.of("runtimeCachePath", ProjectRootResolver.relativize(projectRoot, cachedJar)),
                 "test",
                 "req-1",
                 OffsetDateTime.now(),
@@ -131,7 +133,8 @@ class ToolRegistrationServiceTests {
                 runtimeLoader,
                 runtimeToolCache,
                 new EmptyToolRegistry(),
-                List.of()
+                List.of(),
+                projectRoot
         );
 
         ObjectNode result = service.delete(
@@ -151,50 +154,58 @@ class ToolRegistrationServiceTests {
         assertThat(store.findActive("sample.tool")).isEmpty();
     }
 
-    private MeshingressProperties meshingressProperties(Path bundlePom) {
-        MeshingressProperties defaults = new MeshingressProperties(null, null, null, null, null, null, null, null, null, null);
-        MeshingressProperties.Tools defaultsTools = defaults.tools();
-        MeshingressProperties.Tools.Registration defaultsRegistration = defaultsTools.registration();
-        MeshingressProperties.Tools.Registration registration = new MeshingressProperties.Tools.Registration(
-                defaultsRegistration.enabled(),
-                defaultsRegistration.allowExperimental(),
-                defaultsRegistration.allowStaging(),
-                defaultsRegistration.allowBundle(),
-                defaultsRegistration.allowNativeHttp(),
-                defaultsRegistration.experimentalReplaceExisting(),
-                defaultsRegistration.allowExperimentalOverrideBundle(),
-                defaultsRegistration.allowExperimentalOverrideStaging(),
-                defaultsRegistration.allowStagingOverrideBundle(),
-                defaultsRegistration.allowOverrideNative(),
-                defaultsRegistration.stagingConflictPolicy(),
-                tempDir.resolve("tools").toString(),
-                tempDir.resolve("repository").toString(),
-                bundlePom.toString(),
-                defaultsRegistration.requireLocalJarChecksum(),
-                defaultsRegistration.requireMavenVersionPin(),
-                defaultsRegistration.requireApprovalForDynamicPhases()
+    @Test
+    void deleteDoesNotRemoveAnAbsolutePublicationRuntimeCachePath() throws Exception {
+        ToolRegistrationStore store = new InMemoryToolRegistrationStore();
+        Path projectRoot = projectRoot();
+        Path outsideJar = tempDir.resolve("outside-cache/sample-module.jar");
+        store.saveActive(new ToolRegistrationRecord(
+                "publication-reg-absolute",
+                "sample.tool",
+                ToolRegistrationPhase.STAGING,
+                ToolSourceKind.PUBLICATION_RECORD,
+                "active",
+                Map.of("runtimeCachePath", outsideJar.toString()),
+                "test",
+                "req-1",
+                OffsetDateTime.now(),
+                null,
+                "dev.mrk.tools:sample-module:0.0.1-SNAPSHOT",
+                List.of("sample.tool")
+        ));
+        RecordingToolRuntimeLoader runtimeLoader = new RecordingToolRuntimeLoader();
+        RecordingRuntimeToolCache runtimeToolCache = new RecordingRuntimeToolCache();
+        ToolRegistrationService service = new ToolRegistrationService(
+                new ObjectMapper(),
+                meshingressProperties(tempDir.resolve("pom.xml")),
+                store,
+                runtimeLoader,
+                runtimeToolCache,
+                new EmptyToolRegistry(),
+                List.of(),
+                projectRoot
         );
-        MeshingressProperties.Tools tools = new MeshingressProperties.Tools(
-                defaultsTools.registry(),
-                registration,
-                defaultsTools.allowList(),
-                defaultsTools.denyList(),
-                defaultsTools.defaultTimeout(),
-                defaultsTools.defaultAudit(),
-                defaultsTools.defaultDebugTrace()
+
+        ObjectNode result = service.delete(
+                new McpCallContext("Bearer dev-admin", null, null, "req-1"),
+                "sample.tool",
+                "disable"
         );
-        return new MeshingressProperties(
-                defaults.identity(),
-                defaults.mcp(),
-                tools,
-                defaults.dispatch(),
-                defaults.cache(),
-                defaults.security(),
-                defaults.scopes(),
-                defaults.audit(),
-                defaults.secrets(),
-                defaults.repository()
-        );
+
+        assertThat(result.path("runtimeCacheRemoved").asInt()).isZero();
+        assertThat(runtimeLoader.deactivatedModuleId.value()).isEqualTo("dev.mrk.tools:sample-module:0.0.1-SNAPSHOT");
+        assertThat(runtimeToolCache.removedPath).isNull();
+    }
+
+    private Path projectRoot() throws Exception {
+        Path projectRoot = tempDir.resolve("meshingress");
+        Files.createDirectories(projectRoot);
+        Files.writeString(projectRoot.resolve("pom.xml"), "<project><artifactId>meshingress</artifactId></project>");
+        return projectRoot;
+    }
+
+    private MeshingressProperties meshingressProperties(Path ignoredBundlePom) {
+        return new MeshingressProperties(null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static final class EmptyToolRuntimeLoader implements ToolRuntimeLoader {

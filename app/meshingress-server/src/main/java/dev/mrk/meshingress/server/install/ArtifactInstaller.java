@@ -5,6 +5,7 @@ import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.artifact.model.ArtifactPublicationRecord;
+import dev.mrk.meshingress.artifact.storage.ProjectRootResolver;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationRecord;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationStore;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationPhase;
@@ -27,6 +28,8 @@ import java.util.Map;
 @Service
 public class ArtifactInstaller {
 
+    private final Path projectRoot;
+
     private final PublicationRecordVerifier verifier;
     private final InstallPolicyEvaluator policyEvaluator;
     private final RuntimeToolCache runtimeToolCache;
@@ -48,6 +51,7 @@ public class ArtifactInstaller {
         this.runtimeLoader = runtimeLoader;
         this.registrationStore = registrationStore;
         this.toolRegistry = toolRegistry;
+        this.projectRoot = ProjectRootResolver.resolve(ArtifactInstaller.class, null);
     }
 
     public ToolPublicationInstallResult install(ArtifactPublicationRecord publication, String requestedToolId, McpCallContext context) {
@@ -68,7 +72,7 @@ public class ArtifactInstaller {
             source.put("artifactUri", publication.artifactUri());
             source.put("artifactSha256", publication.artifactChecksum().value());
             source.put("trustStatus", publication.trustStatus().name());
-            source.put("runtimeCachePath", cachedJar.toString());
+            source.put("runtimeCachePath", ProjectRootResolver.relativize(projectRoot, cachedJar));
             source.put("signatureKeyId", publication.signatureKeyId());
             source.put("signatureAlgorithm", publication.signatureAlgorithm());
             source.put("approvedScopes", String.join(",", publication.scopePolicy().approvedScopes()));

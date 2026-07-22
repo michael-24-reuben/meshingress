@@ -25,12 +25,16 @@ public class McpTransportDispatcher {
     }
 
     public Optional<JsonNode> dispatch(String payload, McpCallContext context) {
+        return dispatch(payload, McpInvocationFactory.http(context));
+    }
+
+    public Optional<JsonNode> dispatch(String payload, McpInvocationFactory invocationFactory) {
         JsonNode request;
         try {
             request = objectMapper.readTree(payload);
         } catch (JacksonException exception) {
             return Optional.of(responses.error(null, JsonRpcErrorCodes.PARSE_ERROR, "Parse error"));
         }
-        return dispatcher.dispatch(request, context);
+        return dispatcher.dispatch(request, invocationFactory);
     }
 }

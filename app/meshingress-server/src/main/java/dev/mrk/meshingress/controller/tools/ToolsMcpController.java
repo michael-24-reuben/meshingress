@@ -60,7 +60,6 @@ public class ToolsMcpController {
         if (name.isBlank()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params.name is required");
         }
-        log.info("MCP tools/call: name={} requestId={} sessionId={}", name, context.requestId(), context.sessionId());
         JsonNode arguments = params.path("arguments");
         if (arguments.isMissingNode() || arguments.isNull()) {
             arguments = objectMapper.createObjectNode();

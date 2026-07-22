@@ -13,3 +13,4 @@ public record MavenCoordinatesSpec(
         repositories = repositories == null ? List.of() : List.copyOf(repositories);
     }
 }
+

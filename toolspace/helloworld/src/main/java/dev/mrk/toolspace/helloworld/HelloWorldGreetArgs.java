@@ -8,10 +8,6 @@ import lombok.Getter;
 @McpInputSchema(description = "Greet a person by name")
 public final class HelloWorldGreetArgs {
 
-    @McpInputField(description = "The name of the person to greet")
+    @McpInputField(description = "The name of the person to greet", required = true)
     public String name;
-
-    public String getName() {
-        return name;
-    }
 }

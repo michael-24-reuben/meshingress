@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
 import dev.mrk.meshingress.route.annotations.McpDispatchParam;
@@ -13,6 +14,7 @@ import dev.mrk.meshingress.route.framework.dispatch.McpHandlerMethodInvoker;
 import dev.mrk.meshingress.route.framework.dispatch.McpReturnValueAdapter;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.McpCallContextArgumentResolver;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.McpDispatchParamArgumentResolver;
+import dev.mrk.meshingress.route.framework.dispatch.resolver.McpProgressReporterArgumentResolver;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
@@ -25,6 +27,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -105,6 +108,28 @@ class McpDispatchRouteFrameworkTests {
         assertTrue(exception.getMessage().contains("Duplicate MCP annotation mapping 'test/echo'"));
     }
 
+    @Test
+    void injectsAFreshProgressReporterWithoutMakingItAClientParameter() throws Exception {
+        ProgressHandler handler = new ProgressHandler();
+        McpDispatchRegistry registry = scan(handler);
+        McpHandlerMethodInvoker invoker = invoker();
+        JsonNode params = objectMapper.readTree("{}");
+
+        JsonNode firstResult = invoker.invoke(
+                registry.find("test/progress").orElseThrow(),
+                params,
+                new McpCallContext(null, null, null, null));
+        JsonNode secondResult = invoker.invoke(
+                registry.find("test/progress").orElseThrow(),
+                params,
+                new McpCallContext(null, null, null, null));
+
+        assertTrue(firstResult.get("reporterInjected").asBoolean());
+        assertTrue(secondResult.get("reporterInjected").asBoolean());
+        assertEquals(2, handler.reporters.size());
+        assertNotSame(handler.reporters.getFirst(), handler.reporters.getLast());
+    }
+
     private McpDispatchRegistry scan(Object... handlers) {
         return new McpDispatchMethodScanner().scan(List.of(handlers));
     }
@@ -114,6 +139,7 @@ class McpDispatchRouteFrameworkTests {
                 objectMapper,
                 List.of(
                         new McpCallContextArgumentResolver(),
+                        new McpProgressReporterArgumentResolver(),
                         new McpDispatchParamArgumentResolver(new TypedJsonArgumentBinder())
                 ),
                 new McpReturnValueAdapter()
@@ -168,6 +194,19 @@ class McpDispatchRouteFrameworkTests {
         @McpDispatchMethod("echo")
         Map<String, Object> echo(@McpDispatchParam("method") String method) {
             return Map.of("method", method);
+        }
+    }
+
+    @McpDispatchMapping("test")
+    static class ProgressHandler {
+
+        private final List<McpProgressReporter> reporters = new java.util.ArrayList<>();
+
+        @McpDispatchMethod("progress")
+        Map<String, Object> progress(McpProgressReporter progress) {
+            reporters.add(progress);
+            progress.complete("No-op progress reporter was injected");
+            return Map.of("reporterInjected", true);
         }
     }
 }

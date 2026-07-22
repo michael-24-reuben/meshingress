@@ -15,18 +15,7 @@
     <description>Meshingress Spring Boot MCP server</description>
 
     <dependencies>
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-tool-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-tool-annotations</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
+        <!-- Route Framework -->
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
             <artifactId>meshingress-route-framework</artifactId>
@@ -34,62 +23,81 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Tool API -->
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
             <artifactId>meshingress-tool-framework</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
             <artifactId>meshingress-tool-runtime-loader</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-provisioning</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
             <artifactId>meshingress-tool-api-manifest</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-artifact-model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-artifact-storage</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-artifact-security</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-artifact-publication</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-artifact-scope-scanner</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
             <artifactId>meshingress-tool-bundle</artifactId>
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Artifact Model -->
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-artifact-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-artifact-storage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-artifact-security</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-artifact-publication</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-artifact-scope-scanner</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
+        <!-- Config -->
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-config</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+
+        <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
@@ -188,13 +196,9 @@
             <artifactId>spring-boot-starter-validation-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-config</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
 
+        <!-- Excluded tool modules -->
+        <!-- Notice: These modules are excluded from the final artifact -->
     </dependencies>
 
     <build>

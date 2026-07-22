@@ -5,6 +5,9 @@ import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcResponses;
+import dev.mrk.meshingress.mcp.McpInvocation;
+import dev.mrk.meshingress.mcp.McpInvocationFactory;
+import dev.mrk.meshingress.mcp.audit.McpClientTraceService;
 import dev.mrk.meshingress.route.api.McpDispatchException;
 import dev.mrk.meshingress.route.framework.dispatch.McpDispatchRegistry;
 import dev.mrk.meshingress.security.McpAccessPolicyService;
@@ -29,6 +32,7 @@ public class McpDispatcher {
     private final McpDispatchExecutor dispatchExecutor;
     private final MeshingressProperties properties;
     private final McpAccessPolicyService accessPolicyService;
+    private final McpClientTraceService clientTraceService;
 
     public McpDispatcher(
             ObjectMapper objectMapper,
@@ -36,7 +40,8 @@ public class McpDispatcher {
             McpDispatchRegistry dispatchRegistry,
             McpDispatchExecutor dispatchExecutor,
             MeshingressProperties properties,
-            McpAccessPolicyService accessPolicyService
+            McpAccessPolicyService accessPolicyService,
+            McpClientTraceService clientTraceService
     ) {
         this.objectMapper = objectMapper;
         this.responses = responses;
@@ -44,27 +49,32 @@ public class McpDispatcher {
         this.dispatchExecutor = dispatchExecutor;
         this.properties = properties;
         this.accessPolicyService = accessPolicyService;
+        this.clientTraceService = clientTraceService;
     }
 
     public Optional<JsonNode> dispatch(JsonNode request, McpCallContext context) {
+        return dispatch(request, McpInvocationFactory.http(context));
+    }
+
+    public Optional<JsonNode> dispatch(JsonNode request, McpInvocationFactory invocationFactory) {
         if (request == null || request.isNull()) {
             return Optional.of(responses.error(null, JsonRpcErrorCodes.INVALID_REQUEST, "Invalid request"));
         }
         if (request.isArray()) {
-            return dispatchBatch((ArrayNode) request, context);
+            return dispatchBatch((ArrayNode) request, invocationFactory);
         }
-        JsonNode response = dispatchSingle(request, context);
+        JsonNode response = dispatchSingle(request, invocationFactory);
         return Optional.ofNullable(response);
     }
 
-    private Optional<JsonNode> dispatchBatch(ArrayNode requests, McpCallContext context) {
+    private Optional<JsonNode> dispatchBatch(ArrayNode requests, McpInvocationFactory invocationFactory) {
         if (requests.isEmpty()) {
             return Optional.of(responses.error(null, JsonRpcErrorCodes.INVALID_REQUEST, "Batch request must not be empty"));
         }
 
         ArrayNode batchResponse = objectMapper.createArrayNode();
         for (JsonNode singleRequest : requests) {
-            JsonNode response = dispatchSingle(singleRequest, context);
+            JsonNode response = dispatchSingle(singleRequest, invocationFactory);
             if (response != null) {
                 batchResponse.add(response);
             }
@@ -72,15 +82,19 @@ public class McpDispatcher {
         return batchResponse.isEmpty() ? Optional.empty() : Optional.of(batchResponse);
     }
 
-    private JsonNode dispatchSingle(JsonNode request, McpCallContext context) {
+    private JsonNode dispatchSingle(JsonNode request, McpInvocationFactory invocationFactory) {
         if (!request.isObject()) {
             return responses.error(null, JsonRpcErrorCodes.INVALID_REQUEST, "JSON-RPC request must be an object");
         }
+
+        McpInvocation invocation = invocationFactory.create(request);
+        McpCallContext context = invocation.context();
 
         JsonNode id = request.get("id");
         boolean notification = !request.has("id");
 
         try {
+            clientTraceService.record(request, context);
             if (!request.path("jsonrpc").asString("").equals("2.0")) {
                 throw new JsonRpcException(JsonRpcErrorCodes.INVALID_REQUEST, "jsonrpc must be \"2.0\"");
             }
@@ -91,7 +105,7 @@ public class McpDispatcher {
             }
 
             accessPolicyService.requireAuthenticated(context);
-            JsonNode result = dispatchMethod(method, request.path("params"), context);
+            JsonNode result = dispatchMethod(method, request.path("params"), invocation);
 
             return notification ? null : responses.success(id, result);
 
@@ -105,9 +119,9 @@ public class McpDispatcher {
         }
     }
 
-    private JsonNode dispatchMethod(String method, JsonNode params, McpCallContext context) {
+    private JsonNode dispatchMethod(String method, JsonNode params, McpInvocation invocation) {
         return dispatchRegistry.find(method)
-                .map(handler -> dispatchExecutor.execute(handler, params, context))
+                .map(handler -> dispatchExecutor.execute(handler, params, invocation))
                 .orElseThrow(() -> new JsonRpcException(JsonRpcErrorCodes.METHOD_NOT_FOUND, "Method not found"));
     }
 

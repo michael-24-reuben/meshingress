@@ -1,10 +1,7 @@
 package dev.mrk.toolspace.powershellcli;
 
 import dev.mrk.meshingress.scopes.McpToolScope;
-import dev.mrk.meshingress.toolmetadata.McpToolManifestDefinition;
-import dev.mrk.meshingress.toolmetadata.ToolLink;
-import dev.mrk.meshingress.toolmetadata.ToolProperty;
-import dev.mrk.meshingress.toolmetadata.ToolRequirement;
+import dev.mrk.meshingress.toolmetadata.*;
 
 import java.util.List;
 
@@ -53,15 +50,16 @@ public final class PowerShellCliManifest implements McpToolManifestDefinition {
     }
 
     @Override
-    public String readmeMarkdown() {
-        return """
+    public ToolReadme readme() {
+        return ToolReadme.inline("""
                 # PowerShell CLI
                 
                 Executes PowerShell scripts through the `cli.powershell.execute` MCP function.
                 
                 Native deployments require a PowerShell executable. By default, Meshingress uses `pwsh`.
                 Override this through `meshingress.powershell.executable` when needed.
-                Configure `resources/application.yaml` beside this artifact when a native deployment needs a host-specific PowerShell executable or timeout default.
-                """;
+                Configure `resources/application.properties` beside this artifact when a native deployment needs a host-specific PowerShell executable or timeout default.
+                """);
     }
+
 }

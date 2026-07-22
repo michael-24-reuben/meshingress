@@ -13,6 +13,7 @@ import dev.mrk.meshingress.runtime.registry.ToolModuleRegistration;
 import dev.mrk.meshingress.runtime.registry.ToolRegistrationBridge;
 import dev.mrk.meshingress.runtime.spring.ToolModuleApplicationContextFactory;
 import dev.mrk.meshingress.runtime.spring.ToolModuleClassLoaderFactory;
+import dev.mrk.meshingress.runtime.provisioning.ToolProvisioningGate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -33,6 +34,7 @@ public class DefaultToolRuntimeLoader implements ToolRuntimeLoader {
     private final ToolModuleHandlerFactory handlerFactory;
     private final ToolRegistrationBridge registrationBridge;
     private final ApplicationContext parentContext;
+    private final ToolProvisioningGate provisioningGate;
     private final Map<ToolModuleId, LoadedToolModule> loadedModules = new LinkedHashMap<>();
 
     public DefaultToolRuntimeLoader(
@@ -44,6 +46,28 @@ public class DefaultToolRuntimeLoader implements ToolRuntimeLoader {
             ToolRegistrationBridge registrationBridge,
             ApplicationContext parentContext
     ) {
+        this(
+                artifactResolver,
+                resolutionContext,
+                classLoaderFactory,
+                applicationContextFactory,
+                handlerFactory,
+                registrationBridge,
+                parentContext,
+                ToolProvisioningGate.none()
+        );
+    }
+
+    public DefaultToolRuntimeLoader(
+            ToolArtifactResolver artifactResolver,
+            ToolArtifactResolutionContext resolutionContext,
+            ToolModuleClassLoaderFactory classLoaderFactory,
+            ToolModuleApplicationContextFactory applicationContextFactory,
+            ToolModuleHandlerFactory handlerFactory,
+            ToolRegistrationBridge registrationBridge,
+            ApplicationContext parentContext,
+            ToolProvisioningGate provisioningGate
+    ) {
         this.artifactResolver = artifactResolver;
         this.resolutionContext = resolutionContext;
         this.classLoaderFactory = classLoaderFactory;
@@ -51,6 +75,7 @@ public class DefaultToolRuntimeLoader implements ToolRuntimeLoader {
         this.handlerFactory = handlerFactory;
         this.registrationBridge = registrationBridge;
         this.parentContext = parentContext;
+        this.provisioningGate = provisioningGate == null ? ToolProvisioningGate.none() : provisioningGate;
     }
 
     @Override
@@ -69,8 +94,9 @@ public class DefaultToolRuntimeLoader implements ToolRuntimeLoader {
         URLClassLoader classLoader = null;
         ConfigurableApplicationContext moduleContext = null;
         try {
+            Map<String, String> runtimeProperties = provisioningGate.requireReady(artifact);
             classLoader = classLoaderFactory.create(artifact);
-            moduleContext = applicationContextFactory.create(artifact, classLoader, parentContext);
+            moduleContext = applicationContextFactory.create(artifact, classLoader, parentContext, runtimeProperties);
             List<McpToolHandler> handlers = handlerFactory.handlers(moduleContext);
             if (handlers.isEmpty()) {
                 throw new IllegalStateException("Tool module did not expose any MCP tool handlers: " + artifact.moduleId().value());
