@@ -1,0 +1,3 @@
+package dev.mrk.meshingress.storage.workspace;
+
+enum WorkspaceState { STAGING, HANDOFF_QUEUED, HANDOFF_IN_PROGRESS, HANDOFF_FAILED, AVAILABLE, HANDED_OFF, EXPIRED, EXHAUSTED, DELETING, DELETED, FAILED }

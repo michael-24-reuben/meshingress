@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/mcp")
@@ -62,12 +63,18 @@ public class McpController {
             @Parameter(description = "Caller request correlation identifier.", example = "req-123")
             @RequestHeader(value = "X-Request-Id", required = false) String requestId
     ) {
-        LOGGER.info("=== MCP REQUEST START [http] requestId={} sessionId={} ===", requestId, sessionId);
-        McpCallContext context = new McpCallContext(authorization, roleHeader == null ? legacyAdminHeader : roleHeader, sessionId, requestId);
-        Optional<JsonNode> response = transportDispatcher.dispatch(body, context);
+        String effectiveSessionId = sessionId == null || sessionId.isBlank()
+                ? UUID.randomUUID().toString()
+                : sessionId;
+        McpCallContext context = new McpCallContext(authorization, roleHeader == null ? legacyAdminHeader : roleHeader, effectiveSessionId, requestId);
+        Optional<JsonNode> response = transportDispatcher.dispatch(body, McpInvocationFactory.http(context));
         return response
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+                .map(payload -> ResponseEntity.ok()
+                        .header("Mcp-Session-Id", effectiveSessionId)
+                        .body(payload))
+                .orElseGet(() -> ResponseEntity.noContent()
+                        .header("Mcp-Session-Id", effectiveSessionId)
+                        .build());
     }
 
     @McpRoute(id = "mcp.transport.get.v1", method = McpHttpMethod.GET, path = "/mcp")

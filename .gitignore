@@ -1,12 +1,9 @@
 HELP.md
-target/
 temp/
 /repository/**
-/var/
 tools/
 
 
-.cache/**
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -49,12 +46,20 @@ build/
 .vscode/
 
 ### AI plugin - Antigravity ###
-.env
 .antigravity/
 
 ### Toolspace ###
 # Exclude tool modules and their build artifacts
 toolspace/x-*
+
+### Secure Files ###
+*.pem
+*.env
+
+### Logging and Tracing ###
+*.log
+/var/
+.cache/**
 
 
 ### ETC ###
@@ -70,3 +75,6 @@ toolspace/x-*
 /generated/meshingress-html-client/v1.0/
 /generated/meshingress-java-client/
 /generated/meshingress-html-client/vendor/**
+
+### Temporary Exclusions ###
+/packages/

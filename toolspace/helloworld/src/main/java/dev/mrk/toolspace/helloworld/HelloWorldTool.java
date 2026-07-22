@@ -42,7 +42,7 @@ public class HelloWorldTool {
     )
     @McpFunction(value = "greet", description = "Greet the Person.")
     public DispatchExecutionResult call(HelloWorldGreetArgs arguments, McpCallContext context) {
-        String name = arguments.getName();
+        String name = arguments.name;
         PlainTextContent structured = new PlainTextContent("Hello, " + name + "!");
         structured.setTitle("Greeting");
 

@@ -201,7 +201,8 @@ class RuntimeToolCacheTests {
                         "local-dev-hmac",
                         "dev-repository-signing-key",
                         List.of()
-                )
+                ),
+                null
         );
     }
 

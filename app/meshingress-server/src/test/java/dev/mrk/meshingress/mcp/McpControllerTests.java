@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.mcp;
 
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
+import dev.mrk.meshingress.mcp.audit.McpClientTraceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
@@ -8,9 +9,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,6 +32,9 @@ class McpControllerTests {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private McpClientTraceService clientTraceService;
+
     @Test
     void mcpCorsPreflightAllowsBrowserToolClientOrigin() throws Exception {
         mockMvc.perform(options("/mcp")
@@ -43,7 +49,7 @@ class McpControllerTests {
 
     @Test
     void initializeReturnsToolCapabilities() throws Exception {
-        mockMvc.perform(post("/mcp")
+        MvcResult result = mockMvc.perform(post("/mcp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -64,7 +70,17 @@ class McpControllerTests {
                 .andExpect(jsonPath("$.jsonrpc", is("2.0")))
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.result.capabilities.tools.listChanged", is(true)))
-                .andExpect(jsonPath("$.result.serverInfo.name", is("meshingress")));
+                .andExpect(jsonPath("$.result.serverInfo.name", is("meshingress")))
+                .andExpect(header().exists("Mcp-Session-Id"))
+                .andReturn();
+
+        String sessionId = result.getResponse().getHeader("Mcp-Session-Id");
+        org.assertj.core.api.Assertions.assertThat(clientTraceService.profile(sessionId))
+                .hasValueSatisfying(profile -> {
+                    org.assertj.core.api.Assertions.assertThat(profile.name()).isEqualTo("test-client");
+                    org.assertj.core.api.Assertions.assertThat(profile.version()).isEqualTo("0.1.0");
+                    org.assertj.core.api.Assertions.assertThat(profile.protocolVersion()).isEqualTo("2025-11-25");
+                });
     }
 
     @Test
@@ -82,6 +98,25 @@ class McpControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.tools[0].name", is("architect.entries.list")))
                 .andExpect(jsonPath("$.result.tools[0].annotations.readOnlyHint", is(true)));
+    }
+
+    @Test
+    void toolsListExposesTheBundledOpenInkLibrarySourceTools() throws Exception {
+        mockMvc.perform(post("/mcp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 201,
+                                  "method": "tools/list",
+                                  "params": {}
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("toonverse.fetch")))
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("toonverse.search")))
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("toonverse.download-book")))
+                .andExpect(jsonPath("$.result.tools[*].name", not(hasItem("book.image.extract"))));
     }
 
     @Test

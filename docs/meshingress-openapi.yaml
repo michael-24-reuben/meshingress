@@ -5,6 +5,11 @@ info:
 servers:
 - url: http://100.121.15.11:4737
   description: Generated server url
+tags:
+- name: Artifact repository
+  description: "Upload, assess, review, publish, and retrieve Meshingress tool artifacts."
+- name: Workspace storage
+  description: Retrieve files published by a Meshingress tool workspace.
 paths:
   /mcp:
     get:
@@ -155,7 +160,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Upload an artifact
+      description: Stores a JAR or supported artifact under its repository coordinate
+        for later assessment and review.
       operationId: upload
       parameters:
       - name: groupId
@@ -200,24 +208,34 @@ paths:
             type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       requestBody:
         content:
           multipart/form-data:
@@ -231,7 +249,19 @@ paths:
               - file
       responses:
         "200":
-          description: OK
+          description: Artifact stored and its current lifecycle record returned.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "400":
+          description: "The coordinate, upload, or artifact metadata is invalid."
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: The caller does not have the uploader or admin repository role.
           content:
             '*/*':
               schema:
@@ -239,7 +269,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/revoke:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Revoke an artifact publication
+      description: Revokes a previously published artifact and records the supplied
+        review details.
       operationId: revoke
       parameters:
       - name: groupId
@@ -259,24 +292,34 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       requestBody:
         content:
           application/json:
@@ -284,7 +327,21 @@ paths:
               $ref: "#/components/schemas/ArtifactReviewRequest"
       responses:
         "200":
-          description: OK
+          description: Revoked artifact publication record.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+        "400":
+          description: The artifact is not currently published or the review decision
+            is invalid.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+        "403":
+          description: The caller does not have the publisher or admin repository
+            role.
           content:
             '*/*':
               schema:
@@ -292,7 +349,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/restore:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Restore an artifact
+      description: Restores an artifact lifecycle record using the supplied review
+        details.
       operationId: restore
       parameters:
       - name: groupId
@@ -312,24 +372,34 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       requestBody:
         content:
           application/json:
@@ -337,7 +407,19 @@ paths:
               $ref: "#/components/schemas/ArtifactReviewRequest"
       responses:
         "200":
-          description: OK
+          description: Artifact record after restoration.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "400":
+          description: The coordinate or review decision is invalid.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: Only the admin repository role can restore artifacts.
           content:
             '*/*':
               schema:
@@ -345,7 +427,9 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/reject:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Reject an assessed artifact
+      description: Records a rejection decision. The artifact must be assessed first.
       operationId: reject
       parameters:
       - name: groupId
@@ -365,24 +449,34 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       requestBody:
         content:
           application/json:
@@ -390,7 +484,20 @@ paths:
               $ref: "#/components/schemas/ArtifactReviewRequest"
       responses:
         "200":
-          description: OK
+          description: Artifact record after rejection.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "400":
+          description: The artifact is not ready for rejection or the review decision
+            is invalid.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: The caller does not have the reviewer or admin repository role.
           content:
             '*/*':
               schema:
@@ -398,7 +505,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/publish:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Publish an approved artifact
+      description: Creates the signed publication record for an artifact that is eligible
+        for publication.
       operationId: publish
       parameters:
       - name: groupId
@@ -418,27 +528,50 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Signed artifact publication record.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+        "400":
+          description: The artifact is not ready or eligible for publication.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+        "403":
+          description: The caller does not have the publisher or admin repository
+            role.
           content:
             '*/*':
               schema:
@@ -446,7 +579,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/delete:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Mark an artifact deleted
+      description: Records a deletion decision for an artifact without removing its
+        lifecycle evidence.
       operationId: delete_1
       parameters:
       - name: groupId
@@ -466,24 +602,34 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       requestBody:
         content:
           application/json:
@@ -491,7 +637,19 @@ paths:
               $ref: "#/components/schemas/ArtifactReviewRequest"
       responses:
         "200":
-          description: OK
+          description: Artifact record after deletion.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "400":
+          description: The coordinate or review decision is invalid.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: Only the admin repository role can delete artifacts.
           content:
             '*/*':
               schema:
@@ -499,7 +657,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/assess:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Assess an artifact
+      description: Runs the configured assessment pipeline and records its resulting
+        lifecycle state.
       operationId: assess
       parameters:
       - name: groupId
@@ -519,27 +680,50 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Artifact record after assessment.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "400":
+          description: The coordinate is invalid or the assessment request cannot
+            be completed.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: The caller does not have the reviewer or admin repository role.
           content:
             '*/*':
               schema:
@@ -547,7 +731,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/approve:
     post:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Approve an assessed artifact
+      description: Records an approval decision and its allowed or denied scopes.
+        The artifact must be assessed first.
       operationId: approve
       parameters:
       - name: groupId
@@ -567,24 +754,34 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       requestBody:
         content:
           application/json:
@@ -592,15 +789,117 @@ paths:
               $ref: "#/components/schemas/ArtifactReviewRequest"
       responses:
         "200":
-          description: OK
+          description: Artifact record after approval.
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
+        "400":
+          description: The artifact is not ready for approval or the review decision
+            is invalid.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: The caller does not have the reviewer or admin repository role.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+  /storage/{sessionId}/{requestId}/files/{relativePath}:
+    get:
+      tags:
+      - Workspace storage
+      summary: Download a workspace file
+      description: Streams a published workspace file as an attachment. Byte-range
+        retrieval is not supported.
+      operationId: get_1
+      parameters:
+      - name: sessionId
+        in: path
+        description: Workspace session identifier.
+        required: true
+        schema:
+          type: string
+      - name: requestId
+        in: path
+        description: Workspace request identifier.
+        required: true
+        schema:
+          type: string
+      - name: relativePath
+        in: path
+        description: Relative path of the file inside the workspace.
+        required: true
+        schema:
+          type: string
+      - name: Range
+        in: header
+        description: Not supported. Supplying this header returns 416.
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "File stream with content type, length, attachment filename,\
+            \ no-store cache policy, and nosniff headers."
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
+        "404":
+          description: The workspace or requested file is unavailable.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
+        "416":
+          description: A Range header was supplied; partial-content retrieval is not
+            supported.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
+    head:
+      tags:
+      - Workspace storage
+      summary: Inspect a workspace file
+      description: Returns the file metadata headers without transferring the file
+        body.
+      operationId: head
+      parameters:
+      - name: sessionId
+        in: path
+        description: Workspace session identifier.
+        required: true
+        schema:
+          type: string
+      - name: requestId
+        in: path
+        description: Workspace request identifier.
+        required: true
+        schema:
+          type: string
+      - name: relativePath
+        in: path
+        description: Relative path of the file inside the workspace.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "File metadata headers, including content type, length, and\
+            \ attachment filename."
+        "404":
+          description: The workspace or requested file is unavailable.
   /artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}:
     get:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Download an artifact resource
+      description: "Downloads one named text resource packaged with an artifact, such\
+        \ as its metadata or README."
       operationId: resource
       parameters:
       - name: groupId
@@ -625,27 +924,59 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Named artifact resource attachment.
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: The artifact coordinate is invalid or the resource could not
+            be prepared.
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: The caller does not have a repository role that can read artifacts.
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: No resource with the requested name exists for this artifact.
           content:
             text/plain:
               schema:
@@ -654,7 +985,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/publication:
     get:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Get an artifact publication
+      description: "Returns the signed publication record, including eligibility and\
+        \ revocation state, for one artifact coordinate."
       operationId: publication
       parameters:
       - name: groupId
@@ -674,27 +1008,49 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Artifact publication record.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+        "400":
+          description: The artifact coordinate is invalid or unavailable.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactPublicationRecord"
+        "403":
+          description: The caller does not have a repository role that can read artifacts.
           content:
             '*/*':
               schema:
@@ -702,7 +1058,10 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/metadata:
     get:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Get artifact metadata
+      description: "Returns the current lifecycle, checksum, scope, and assessment\
+        \ metadata for one artifact coordinate."
       operationId: metadata
       parameters:
       - name: groupId
@@ -722,27 +1081,49 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Current artifact record.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "400":
+          description: The artifact coordinate is invalid or unavailable.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: The caller does not have a repository role that can read artifacts.
           content:
             '*/*':
               schema:
@@ -750,7 +1131,9 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/file:
     get:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Download an artifact file
+      description: Downloads the stored artifact binary as an attachment.
       operationId: file
       parameters:
       - name: groupId
@@ -770,27 +1153,52 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Artifact binary attachment.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: The artifact coordinate is invalid or the download could not
+            be prepared.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: The caller does not have a repository role that can read artifacts.
           content:
             application/octet-stream:
               schema:
@@ -799,7 +1207,9 @@ paths:
   /artifact/{groupId}/{artifactId}/{version}/assessment:
     get:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: Get assessment results
+      description: Returns scanner results recorded for one artifact coordinate.
       operationId: assessment
       parameters:
       - name: groupId
@@ -819,27 +1229,53 @@ paths:
           type: string
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Scanner result list.
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScannerResult"
+        "400":
+          description: The artifact coordinate is invalid or unavailable.
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScannerResult"
+        "403":
+          description: The caller does not have a repository role that can read artifacts.
           content:
             '*/*':
               schema:
@@ -849,32 +1285,53 @@ paths:
   /artifact/reviews/pending:
     get:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: List pending artifact reviews
+      description: Lists artifacts that require repository review before approval
+        and publication.
       operationId: pendingReviewQueue
       parameters:
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Pending review queue.
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArtifactReviewQueueItem"
+        "403":
+          description: The caller does not have a repository role that can read artifacts.
           content:
             '*/*':
               schema:
@@ -884,32 +1341,52 @@ paths:
   /artifact/jars:
     get:
       tags:
-      - artifact-controller
+      - Artifact repository
+      summary: List uploaded JAR artifacts
+      description: Lists metadata for JAR artifacts known to the repository.
       operationId: uploadedJarMetadata
       parameters:
       - name: Authorization
         in: header
+        description: Optional bearer credential propagated with the repository request.
         required: false
         schema:
           type: string
+        example: Bearer <token>
       - name: X-Repository-Role
         in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
         required: false
         schema:
           type: string
+        example: reviewer
       - name: X-Repository-Actor
         in: header
+        description: Optional caller identity recorded with the repository action.
         required: false
         schema:
           type: string
+        example: release-bot
       - name: X-Request-Id
         in: header
+        description: Optional caller correlation identifier.
         required: false
         schema:
           type: string
+        example: req-123
       responses:
         "200":
-          description: OK
+          description: Artifact metadata list.
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ArtifactRecord"
+        "403":
+          description: The caller does not have a repository role that can read artifacts.
           content:
             '*/*':
               schema:
@@ -1302,8 +1779,8 @@ components:
           example: C:/tools/sample-tool.jar
         pomPath:
           type: string
-          description: Optional filesystem path to the published Maven POM. If omitted,
-            Meshingress uses the JAR's embedded Maven POM when available.
+          description: "Optional filesystem path to the published Maven POM. If omitted,\
+            \ Meshingress uses the JAR's embedded Maven POM when available."
           example: C:/tools/sample-tool.pom
         checksumSha256:
           type: string
@@ -1314,6 +1791,32 @@ components:
           description: Legacy SHA-256 checksum field. Prefer checksumSha256 for new
             callers.
           example: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    ToolRegistrationMavenParams:
+      type: object
+      description: Maven coordinate registration source for a runtime tool module.
+      properties:
+        groupId:
+          type: string
+          description: Maven group id.
+          example: dev.mrk.toolspace
+        artifactId:
+          type: string
+          description: Maven artifact id.
+          example: sample-tool
+        version:
+          type: string
+          description: Maven artifact version.
+          example: 0.0.1
+        repositories:
+          type: array
+          description: Optional repository URLs to search in addition to the configured
+            local repository.
+          items:
+            type: string
+      required:
+      - artifactId
+      - groupId
+      - version
     ToolRegistrationNativeParams:
       type: object
       description: Native built-in registration source.
@@ -1351,6 +1854,9 @@ components:
         localJar:
           $ref: "#/components/schemas/ToolRegistrationLocalJarParams"
           description: Local JAR source details.
+        maven:
+          $ref: "#/components/schemas/ToolRegistrationMavenParams"
+          description: Maven coordinate source details.
         bundle:
           $ref: "#/components/schemas/ToolRegistrationBundleParams"
           description: Bundle source details.
@@ -1832,40 +2338,7 @@ components:
           type: boolean
         float:
           type: boolean
-        int:
-          type: boolean
-        long:
-          type: boolean
-        string:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        short:
-          type: boolean
-        boolean:
-          type: boolean
-        double:
-          type: boolean
-        binary:
-          type: boolean
-        pojo:
-          type: boolean
         number:
-          type: boolean
-        missingNode:
-          type: boolean
-        bigInteger:
-          type: boolean
-        valueNode:
-          type: boolean
-        bigDecimal:
-          type: boolean
-        integralNumber:
-          type: boolean
-        floatingPointNumber:
-          type: boolean
-        container:
           type: boolean
         nodeType:
           type: string
@@ -1879,6 +2352,39 @@ components:
           - OBJECT
           - POJO
           - STRING
+        integralNumber:
+          type: boolean
+        container:
+          type: boolean
+        bigDecimal:
+          type: boolean
+        missingNode:
+          type: boolean
+        valueNode:
+          type: boolean
+        bigInteger:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        string:
+          type: boolean
+        short:
+          type: boolean
+        int:
+          type: boolean
+        boolean:
+          type: boolean
+        double:
+          type: boolean
+        textual:
+          type: boolean
+          deprecated: true
+        long:
+          type: boolean
+        binary:
+          type: boolean
+        pojo:
+          type: boolean
         embeddedValue:
           type: boolean
     ArtifactFileEntry:
@@ -1971,6 +2477,7 @@ components:
           type: string
         notes:
           type: string
+    StreamingResponseBody: {}
     Finding:
       type: object
       properties:

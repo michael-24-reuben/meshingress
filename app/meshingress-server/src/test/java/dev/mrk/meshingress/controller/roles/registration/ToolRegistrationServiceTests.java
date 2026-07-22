@@ -205,7 +205,7 @@ class ToolRegistrationServiceTests {
     }
 
     private MeshingressProperties meshingressProperties(Path ignoredBundlePom) {
-        return new MeshingressProperties(null, null, null, null, null, null, null, null, null, null);
+        return new MeshingressProperties(null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static final class EmptyToolRuntimeLoader implements ToolRuntimeLoader {

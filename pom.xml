@@ -42,6 +42,8 @@
         <module>toolspace/helloworld</module>
         <module>toolspace/powershell-cli</module>
         <module>toolspace/x-faster-whisper</module>
+        <module>packages/aegis</module>
+        <module>toolspace/x-open-ink-library</module>
     </modules>
 
     <properties>

@@ -180,7 +180,7 @@ class BundleToolRegistrationStrategyTests {
     }
 
     private MeshingressProperties properties(Path localRoot, Path bundlePom) {
-        MeshingressProperties defaults = new MeshingressProperties(null, null, null, null, null, null, null, null, null, null);
+        MeshingressProperties defaults = new MeshingressProperties(null, null, null, null, null, null, null, null, null, null, null);
         MeshingressProperties.Tools defaultsTools = defaults.tools();
         MeshingressProperties.Tools.Registration registration = defaultsTools.registration();
         MeshingressProperties.Tools.Registration configuredRegistration = new MeshingressProperties.Tools.Registration(
@@ -220,7 +220,8 @@ class BundleToolRegistrationStrategyTests {
                 defaults.scopes(),
                 defaults.audit(),
                 defaults.secrets(),
-                defaults.repository()
+                defaults.repository(),
+                defaults.storage()
         );
     }
 }

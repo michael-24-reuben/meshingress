@@ -13,6 +13,7 @@ import dev.mrk.meshingress.route.framework.dispatch.McpReturnValueAdapter;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.McpCallContextArgumentResolver;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.McpDispatchArgumentResolver;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.McpDispatchParamArgumentResolver;
+import dev.mrk.meshingress.route.framework.dispatch.resolver.McpProgressReporterArgumentResolver;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -43,6 +44,7 @@ public class McpRouteConfiguration {
         TypedJsonArgumentBinder binder = new TypedJsonArgumentBinder();
         List<McpDispatchArgumentResolver> resolvers = List.of(
                 new McpCallContextArgumentResolver(),
+                new McpProgressReporterArgumentResolver(),
                 new McpDispatchParamArgumentResolver(binder)
         );
         return new McpHandlerMethodInvoker(objectMapper, resolvers, new McpReturnValueAdapter());
