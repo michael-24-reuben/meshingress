@@ -1,17 +1,30 @@
 import fs from "node:fs";
 import path from "node:path";
 
+const socketUrl = process.env.MESHINGRESS_MCP_WS_URL ?? "ws://100.121.15.11:4737/mcp/ws";
+const bookName = process.env.MESHINGRESS_BOOK_NAME ?? "solo leveling";
+const minChapterNumber = integerEnvironment("MESHINGRESS_MIN_CHAPTER", 0);
+const maxChapterNumber = integerEnvironment("MESHINGRESS_MAX_CHAPTER", 3);
+const ttlSeconds = integerEnvironment("MESHINGRESS_TTL_SECONDS", 86400);
+const maxRequests = integerEnvironment("MESHINGRESS_MAX_REQUESTS", 50000);
+const monitorSeconds = integerEnvironment("MESHINGRESS_MONITOR_SECONDS", 900);
+const terminalPublicationStates = new Set(["COMPLETED", "FAILED", "AVAILABLE", "HANDED_OFF", "HANDOFF_FAILED"]);
 const startedAt = new Date();
 let timestamp = startedAt.toISOString();
-const downloadCallId = "solo-leveling-0-202";
+const downloadCallId = `download-${timestamp.replace(/[:.]/g, "-")}`;
 const publicationCallPrefix = "publication-status-";
 let publicationPoll = null;
+let publicationDeadline = null;
 let publicationWorkspace = null;
 let lastPublicationState = null;
 
-console.log("> Tool call started at ", timestamp);
+if (maxChapterNumber < minChapterNumber) {
+    throw new Error("MESHINGRESS_MAX_CHAPTER must be greater than or equal to MESHINGRESS_MIN_CHAPTER.");
+}
 
-const socket = new WebSocket("ws://100.121.15.11:4737/mcp/ws");
+console.log(`> Delegated tool call started at ${timestamp} | ${bookName} chapters ${minChapterNumber}-${maxChapterNumber}`);
+
+const socket = new WebSocket(socketUrl);
 
 socket.addEventListener("open", () => {
     socket.send(JSON.stringify({
@@ -21,11 +34,11 @@ socket.addEventListener("open", () => {
         "params": {
             "name": "toonverse.download-book",
             "arguments": {
-                "name": "solo leveling",
-                "minChapterNumber": 0,
-                "maxChapterNumber": 5,
-                "ttlSeconds": 86400,
-                "maxRequests": 50000
+                "name": bookName,
+                "minChapterNumber": minChapterNumber,
+                "maxChapterNumber": maxChapterNumber,
+                "ttlSeconds": ttlSeconds,
+                "maxRequests": maxRequests
             }
         }
     }));
@@ -66,6 +79,12 @@ socket.addEventListener("error", error => {
     fs.appendFileSync(errFile, `${JSON.stringify(error)}\n`, "utf8");
 });
 
+socket.addEventListener("close", event => {
+    if (publicationPoll) clearInterval(publicationPoll);
+    if (publicationDeadline) clearTimeout(publicationDeadline);
+    console.log(`[socket] closed ${event.code}${event.reason ? ` | ${event.reason}` : ""}`);
+});
+
 function printResponse(response) {
     if (response.method === "notifications/progress") {
         const progress = response.params.progress;
@@ -87,8 +106,8 @@ function printResponse(response) {
             return;
         }
 
-        const download = result.structuredContent;
-        console.log(`[completed] ${download.chapterCount} chapters, ${download.pageCount} pages | ${elapsedSeconds}s`);
+        const download = result.structuredContent ?? {};
+        console.log(`[accepted] ${download.chapterCount ?? 0} chapters, ${download.pageCount ?? 0} pages | ${elapsedSeconds}s`);
     }
 }
 
@@ -109,6 +128,10 @@ function beginPublicationMonitoring(response) {
     console.log(`[publication] ${workspace.publicationState ?? "UNKNOWN"} | monitoring ${workspace.sessionId}/${workspace.requestId}`);
     pollPublicationStatus();
     publicationPoll = setInterval(pollPublicationStatus, 1_000);
+    publicationDeadline = setTimeout(() => {
+        console.error(`[publication] monitoring timed out after ${monitorSeconds}s.`);
+        socket.close(1011, "Publication monitor timeout");
+    }, monitorSeconds * 1_000);
 }
 
 function pollPublicationStatus() {
@@ -138,13 +161,21 @@ function reportPublicationStatus(response) {
         return;
     }
     if (status.state !== lastPublicationState) {
-        const suffix = status.lastError ? ` | ${status.lastError}` : "";
+        const error = status.lastError ?? status.error;
+        const suffix = error ? ` | ${error}` : "";
         console.log(`[publication] ${status.state} | attempts ${status.attempts ?? 0}${suffix}`);
         lastPublicationState = status.state;
     }
-    if (["HANDED_OFF", "AVAILABLE", "HANDOFF_FAILED", "FAILED"].includes(status.state)) {
+    if (terminalPublicationStates.has(status.state)) {
         if (publicationPoll) clearInterval(publicationPoll);
+        if (publicationDeadline) clearTimeout(publicationDeadline);
         socket.close(1000, `Publication ${status.state}`);
     }
 }
 
+function integerEnvironment(name, fallback) {
+    const value = process.env[name];
+    if (value === undefined || value === "") return fallback;
+    if (!/^-?\d+$/.test(value)) throw new Error(`${name} must be an integer.`);
+    return Number.parseInt(value, 10);
+}

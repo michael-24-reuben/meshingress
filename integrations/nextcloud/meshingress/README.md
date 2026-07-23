@@ -1,115 +1,85 @@
-# Meshingress Nextcloud App
+# Meshingress Nextcloud delegated workspaces
 
-The `meshingress` app owns `Workspace/Meshingress/` and is the external provider for:
+This is the current Nextcloud app source. `../meshingress-v1/` is preserved only as the prior implementation reference and is not part of this app's runtime.
 
-```properties
-meshingress.storage.lifecycle=delegated-external
-```
-
-New integrations use the reserved-workspace API. Nextcloud owns delegated media bytes; Meshingress sends only native tool output and HTTPS source references.
-
-## Authentication
-
-Every request requires an authenticated Nextcloud user and:
+Meshingress sends native metadata and credential-free HTTPS source references. Nextcloud owns the download, retry, storage, and final manifest.
 
 ```text
-OCS-APIRequest: true
+RESERVE -> OPEN -> [native files | source batches]* -> SEALED -> QUEUED -> RUNNING -> COMPLETED | FAILED
 ```
 
-Every reservation mutation also requires a stable lowercase `X-Meshingress-Tool-Id` header. The app derives workspace ownership and tool identity from authentication plus that header; request JSON cannot override them.
+`SEALED` is durable before worker wake-up. The dedicated worker also scans sealed records, so a failed enqueue cannot strand a workspace.
 
-## Current reserved-workspace API
+## OCS routes
+
+All routes require an authenticated Nextcloud user and `OCS-APIRequest: true`. Mutations also require a stable lowercase `X-Meshingress-Tool-Id` header.
 
 ```text
 POST /ocs/v2.php/apps/meshingress/api/v1/delegated-workspaces?format=json
 PUT  /ocs/v2.php/apps/meshingress/api/v1/delegated-workspaces/{workspaceId}/files?format=json
 POST /ocs/v2.php/apps/meshingress/api/v1/delegated-workspaces/{workspaceId}/sources?format=json
 POST /ocs/v2.php/apps/meshingress/api/v1/delegated-workspaces/{workspaceId}/seal?format=json
+GET  /ocs/v2.php/apps/meshingress/api/v1/delegated-workspaces/{workspaceId}?format=json
 GET  /ocs/v2.php/apps/meshingress/api/v1/delegated-workspaces/by-request/{requestId}?format=json
 ```
 
-### 1. Reserve
+`requestId` is required when reserving and is the opaque managed workspace ID. Retrying the same reservation is idempotent for the same authenticated user and tool.
 
 ```json
 {
-  "sessionId": "tool-session-123",
-  "requestId": "req_book_123"
+  "requestId": "req_book_123",
+  "sessionId": "optional-mcp-session"
 }
 ```
 
-The request ID is the opaque workspace ID and determines the managed root:
-
-```text
-Workspace/Meshingress/storage/<tool-id>/req_book_123/
-```
-
-The response is an OPEN workspace with `workspaceId`, `workspaceUri`, `sessionId`, `requestId`, `toolId`, `sourceCount`, and `createdAt`.
-
-### 2. Upload native output
-
-Use JSON rather than a raw request body because Nextcloud 34 does not expose raw OCS controller content publicly:
+While the workspace is `OPEN`, native files and source batches can be posted in either order. Native files use JSON/Base64 because Nextcloud 34 does not expose a raw OCS request body to this controller.
 
 ```json
 {
   "path": "book.json",
   "contentType": "application/json",
-  "contentBase64": "eyJ0eXBlIjoib3Blbi1pbmsuYm9vay92MSJ9Cg=="
+  "contentBase64": "eyJ0eXBlIjoib3Blbi1pbmsuYm9rIn0="
 }
 ```
 
-`path` must be a relative file path. `manifest.json` and `manifest-nci_*.json` are reserved. Native files and delegated source paths cannot collide.
-
-### 3. Append delegated sources
+Delegated sources have explicit destinations. `contentType`, `expectedByteSize`, and `expectedSha256` are optional per-source configuration; the worker verifies supplied size and digest before completing the source.
 
 ```json
 {
   "sources": [
     {
-      "url": "https://source.example.com/chapters/001/page-001.jpg",
-      "path": "chapters/0001/001.jpg"
+      "url": "https://source.example/chapters/001/page-001.jpg",
+      "path": "chapters/0001/001.jpg",
+      "contentType": "image/jpeg",
+      "expectedByteSize": 184920,
+      "expectedSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     }
   ]
 }
 ```
 
-URLs must be credential-free HTTPS URLs. Paths are relative, explicit, and validated atomically as a batch. Appending sources does not start the worker.
+The append response assigns a durable `sourceId` for each accepted path. It is an audit/retry correlation value; callers do not choose it.
 
-### 4. Seal and poll
+The app accepts only credential-free HTTPS URLs and relative, traversal-free file paths. `manifest.json` is reserved. A source succeeds independently and remains complete across later retries; a source has three attempts. If any source exhausts its attempts, the workspace becomes `FAILED` with a safe error. On success the app writes `manifest.json` and returns the same reader-ready manifest from status polling.
 
-`POST .../{workspaceId}/seal` makes the reservation immutable and creates exactly one durable source-import job. Poll the `by-request` endpoint. It returns queued/running/failed workspace state and, on success, the canonical `meshingress.tool-storage-manifest/v1` manifest.
+## Worker
 
-The final manifest contains native files and Nextcloud-downloaded sources together. It has no `expiresAt`, because Nextcloud owns the content.
-
-## Legacy compatibility API
-
-The endpoints below remain available for existing clients only. They must not be used by new `delegated-external` integrations.
-
-```text
-POST /ocs/v2.php/apps/meshingress/api/v1/workspace/initialize?format=json
-POST /ocs/v2.php/apps/meshingress/api/v1/source-imports?format=json
-GET  /ocs/v2.php/apps/meshingress/api/v1/source-imports/{jobId}?format=json
-```
-
-The legacy multi-source form queues a job immediately and may be paired with direct WebDAV native-file uploads. It will remain until a separately announced compatibility/deprecation decision.
-
-## Generated smoke test
-
-`generated/meshingress-nextcloud-tool-calling/nextcloud-upload-test.js` exercises reserve -> native upload -> source append -> seal -> poll. It requires an environment value rather than an inline password:
+The background job is only a wake-up. For predictable processing, run the dedicated durable scanner:
 
 ```powershell
-$env:NEXTCLOUD_PRIMARY_AUTH = 'Basic <base64(userId:appPassword)>'
-node generated/meshingress-nextcloud-tool-calling/nextcloud-upload-test.js
+php occ meshingress:workspace:work --watch --interval=1 --no-interaction --quiet
 ```
 
-## Server-side installation
+It claims one `SEALED` or `QUEUED` record at a time. A stopped process leaves a 15-minute lease; a later scanner safely reclaims it. This protects against both generic Nextcloud queue starvation and duplicate wake-ups.
 
-Use `install-nextcloud-app.js` from a machine with Node.js, OpenSSH `ssh`/`scp`, and SSH-agent access to the host.
+## Installation
+
+The included helper is deliberately deploy-only when invoked. It uses SSH-agent authentication and refuses to overwrite an installed app unless `--replace-existing` is explicit. It does not restart Nextcloud or embed credentials.
 
 ```powershell
 $env:MESHINGRESS_NEXTCLOUD_DEPLOY_HOST = 'nextcloud-host.example'
 $env:MESHINGRESS_NEXTCLOUD_DEPLOY_USER = 'linux-user'
-$env:MESHINGRESS_NEXTCLOUD_DEPLOY_CONTAINER = 'nextcloud-app.v1'
 node integrations/nextcloud/meshingress/install-nextcloud-app.js --replace-existing
 ```
 
-The installer stages/lints the app, applies migrations, refreshes the managed source-import worker, and preserves unrelated cron entries. Restart the Nextcloud app container after replacement when the active PHP route cache has not reloaded the new routes.
+After deployment, start the dedicated worker through the host's service manager or an explicitly reviewed supervisor configuration. Do not rely on the caller process to stream or retain source bytes.

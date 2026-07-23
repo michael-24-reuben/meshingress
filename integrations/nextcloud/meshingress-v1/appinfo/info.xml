@@ -3,9 +3,9 @@
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
   <id>meshingress</id>
   <name>Meshingress</name>
-  <summary>Sealed workspaces with Nextcloud-owned source imports.</summary>
-  <description>Owns a single delegated-source workspace lifecycle: reserve, add native files and HTTPS sources, seal, process, and publish a reader-ready manifest.</description>
-  <version>1.0.0</version>
+  <summary>Managed Meshingress workspaces and delegated source imports.</summary>
+  <description>Creates and manages Meshingress workspaces, accepts delegated multi-source HTTPS downloads, and publishes a canonical storage manifest from the completed Nextcloud-owned workspace.</description>
+  <version>0.2.0</version>
   <licence>agpl</licence>
   <author>Meshingress</author>
   <namespace>Meshingress</namespace>

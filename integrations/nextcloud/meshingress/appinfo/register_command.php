@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-use OCA\Meshingress\Command\SourceImportWorkerCommand;
+use OCA\Meshingress\Command\WorkspaceWorkerCommand;
 
-$application->add(\OC::$server->get(SourceImportWorkerCommand::class));
+$application->add(\OC::$server->get(WorkspaceWorkerCommand::class));
