@@ -5,6 +5,7 @@ import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
 import dev.mrk.meshingress.route.annotations.McpDispatchParam;
+import dev.mrk.meshingress.route.framework.dispatch.McpDispatchRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -34,6 +36,14 @@ class McpAnnotationDispatchMvcTests {
 
     @jakarta.annotation.Resource
     private MockMvc mockMvc;
+
+    @jakarta.annotation.Resource
+    private McpDispatchRegistry dispatchRegistry;
+
+    @Test
+    void discoversTheSharedStoragePublicationStatusDispatchMethod() {
+        assertTrue(dispatchRegistry.find("storage/publication-status").isPresent());
+    }
 
     @Test
     void annotatedDispatchUsesNormalJsonRpcEnvelopeAndManualControllersStillWork() throws Exception {

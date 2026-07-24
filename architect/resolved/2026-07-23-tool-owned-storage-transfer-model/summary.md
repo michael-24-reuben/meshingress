@@ -5,3 +5,5 @@ Resolved on `development`. Storage lifecycle now expresses only local-byte place
 The related Nextcloud records remain active because their separate deployment and streaming-ingest work is not closed by this refactor.
 
 Reopened twice: first to prevent an explicitly blank delegated target from registering the optional viewer surface, then to make the named delegated target bind through the immutable compatibility record. Both cases now have focused regression coverage.
+
+Publication status is now a reusable direct dispatch operation at `storage/publication-status`, rather than a Toonverse MCP tool function. The bundled WebSocket monitor uses the direct JSON-RPC result contract.

@@ -35,3 +35,16 @@ git diff --check
 - 12 focused tests passed.
 - The binding regression test proves the canonical immutable configuration retains `delegated-target=nextcloud-primary`; this is the value that `StorageLifecyclePolicy.delegatedTarget()` now consumes.
 - `git diff --check` passed before commit.
+
+## Reopened dispatch-boundary verification
+
+```powershell
+.\mvnw.cmd -pl app\meshingress-server -am test "-Dtest=StoragePublicationMcpControllerTests,McpAnnotationDispatchMvcTests" "-Dsurefire.failIfNoSpecifiedTests=false"
+.\mvnw.cmd -pl toolspace\x-open-ink-library -am test "-Dtest=ToonverseToolTests" "-Dsurefire.failIfNoSpecifiedTests=false"
+node --check toolspace\x-open-ink-library\src\main\resources\mcp-ws-download-book.js
+git diff --check
+```
+
+- Server reactor: 6 focused tests passed. The direct controller tests cover successful status lookup, missing identifiers, and normalized storage failure; the MVC context test confirms `storage/publication-status` is registered.
+- Toonverse reactor: 9 tests passed after removal of the tool-specific publication-status function.
+- JavaScript syntax and whitespace checks passed.

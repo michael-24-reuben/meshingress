@@ -17,3 +17,7 @@ An explicit blank `meshingress.storage.external.delegated-target` satisfied Spri
 ## Reopened configuration-binding regression
 
 The raw target condition and the lifecycle policy were observing different representations of the same setting: the raw environment retained `nextcloud-primary`, but the bound immutable `Storage.External` value held an empty `delegatedTarget`. The record had gained a nine-argument compatibility constructor alongside its canonical ten-argument constructor. Spring needed the canonical constructor identified explicitly to bind the new property reliably.
+
+## Reopened dispatch-boundary assessment
+
+`ToonverseTool.publicationStatus` merely forwarded workspace identifiers to `ToolStorageService`; the status may represent a local handoff or a delegated destination import. Keeping it as `toonverse.publication-status` incorrectly made a storage operation look like a Toonverse capability and forced non-Toonverse callers through `tools/call`.

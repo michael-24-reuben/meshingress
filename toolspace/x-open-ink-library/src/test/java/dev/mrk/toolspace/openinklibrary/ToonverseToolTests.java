@@ -7,7 +7,6 @@ import dev.mrk.toolspace.openinklibrary.source.toonverse.ToonverseFetchChapterAr
 import dev.mrk.toolspace.openinklibrary.source.toonverse.ToonverseFetchChaptersArgs;
 import dev.mrk.toolspace.openinklibrary.source.toonverse.ToonverseFetchFullArgs;
 import dev.mrk.toolspace.openinklibrary.source.toonverse.ToonverseDownloadBookArgs;
-import dev.mrk.toolspace.openinklibrary.source.toonverse.ToonversePublicationStatusArgs;
 import dev.mrk.toolspace.openinklibrary.source.toonverse.ToonverseSourceConfiguration;
 import dev.mrk.toolspace.openinklibrary.source.toonverse.ToonverseTool;
 import dev.mrk.meshingress.api.McpCallContext;
@@ -15,7 +14,6 @@ import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
 import dev.mrk.meshingress.api.result.progress.ProgressUpdate;
 import dev.mrk.meshingress.api.storage.ToolStorageFile;
 import dev.mrk.meshingress.api.storage.ToolStorageFileRequest;
-import dev.mrk.meshingress.api.storage.ToolStoragePublicationStatus;
 import dev.mrk.meshingress.api.storage.ToolStorageService;
 import dev.mrk.meshingress.api.storage.ToolStorageTransferMode;
 import dev.mrk.meshingress.api.storage.ToolStorageWorkspace;
@@ -313,23 +311,11 @@ class ToonverseToolTests {
     }
 
     @Test
-    void publicationStatusReturnsTheDurableHandoffStateForADownloadedWorkspace() throws Exception {
-        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        ToonverseTool tool = new ToonverseTool(client(), objectMapper, new RecordingStorage());
-
-        var result = tool.publicationStatus(new ToonversePublicationStatusArgs("session-1", "req-test"), null);
-
-        assertEquals(false, result.isError());
-        assertEquals("HANDOFF_QUEUED", result.content().getFirst().value().path("state").asString());
-        assertEquals("dav", result.content().getFirst().value().path("target").asString());
-    }
-
-    @Test
     void reflectionDiscoversOnlyTheFetchAndSearchSourceOperations() {
         var annotation = new McpToolAnnotationScanner(objectMapper).scan(ToonverseTool.class);
 
         assertEquals("toonverse", annotation.descriptor().name());
-        assertEquals(java.util.Set.of("toonverse.fetch", "toonverse.fetch-full", "toonverse.fetch-chapter", "toonverse.fetch-chapters", "toonverse.download-book", "toonverse.publication-status", "toonverse.search"),
+        assertEquals(java.util.Set.of("toonverse.fetch", "toonverse.fetch-full", "toonverse.fetch-chapter", "toonverse.fetch-chapters", "toonverse.download-book", "toonverse.search"),
                 annotation.functions().stream().map(function -> function.descriptor().name()).collect(java.util.stream.Collectors.toSet()));
         assertEquals(900_000L, annotation.functions().stream()
                 .filter(function -> function.descriptor().name().equals("toonverse.download-book"))
@@ -376,10 +362,6 @@ class ToonverseToolTests {
             return new ToolStorageWorkspace(workspace.sessionId(), workspace.requestId(), workspace.toolId(), workspace.filesUri(), workspace.createdAt(), workspace.expiresAt(), workspace.remainingRequests(), true);
         }
 
-        @Override
-        public ToolStoragePublicationStatus publicationStatus(String sessionId, String requestId) {
-            return new ToolStoragePublicationStatus(sessionId, requestId, "HANDOFF_QUEUED", "dav", 1, OffsetDateTime.now(), null);
-        }
     }
 
     private static final class DelegatingStorage extends RecordingStorage {

@@ -19,3 +19,10 @@ No qBittorrent module was added. A completed qBittorrent job can now open a `LOC
 
 - Annotated the canonical `MeshingressProperties.Storage.External` record constructor with `@ConstructorBinding`, while retaining the nine-argument compatibility overload.
 - Added a regression test that binds `meshingress.storage.external.delegated-target=nextcloud-primary` into `MeshingressProperties` and asserts the resulting immutable configuration retains that exact target name.
+
+## Reopened dispatch-boundary fix
+
+- Added the server-owned `StoragePublicationMcpController` with `@McpDispatchMapping("storage")` and the direct method `storage/publication-status`.
+- Moved request validation and storage-failure normalization to that controller, returning `ToolStoragePublicationStatus` directly in the JSON-RPC result.
+- Removed `toonverse.publication-status`, its Toonverse-only argument type, and its tool-discovery test expectation.
+- Updated the Toonverse WebSocket publication monitor to send the new direct-dispatch method and consume its direct result payload.

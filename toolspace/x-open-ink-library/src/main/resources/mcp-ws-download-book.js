@@ -147,20 +147,17 @@ function pollPublicationStatus() {
     socket.send(JSON.stringify({
         jsonrpc: "2.0",
         id: `${publicationCallPrefix}${Date.now()}`,
-        method: "tools/call",
-        params: {
-            name: "toonverse.publication-status",
-            arguments: {sessionId: publicationWorkspace.sessionId, requestId: publicationWorkspace.requestId},
-        },
+        method: "storage/publication-status",
+        params: {sessionId: publicationWorkspace.sessionId, requestId: publicationWorkspace.requestId},
     }));
 }
 
 function reportPublicationStatus(response) {
-    if (response.result?.isError) {
-        console.error(`[publication] status request failed: ${response.result?._meta?.errorMessage ?? "unknown error"}`);
+    if (response.error) {
+        console.error(`[publication] status request failed: ${response.error.message ?? "unknown error"}`);
         return;
     }
-    const status = response.result?.structuredContent;
+    const status = response.result;
     if (!status?.state) {
         console.error("[publication] status response was malformed.");
         return;

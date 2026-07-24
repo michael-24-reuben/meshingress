@@ -7,8 +7,8 @@
   "priority": "high",
   "createdAt": "2026-07-23T21:33:27-04:00",
   "activatedAt": "2026-07-23T21:40:48-04:00",
-  "resolvedAt": "2026-07-23T22:13:03-04:00",
-  "updatedAt": "2026-07-23T22:13:03-04:00",
+  "resolvedAt": "2026-07-23T22:55:24-04:00",
+  "updatedAt": "2026-07-23T22:55:24-04:00",
   "tags": ["storage", "lifecycle", "transfer", "delegation", "async", "nextcloud", "qbittorrent"],
   "related": [
     "2026-07-22-delegated-external-source-import",
@@ -49,6 +49,16 @@
       "at": "2026-07-23T22:13:03-04:00",
       "type": "RESOLVED",
       "note": "Marked the canonical External record constructor for Spring configuration binding and added a binding regression test; the delegated target now reaches the lifecycle policy."
+    },
+    {
+      "at": "2026-07-23T22:55:24-04:00",
+      "type": "REOPENED",
+      "note": "Moved Toonverse publication polling out of the public tool surface so workspace publication state can be dispatched independently of a source tool."
+    },
+    {
+      "at": "2026-07-23T22:55:24-04:00",
+      "type": "RESOLVED",
+      "note": "Added storage/publication-status as a shared dispatch method, migrated the Toonverse WebSocket sample, and removed the Toonverse-specific status function."
     }
   ]
 }

@@ -5,7 +5,6 @@ import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
 import dev.mrk.meshingress.api.storage.ToolStorageException;
 import dev.mrk.meshingress.api.storage.ToolStorageFile;
 import dev.mrk.meshingress.api.storage.ToolStorageFileRequest;
-import dev.mrk.meshingress.api.storage.ToolStoragePublicationStatus;
 import dev.mrk.meshingress.api.storage.ToolStorageService;
 import dev.mrk.meshingress.api.storage.ToolStorageWorkspace;
 import dev.mrk.meshingress.api.storage.ToolStorageWorkspaceRequest;
@@ -212,22 +211,6 @@ public final class ToonverseTool {
         } catch (RuntimeException exception) {
             progress.error("The Toonverse book download could not be completed.");
             return failed("SOURCE_REQUEST_FAILED", "The Toonverse book download could not be completed.");
-        }
-    }
-
-    @McpConfigureMapping(timeoutMs = 30_000, audit = true)
-    @McpFunction(value = "publication-status", title = "Get Toonverse publication status", description = "Inspect or monitor the external publication state of a workspace returned by Toonverse download-book.")
-    public DispatchExecutionResult publicationStatus(ToonversePublicationStatusArgs arguments, McpCallContext context) {
-        try {
-            if (arguments == null || arguments.sessionId() == null || arguments.sessionId().isBlank() || arguments.requestId() == null || arguments.requestId().isBlank()) {
-                return failed("SOURCE_RESPONSE_INVALID", "sessionId and requestId are required.");
-            }
-            ToolStoragePublicationStatus status = requireStorage().publicationStatus(arguments.sessionId().trim(), arguments.requestId().trim());
-            return completed(objectMapper.valueToTree(status), "Toonverse publication is " + status.state() + ".");
-        } catch (ToolStorageException exception) {
-            return failed("STORAGE_REQUEST_FAILED", storageFailureMessage(exception));
-        } catch (RuntimeException exception) {
-            return failed("STORAGE_REQUEST_FAILED", "The Toonverse publication status is unavailable.");
         }
     }
 
