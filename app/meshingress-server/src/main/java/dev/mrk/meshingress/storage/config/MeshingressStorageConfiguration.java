@@ -8,6 +8,9 @@ import dev.mrk.meshingress.storage.workspace.WorkspaceCleanupCoordinator;
 import dev.mrk.meshingress.storage.workspace.WorkspaceMetadataStore;
 import dev.mrk.meshingress.storage.workspace.WorkspacePathLayout;
 import dev.mrk.meshingress.storage.workspace.WorkspaceRetrievalService;
+import dev.mrk.meshingress.storage.workspace.DelegatedViewerCapabilityStore;
+import dev.mrk.meshingress.storage.workspace.DelegatedViewerService;
+import dev.mrk.meshingress.storage.workspace.NextcloudDelegatedWorkspaceClient;
 import dev.mrk.meshingress.storage.workspace.AsyncExternalHandoffWorker;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -47,14 +50,22 @@ public class MeshingressStorageConfiguration {
 
     @Bean
     ToolStorageService toolStorageService(MeshingressProperties properties, WorkspaceMetadataStore metadata, WorkspaceFiles files,
-                                          WorkspacePathLayout paths, ObjectMapper objectMapper, StorageLifecyclePolicy lifecyclePolicy) {
+                                          WorkspacePathLayout paths, ObjectMapper objectMapper, StorageLifecyclePolicy lifecyclePolicy, JdbcTemplate jdbc) {
         if (properties.storage().lifecycle() == MeshingressProperties.Storage.Lifecycle.DELEGATED_EXTERNAL) {
             var target = properties.storage().external().targets().get(properties.storage().external().defaultTarget());
-            return new dev.mrk.meshingress.storage.workspace.NextcloudDelegatedStorageService(
-                    new dev.mrk.meshingress.storage.workspace.NextcloudDelegatedWorkspaceClient(
-                            target, properties.storage().external().uploadTimeout(), StorageLifecyclePolicy.authorization(target.credentialRef()), objectMapper));
+            NextcloudDelegatedWorkspaceClient client = new NextcloudDelegatedWorkspaceClient(target, properties.storage().external().uploadTimeout(), StorageLifecyclePolicy.authorization(target.credentialRef()), objectMapper);
+            DelegatedViewerCapabilityStore viewers = new DelegatedViewerCapabilityStore(jdbc, properties.storage().metadata().sql());
+            return new dev.mrk.meshingress.storage.workspace.NextcloudDelegatedStorageService(client, viewers, properties.identity().publicBaseUrl().toString(), properties.storage());
         }
         return new ToolWorkspaceStorageService(properties.storage(), metadata, files, paths, objectMapper, lifecyclePolicy.publisher().orElse(null));
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "meshingress.storage", name = "lifecycle", havingValue = "delegated-external")
+    DelegatedViewerService delegatedViewerService(MeshingressProperties properties, ObjectMapper objectMapper, JdbcTemplate jdbc) {
+        var target = properties.storage().external().targets().get(properties.storage().external().defaultTarget());
+        NextcloudDelegatedWorkspaceClient client = new NextcloudDelegatedWorkspaceClient(target, properties.storage().external().uploadTimeout(), StorageLifecyclePolicy.authorization(target.credentialRef()), objectMapper);
+        return new DelegatedViewerService(new DelegatedViewerCapabilityStore(jdbc, properties.storage().metadata().sql()), client);
     }
 
     @Bean

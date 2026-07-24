@@ -11,11 +11,18 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface McpTool {
+    /**
+     * A regular expression that matches a valid MCP tool name.
+     * The format is: {@code [a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)*}
+     * <p>
+     * Enforces matching pattern for foreign keys in {@link McpTool#value()}
+     */
+    String QUALIFIED_TOOL_NAME_REGEX = "[a-z][a-z0-9_-]*(?:\\.[a-z][a-z0-9_-]*)*";
 
     /**
      * Defines a unique tool ID, used to identify the tool in the system.
      */
-    @Pattern("[a-z][a-z0-9-_]*(\\.[a-z][a-z0-9-_])*")
+    @Pattern(QUALIFIED_TOOL_NAME_REGEX)
     String value();
 
     String title() default "";

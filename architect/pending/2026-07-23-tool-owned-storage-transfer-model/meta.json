@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-23-tool-owned-storage-transfer-model",
+  "title": "Tool-Owned Storage Transfer Model",
+  "type": "storage-architecture",
+  "status": "pending",
+  "priority": "high",
+  "createdAt": "2026-07-23T21:33:27-04:00",
+  "updatedAt": "2026-07-23T21:33:27-04:00",
+  "tags": ["storage", "lifecycle", "transfer", "delegation", "async", "nextcloud", "qbittorrent"],
+  "related": [
+    "2026-07-22-delegated-external-source-import",
+    "2026-07-23-nextcloud-streaming-ingest-remodel"
+  ],
+  "events": [
+    {
+      "at": "2026-07-23T21:33:27-04:00",
+      "type": "CREATED",
+      "note": "Captured the accepted separation of storage lifecycle, tool-owned transfer, and local-byte execution policy before implementation."
+    }
+  ]
+}

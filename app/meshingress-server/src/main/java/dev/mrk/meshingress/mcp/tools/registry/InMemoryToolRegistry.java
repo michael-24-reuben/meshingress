@@ -1,6 +1,8 @@
 package dev.mrk.meshingress.mcp.tools.registry;
 
 import dev.mrk.meshingress.api.tools.*;
+import dev.mrk.meshingress.api.tools.annotation.McpFunction;
+import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
@@ -35,8 +37,9 @@ import java.util.regex.Pattern;
 public class InMemoryToolRegistry implements ToolRegistry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryToolRegistry.class);
-    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]*(\\.[a-z][a-z0-9-_]*)*$");
-    private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]*(\\.[a-z][a-z0-9-_]*)+$");
+    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^" + McpTool.QUALIFIED_TOOL_NAME_REGEX + "$");
+    //    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]*(\\.[a-z][a-z0-9-_]*)*$");
+    private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile("^" + McpFunction.QUALIFIED_TOOL_FUNCTION_NAME_REGEX + "$");
 
     private final ObjectMapper objectMapper;
     private final MeshingressProperties properties;
@@ -230,7 +233,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
             errors.add("At least one function descriptor is required.");
         }
         for (McpFunctionDescriptor function : descriptor.functions()) {
-            checkFunction(function, errors, warnings, validateHandlerKey);
+            checkFunction(descriptor.name(), function, errors, warnings, validateHandlerKey);
         }
 
         ObjectNode normalized = objectMapper.createObjectNode();
@@ -390,9 +393,9 @@ public class InMemoryToolRegistry implements ToolRegistry {
     /**
      * Validate a single function descriptor and add findings.
      */
-    private void checkFunction(McpFunctionDescriptor function, List<String> errors, List<String> warnings, boolean validateHandlerKey) {
-        if (function.name() == null || !FUNCTION_NAME_PATTERN.matcher(function.name()).matches()) {
-            errors.add("Function name must join tool and function names with a period.");
+    private void checkFunction(String toolName, McpFunctionDescriptor function, List<String> errors, List<String> warnings, boolean validateHandlerKey) {
+        if (function.name() == null || !FUNCTION_NAME_PATTERN.matcher(function.name().substring(toolName.length() + 1)).matches()) {
+            errors.add("Function name must join tool and function names with a period: '%s'.".formatted(function.name()));
         }
         if (function.inputSchema() == null || !function.inputSchema().isObject()) {
             errors.add("function inputSchema must be an object.");

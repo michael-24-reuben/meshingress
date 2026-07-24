@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = StorageController.class)
+@RestControllerAdvice(assignableTypes = {StorageController.class, DelegatedViewerController.class})
 public class StorageRouteExceptionHandler {
     @ExceptionHandler(ToolStorageException.class)
     ResponseEntity<Void> unavailable() { return ResponseEntity.notFound().build(); }

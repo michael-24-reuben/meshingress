@@ -51,6 +51,10 @@ build/
 ### Toolspace ###
 # Exclude tool modules and their build artifacts
 toolspace/x-*
+!toolspace/x-transform/
+!toolspace/x-transform/**
+toolspace/x-transform/**/node_modules/
+toolspace/x-transform/target/
 
 ### Secure Files ###
 *.pem

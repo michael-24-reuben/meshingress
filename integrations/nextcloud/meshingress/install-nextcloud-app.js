@@ -20,7 +20,7 @@ function requireSafe(value, name, expression) {
 }
 
 function quote(value) {
-  return `'${value.replaceAll("'", "'\\\"'\\\"'")}'`;
+  return `'${value.replaceAll("'", "'\"'\"'")}'`;
 }
 
 function run(command, argumentsList) {

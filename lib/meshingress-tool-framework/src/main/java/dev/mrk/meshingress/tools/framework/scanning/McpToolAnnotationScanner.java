@@ -37,7 +37,6 @@ public class McpToolAnnotationScanner {
     private static final McpConfigureMapping DEFAULT_FUNCTION_MAPPING = resolveDefaultFunctionMapping();
 
     private final ObjectMapper objectMapper;
-    private static final String QUALIFIED_TOOL_NAME_REGEX = "[a-z][a-z0-9]*(\\.[a-z0-9]+)*";
 
     public McpToolAnnotationScanner(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -55,7 +54,7 @@ public class McpToolAnnotationScanner {
         if (tool == null) {
             throw new IllegalStateException("Annotated MCP tool requires @McpTool: " + toolClass.getName());
 
-        } else if (!tool.value().isBlank() && !tool.value().matches(QUALIFIED_TOOL_NAME_REGEX)) {
+        } else if (!tool.value().isBlank() && !tool.value().matches(McpTool.QUALIFIED_TOOL_NAME_REGEX)) {
             throw new IllegalStateException("Mcp tool '%s' requires valid @McpTool annotation: '%s'".formatted(toolClass.getName(), tool.value()));
         }
 

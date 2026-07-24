@@ -11,8 +11,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface McpFunction {
+    String QUALIFIED_TOOL_FUNCTION_NAME_REGEX = "[a-z][a-z0-9-_]*";
 
-    @Pattern("[a-z][a-z0-9-_]*")
+    @Pattern(QUALIFIED_TOOL_FUNCTION_NAME_REGEX)
     String value() default "";
 
     String title() default "";
