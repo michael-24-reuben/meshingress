@@ -1,9 +1,10 @@
 package dev.mrk.meshingress.storage.web;
 
 import dev.mrk.meshingress.storage.workspace.DelegatedViewerService;
+import dev.mrk.meshingress.storage.config.DelegatedSourceTargetConfiguredCondition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 @RestController
 @RequestMapping("/storage/delegated")
-@ConditionalOnBean(DelegatedViewerService.class)
+@Conditional(DelegatedSourceTargetConfiguredCondition.class)
 public final class DelegatedViewerController {
     private final DelegatedViewerService viewer;
 

@@ -7,8 +7,8 @@
   "priority": "high",
   "createdAt": "2026-07-23T21:33:27-04:00",
   "activatedAt": "2026-07-23T21:40:48-04:00",
-  "resolvedAt": "2026-07-23T21:46:22-04:00",
-  "updatedAt": "2026-07-23T21:46:22-04:00",
+  "resolvedAt": "2026-07-23T22:07:50-04:00",
+  "updatedAt": "2026-07-23T22:07:50-04:00",
   "tags": ["storage", "lifecycle", "transfer", "delegation", "async", "nextcloud", "qbittorrent"],
   "related": [
     "2026-07-22-delegated-external-source-import",
@@ -29,6 +29,16 @@
       "at": "2026-07-23T21:46:22-04:00",
       "type": "RESOLVED",
       "note": "Implemented concurrent local-byte and delegated-source routing, tool-requested queued local handoff, Toonverse workspace selection, lifecycle cleanup, and focused regression coverage."
+    },
+    {
+      "at": "2026-07-23T22:07:06-04:00",
+      "type": "REOPENED",
+      "note": "An explicitly blank delegated-target still satisfied Spring ConditionalOnProperty and caused delegatedViewerService to throw during startup."
+    },
+    {
+      "at": "2026-07-23T22:07:50-04:00",
+      "type": "RESOLVED",
+      "note": "Replaced the generic property condition with a nonblank delegated-target condition on both the viewer factory and route; focused regression tests passed."
     }
   ]
 }

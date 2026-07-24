@@ -9,3 +9,8 @@
 - Updated the default application configuration and storage reference documentation.
 
 No qBittorrent module was added. A completed qBittorrent job can now open a `LOCAL_BYTES` workspace and choose `INLINE` or `QUEUED` under `LOCAL_EXTERNAL` without changing the global lifecycle.
+
+## Reopened regression fix
+
+- Added `DelegatedSourceTargetConfiguredCondition`, which evaluates the configured target name after trimming whitespace.
+- Applied it to both `delegatedViewerService` and `DelegatedViewerController`, so blank configuration disables the optional delegated surface instead of throwing at startup.

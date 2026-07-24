@@ -14,8 +14,8 @@ import dev.mrk.meshingress.storage.workspace.NextcloudDelegatedWorkspaceClient;
 import dev.mrk.meshingress.storage.workspace.AsyncExternalHandoffWorker;
 import dev.mrk.meshingress.storage.workspace.ToolStorageRouter;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.ObjectProvider;
@@ -62,17 +62,15 @@ public class MeshingressStorageConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "meshingress.storage.external", name = "delegated-target")
-    DelegatedViewerService delegatedViewerService(MeshingressProperties properties, ObjectMapper objectMapper, JdbcTemplate jdbc,
-                                                  StorageLifecyclePolicy lifecyclePolicy) {
+    @Conditional(DelegatedSourceTargetConfiguredCondition.class)
+    DelegatedViewerService delegatedViewerService(MeshingressProperties properties, ObjectMapper objectMapper, JdbcTemplate jdbc, StorageLifecyclePolicy lifecyclePolicy) {
         var target = lifecyclePolicy.delegatedTarget().orElseThrow(() -> new IllegalStateException("No delegated-source target is configured."));
         NextcloudDelegatedWorkspaceClient client = new NextcloudDelegatedWorkspaceClient(target, properties.storage().external().uploadTimeout(), StorageLifecyclePolicy.authorization(target.credentialRef()), objectMapper);
         return new DelegatedViewerService(new DelegatedViewerCapabilityStore(jdbc, properties.storage().metadata().sql()), client);
     }
 
     @Bean
-    WorkspaceRetrievalService workspaceRetrievalService(MeshingressProperties properties, WorkspaceMetadataStore metadata,
-                                                        WorkspaceFiles files, WorkspacePathLayout paths) {
+    WorkspaceRetrievalService workspaceRetrievalService(MeshingressProperties properties, WorkspaceMetadataStore metadata, WorkspaceFiles files, WorkspacePathLayout paths) {
         return new WorkspaceRetrievalService(properties.storage(), metadata, files, paths);
     }
 
@@ -83,8 +81,7 @@ public class MeshingressStorageConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "meshingress.storage", name = "lifecycle", havingValue = "local-external")
-    AsyncExternalHandoffWorker asyncExternalHandoffWorker(MeshingressProperties properties, WorkspaceMetadataStore metadata,
-                                                          WorkspaceFiles files, StorageLifecyclePolicy lifecyclePolicy) {
+    AsyncExternalHandoffWorker asyncExternalHandoffWorker(MeshingressProperties properties, WorkspaceMetadataStore metadata, WorkspaceFiles files, StorageLifecyclePolicy lifecyclePolicy) {
         return new AsyncExternalHandoffWorker(properties.storage(), metadata, files,
                 lifecyclePolicy.publisher().orElseThrow(() -> new IllegalStateException("No external handoff publisher is configured.")));
     }

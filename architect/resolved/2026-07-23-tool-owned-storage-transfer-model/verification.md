@@ -15,3 +15,12 @@ Results:
 - `git diff --check` passed.
 
 No deployment or live Nextcloud call was performed in this slice.
+
+## Reopened regression verification
+
+```powershell
+.\mvnw.cmd -pl app\meshingress-server -am test "-Dtest=DelegatedSourceTargetConfiguredConditionTests,StorageLifecyclePolicyTests,ToolStorageRouterTests,DelegatedViewerControllerTests" "-Dsurefire.failIfNoSpecifiedTests=false"
+```
+
+- 11 focused tests passed.
+- The new condition test proves whitespace-only target values do not create the delegated viewer beans, while `nextcloud-primary` does.
