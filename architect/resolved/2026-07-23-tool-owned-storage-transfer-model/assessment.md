@@ -13,3 +13,7 @@ The implementation separates these axes:
 ## Reopened startup regression
 
 An explicit blank `meshingress.storage.external.delegated-target` satisfied Spring's generic property condition even though it cannot select a delegated target. The viewer factory then reached its intentional validation error during startup. A dedicated condition now requires a nonblank target name before either the factory or viewer route is registered.
+
+## Reopened configuration-binding regression
+
+The raw target condition and the lifecycle policy were observing different representations of the same setting: the raw environment retained `nextcloud-primary`, but the bound immutable `Storage.External` value held an empty `delegatedTarget`. The record had gained a nine-argument compatibility constructor alongside its canonical ten-argument constructor. Spring needed the canonical constructor identified explicitly to bind the new property reliably.

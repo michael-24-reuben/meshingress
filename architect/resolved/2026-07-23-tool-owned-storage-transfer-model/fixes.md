@@ -14,3 +14,8 @@ No qBittorrent module was added. A completed qBittorrent job can now open a `LOC
 
 - Added `DelegatedSourceTargetConfiguredCondition`, which evaluates the configured target name after trimming whitespace.
 - Applied it to both `delegatedViewerService` and `DelegatedViewerController`, so blank configuration disables the optional delegated surface instead of throwing at startup.
+
+## Reopened configuration-binding fix
+
+- Annotated the canonical `MeshingressProperties.Storage.External` record constructor with `@ConstructorBinding`, while retaining the nine-argument compatibility overload.
+- Added a regression test that binds `meshingress.storage.external.delegated-target=nextcloud-primary` into `MeshingressProperties` and asserts the resulting immutable configuration retains that exact target name.

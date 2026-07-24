@@ -24,3 +24,14 @@ No deployment or live Nextcloud call was performed in this slice.
 
 - 11 focused tests passed.
 - The new condition test proves whitespace-only target values do not create the delegated viewer beans, while `nextcloud-primary` does.
+
+## Reopened configuration-binding verification
+
+```powershell
+.\mvnw.cmd -pl app\meshingress-server -am test "-Dtest=DelegatedSourceTargetConfiguredConditionTests,StorageLifecyclePolicyTests,ToolStorageRouterTests,DelegatedViewerControllerTests" "-Dsurefire.failIfNoSpecifiedTests=false"
+git diff --check
+```
+
+- 12 focused tests passed.
+- The binding regression test proves the canonical immutable configuration retains `delegated-target=nextcloud-primary`; this is the value that `StorageLifecyclePolicy.delegatedTarget()` now consumes.
+- `git diff --check` passed before commit.

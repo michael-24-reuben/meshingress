@@ -4,4 +4,4 @@ Resolved on `development`. Storage lifecycle now expresses only local-byte place
 
 The related Nextcloud records remain active because their separate deployment and streaming-ingest work is not closed by this refactor.
 
-Reopened once and resolved after correcting blank delegated-target startup handling.
+Reopened twice: first to prevent an explicitly blank delegated target from registering the optional viewer surface, then to make the named delegated target bind through the immutable compatibility record. Both cases now have focused regression coverage.

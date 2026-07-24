@@ -7,8 +7,8 @@
   "priority": "high",
   "createdAt": "2026-07-23T21:33:27-04:00",
   "activatedAt": "2026-07-23T21:40:48-04:00",
-  "resolvedAt": "2026-07-23T22:07:50-04:00",
-  "updatedAt": "2026-07-23T22:07:50-04:00",
+  "resolvedAt": "2026-07-23T22:13:03-04:00",
+  "updatedAt": "2026-07-23T22:13:03-04:00",
   "tags": ["storage", "lifecycle", "transfer", "delegation", "async", "nextcloud", "qbittorrent"],
   "related": [
     "2026-07-22-delegated-external-source-import",
@@ -39,6 +39,16 @@
       "at": "2026-07-23T22:07:50-04:00",
       "type": "RESOLVED",
       "note": "Replaced the generic property condition with a nonblank delegated-target condition on both the viewer factory and route; focused regression tests passed."
+    },
+    {
+      "at": "2026-07-23T22:13:03-04:00",
+      "type": "REOPENED",
+      "note": "The nonblank raw property was present, but the immutable configuration object still bound delegatedTarget as blank because its compatibility overload obscured the canonical record constructor."
+    },
+    {
+      "at": "2026-07-23T22:13:03-04:00",
+      "type": "RESOLVED",
+      "note": "Marked the canonical External record constructor for Spring configuration binding and added a binding regression test; the delegated target now reaches the lifecycle policy."
     }
   ]
 }

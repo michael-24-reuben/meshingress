@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.util.unit.DataSize;
 
 import java.net.URI;
@@ -447,6 +448,7 @@ public record MeshingressProperties(
                 @Valid @NotNull AsyncHandoff asyncHandoff,
                 @NotNull Map<String, Target> targets
         ) {
+            @ConstructorBinding
             public External {
                 defaultTarget = defaultTarget == null ? "" : defaultTarget.trim();
                 delegatedTarget = delegatedTarget == null ? "" : delegatedTarget.trim();
