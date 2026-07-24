@@ -3,10 +3,12 @@
   "id": "2026-07-23-tool-owned-storage-transfer-model",
   "title": "Tool-Owned Storage Transfer Model",
   "type": "storage-architecture",
-  "status": "pending",
+  "status": "resolved",
   "priority": "high",
   "createdAt": "2026-07-23T21:33:27-04:00",
-  "updatedAt": "2026-07-23T21:33:27-04:00",
+  "activatedAt": "2026-07-23T21:40:48-04:00",
+  "resolvedAt": "2026-07-23T21:46:22-04:00",
+  "updatedAt": "2026-07-23T21:46:22-04:00",
   "tags": ["storage", "lifecycle", "transfer", "delegation", "async", "nextcloud", "qbittorrent"],
   "related": [
     "2026-07-22-delegated-external-source-import",
@@ -17,6 +19,16 @@
       "at": "2026-07-23T21:33:27-04:00",
       "type": "CREATED",
       "note": "Captured the accepted separation of storage lifecycle, tool-owned transfer, and local-byte execution policy before implementation."
+    },
+    {
+      "at": "2026-07-23T21:40:48-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation began on development after the source-only GitHub workspace backup."
+    },
+    {
+      "at": "2026-07-23T21:46:22-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented concurrent local-byte and delegated-source routing, tool-requested queued local handoff, Toonverse workspace selection, lifecycle cleanup, and focused regression coverage."
     }
   ]
 }

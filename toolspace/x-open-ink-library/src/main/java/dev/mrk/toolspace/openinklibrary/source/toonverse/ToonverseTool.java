@@ -157,7 +157,9 @@ public final class ToonverseTool {
             String slug = resolveSlug(arguments.name());
             JsonNode firstPayload = client.fetchReadingChapter(slug, arguments.minChapterNumber());
             validateDownloadRange(firstPayload, arguments.minChapterNumber(), arguments.maxChapterNumber());
-            ToolStorageWorkspaceRequest workspaceRequest = new ToolStorageWorkspaceRequest(storageTtl(arguments.ttlSeconds()), arguments.maxRequests());
+            ToolStorageWorkspaceRequest workspaceRequest = new ToolStorageWorkspaceRequest(
+                    storageTtl(arguments.ttlSeconds()), arguments.maxRequests(), ToolStorageTransferMode.DELEGATED_SOURCE_URLS
+            );
             ToolStorageWorkspace workspace = storage.openWorkspace("toonverse.download-book", context, workspaceRequest);
             List<Map<String, Object>> chapters = new ArrayList<>();
             JsonNode series = null;
@@ -246,7 +248,7 @@ public final class ToonverseTool {
             int pageNumber = page.path("number").isInt() ? page.path("number").asInt() : pages.size() + 1;
             String imageUrl = page.path("imageUrl").asString();
 
-            if (storage.transferMode() == ToolStorageTransferMode.DELEGATED_SOURCE_URLS) {
+            if (workspace.transferMode() == ToolStorageTransferMode.DELEGATED_SOURCE_URLS) {
                 String extension = extension(imageUrl, "application/octet-stream");
                 String path = directory + "/" + String.format(Locale.ROOT, "%03d", pageNumber) + extension;
                 storage.delegateFile(workspace, java.net.URI.create(imageUrl), path);
@@ -279,7 +281,7 @@ public final class ToonverseTool {
     }
 
     private String downloadCover(ToolStorageService storage, ToolStorageWorkspace workspace, String coverUrl) {
-        if (storage.transferMode() == ToolStorageTransferMode.DELEGATED_SOURCE_URLS) {
+        if (workspace.transferMode() == ToolStorageTransferMode.DELEGATED_SOURCE_URLS) {
             String path = "cover" + extension(coverUrl, "application/octet-stream");
             storage.delegateFile(workspace, java.net.URI.create(coverUrl), path);
             return path;

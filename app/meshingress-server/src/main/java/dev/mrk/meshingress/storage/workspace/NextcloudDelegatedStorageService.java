@@ -27,11 +27,13 @@ public final class NextcloudDelegatedStorageService implements ToolStorageServic
         this.properties = properties;
     }
 
-    @Override public ToolStorageTransferMode transferMode() { return ToolStorageTransferMode.DELEGATED_SOURCE_URLS; }
-
     @Override
     public ToolStorageWorkspace openWorkspace(String toolId, McpCallContext context, ToolStorageWorkspaceRequest request) {
         if (!properties.enabled()) throw new ToolStorageException("Ephemeral storage is disabled.");
+        if (request == null || request.transferMode() != ToolStorageTransferMode.DELEGATED_SOURCE_URLS)
+            throw new ToolStorageException("The delegated destination requires DELEGATED_SOURCE_URLS.");
+        if (request.localPublicationMode() != null)
+            throw new ToolStorageException("Delegated source URLs cannot use a Meshingress local publication mode.");
         if (toolId == null || toolId.isBlank()) throw new ToolStorageException("A tool ID is required.");
         String requestId = "req_" + UUID.randomUUID().toString().replace("-", "");
         String sessionId = context == null || context.sessionId() == null ? "" : context.sessionId();
@@ -93,6 +95,7 @@ public final class NextcloudDelegatedStorageService implements ToolStorageServic
     private ToolStorageWorkspace workspace(JsonNode remote, String toolId, String sessionId, String requestId, boolean published, DelegatedViewerCapabilityStore.Capability viewer) {
         OffsetDateTime now = OffsetDateTime.now();
         return new ToolStorageWorkspace(sessionId, remote.path("workspaceId").asText(requestId), toolId,
-                viewerBaseUri + "/storage/delegated/" + viewer.token() + "/files/", now, viewer.expiresAt(), viewer.remainingRequests(), published, remote.path("state").asText(published ? "QUEUED" : "OPEN"));
+                viewerBaseUri + "/storage/delegated/" + viewer.token() + "/files/", now, viewer.expiresAt(), viewer.remainingRequests(), published,
+                remote.path("state").asText(published ? "QUEUED" : "OPEN"), ToolStorageTransferMode.DELEGATED_SOURCE_URLS, null);
     }
 }

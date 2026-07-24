@@ -33,15 +33,13 @@ meshingress.storage.sql.initialize-schema=true
 
 meshingress.storage.enabled=true
 
-# Allowed:
+# Allowed only for Meshingress-managed bytes:
 # - local-local
 # - local-external
-# - local-async-external
-# - external-external
 #
-# Explicitly invalid:
-# - external-local
-meshingress.storage.lifecycle=local-async-external
+# Legacy values delegated-external, local-async-external, and external-external
+# are rejected at binding time. They combined separate concerns.
+meshingress.storage.lifecycle=local-local
 
 # Applies regardless of staging/publishing location.
 meshingress.storage.max-entry-size=256MB
@@ -96,11 +94,14 @@ meshingress.storage.local.cleanup.batch-size=100
 # External storage policy
 # ============================================================
 
-# Required for:
-# - local-external
-# - local-async-external
-# - external-external
-meshingress.storage.external.default-target=nextcloud-primary
+# Required only for lifecycle=local-external. This is the fixed target for
+# LOCAL_BYTES workspaces; tools never choose a raw target or credentials.
+meshingress.storage.external.default-target=webdav-primary
+
+# Optional Nextcloud target for tool-requested DELEGATED_SOURCE_URLS workspaces.
+# It can coexist with either local lifecycle because it does not use local-byte
+# publication or the Meshingress handoff worker.
+meshingress.storage.external.delegated-target=nextcloud-primary
 
 # Fixed safety contract:
 # - create new content
@@ -117,9 +118,9 @@ meshingress.storage.external.retention-policy=provider-managed
 meshingress.storage.external.max-concurrent-uploads=8
 meshingress.storage.external.upload-timeout=30m
 
-# local-async-external writes its durable handoff record before returning to
-# the tool caller. A bounded worker claims records, recovers expired leases,
-# retries transient failures, and writes manifest.json last.
+# A LOCAL_BYTES tool requests QUEUED publication when it needs a durable
+# handoff record before returning. A bounded worker claims records, recovers
+# expired leases, retries transient failures, and writes manifest.json last.
 meshingress.storage.external.async-handoff.worker-interval=5s
 meshingress.storage.external.async-handoff.lease-duration=35m
 meshingress.storage.external.async-handoff.max-attempts=8
@@ -127,10 +128,8 @@ meshingress.storage.external.async-handoff.initial-retry-delay=5s
 meshingress.storage.external.async-handoff.max-retry-delay=5m
 
 # Built-in provider coverage is intentionally explicit: this server currently
-# ships the WebDAV direct-final adapter for local-external and
-# local-async-external. A provider-session
-# adapter must be installed before external-external can start; configuration
-# rejects that lifecycle instead of silently staging locally.
+# ships the WebDAV direct-final adapter for LOCAL_BYTES local-external work and
+# the Nextcloud reserved-workspace adapter for DELEGATED_SOURCE_URLS work.
 
 
 # ============================================================

@@ -17,6 +17,7 @@ import dev.mrk.meshingress.api.storage.ToolStorageFile;
 import dev.mrk.meshingress.api.storage.ToolStorageFileRequest;
 import dev.mrk.meshingress.api.storage.ToolStoragePublicationStatus;
 import dev.mrk.meshingress.api.storage.ToolStorageService;
+import dev.mrk.meshingress.api.storage.ToolStorageTransferMode;
 import dev.mrk.meshingress.api.storage.ToolStorageWorkspace;
 import dev.mrk.meshingress.api.storage.ToolStorageWorkspaceRequest;
 import dev.mrk.meshingress.tools.framework.scanning.McpToolAnnotationScanner;
@@ -384,8 +385,12 @@ class ToonverseToolTests {
     private static final class DelegatingStorage extends RecordingStorage {
         private final List<String> delegatedPaths = new ArrayList<>();
 
-        @Override public dev.mrk.meshingress.api.storage.ToolStorageTransferMode transferMode() {
-            return dev.mrk.meshingress.api.storage.ToolStorageTransferMode.DELEGATED_SOURCE_URLS;
+        @Override
+        public ToolStorageWorkspace openWorkspace(String toolId, McpCallContext context, ToolStorageWorkspaceRequest request) {
+            assertEquals(ToolStorageTransferMode.DELEGATED_SOURCE_URLS, request.transferMode());
+            OffsetDateTime now = OffsetDateTime.now();
+            return new ToolStorageWorkspace(context.sessionId(), "req-test", toolId, "/storage/delegated/token/files/", now, now.plusMinutes(2), 10, false,
+                    "OPEN", ToolStorageTransferMode.DELEGATED_SOURCE_URLS, null);
         }
 
         @Override public dev.mrk.meshingress.api.storage.ToolStorageDelegatedFile delegateFile(ToolStorageWorkspace workspace, URI sourceUrl, String relativePath) {

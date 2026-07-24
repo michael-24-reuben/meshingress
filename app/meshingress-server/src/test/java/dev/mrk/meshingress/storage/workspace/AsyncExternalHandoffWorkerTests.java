@@ -101,7 +101,7 @@ class AsyncExternalHandoffWorkerTests {
     }
 
     private ToolStorageWorkspace openAndWrite(Fixture fixture) {
-        ToolStorageWorkspace workspace = fixture.service.openWorkspace("tool", new McpCallContext(null, null, "session-1", "caller-request"), new ToolStorageWorkspaceRequest(null, 1));
+        ToolStorageWorkspace workspace = fixture.service.openWorkspace("tool", new McpCallContext(null, null, "session-1", "caller-request"), new ToolStorageWorkspaceRequest(null, 1, dev.mrk.meshingress.api.storage.ToolStorageTransferMode.LOCAL_BYTES, dev.mrk.meshingress.api.storage.ToolStorageLocalPublicationMode.QUEUED));
         fixture.service.writeFile(workspace, "chapters/001.txt", new ByteArrayInputStream("content".getBytes(StandardCharsets.UTF_8)), new ToolStorageFileRequest("text/plain"));
         return workspace;
     }
@@ -109,7 +109,7 @@ class AsyncExternalHandoffWorkerTests {
     private Fixture fixture(ExternalHandoffPublisher publisher, Duration leaseDuration) {
         String schema = "async" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         MeshingressProperties.Storage.AsyncHandoff async = new MeshingressProperties.Storage.AsyncHandoff(Duration.ofSeconds(1), leaseDuration, 3, Duration.ofSeconds(1), Duration.ofMinutes(1));
-        MeshingressProperties.Storage properties = new MeshingressProperties.Storage(true, MeshingressProperties.Storage.Lifecycle.LOCAL_ASYNC_EXTERNAL, DataSize.ofMegabytes(1),
+        MeshingressProperties.Storage properties = new MeshingressProperties.Storage(true, MeshingressProperties.Storage.Lifecycle.LOCAL_EXTERNAL, DataSize.ofMegabytes(1),
                 new MeshingressProperties.Storage.Local(temp.resolve(schema).toString(), 10, new MeshingressProperties.Storage.Staging(DataSize.ofMegabytes(1), Duration.ofMinutes(1)),
                         new MeshingressProperties.Storage.Published(DataSize.ofMegabytes(1), Duration.ofMinutes(1), Duration.ofHours(1), 1, 1, 1), new MeshingressProperties.Storage.Cleanup(Duration.ofMinutes(1), 10)),
                 new MeshingressProperties.Storage.External("dav", MeshingressProperties.Storage.AccessMode.WRITE_ONLY, MeshingressProperties.Storage.MutationPolicy.CREATE_ONLY,

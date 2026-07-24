@@ -16,18 +16,13 @@ import java.net.URI;
  */
 public interface ToolStorageService {
 
-    /** Describes whether a tool should supply bytes or durable HTTPS source references. */
-    default ToolStorageTransferMode transferMode() {
-        return ToolStorageTransferMode.LOCAL_BYTES;
-    }
-
     ToolStorageWorkspace openWorkspace(String toolId, McpCallContext context, ToolStorageWorkspaceRequest request);
 
     ToolStorageFile writeFile(ToolStorageWorkspace workspace, String relativePath, InputStream content, ToolStorageFileRequest request);
 
     /**
-     * Registers a source that the configured external provider will fetch after publication.
-     * Implementations must reject this call unless {@link #transferMode()} is
+     * Registers a source that the delegated destination will fetch after sealing.
+     * Implementations must reject this call unless the workspace was opened with
      * {@link ToolStorageTransferMode#DELEGATED_SOURCE_URLS}.
      */
     default ToolStorageDelegatedFile delegateFile(ToolStorageWorkspace workspace, URI sourceUrl, String relativePath) {

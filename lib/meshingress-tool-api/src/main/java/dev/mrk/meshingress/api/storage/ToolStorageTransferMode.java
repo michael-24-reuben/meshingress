@@ -4,6 +4,6 @@ package dev.mrk.meshingress.api.storage;
 public enum ToolStorageTransferMode {
     /** Tools upload every file through {@link ToolStorageService#writeFile}. */
     LOCAL_BYTES,
-    /** Tools upload native files but register HTTPS media for the provider to fetch. */
+    /** Tools upload native descriptors but register HTTPS media for the destination to fetch. */
     DELEGATED_SOURCE_URLS
 }

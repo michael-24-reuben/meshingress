@@ -374,7 +374,8 @@ public record MeshingressProperties(
             return new Storage(true, Lifecycle.LOCAL_LOCAL, DataSize.ofMegabytes(256), Local.defaults(), External.defaults(), Metadata.defaults());
         }
 
-        public enum Lifecycle { LOCAL_LOCAL, LOCAL_EXTERNAL, LOCAL_ASYNC_EXTERNAL, DELEGATED_EXTERNAL, EXTERNAL_EXTERNAL }
+        /** Placement policy for bytes acquired by Meshingress itself. */
+        public enum Lifecycle { LOCAL_LOCAL, LOCAL_EXTERNAL }
         public enum AccessMode { WRITE_ONLY }
         public enum MutationPolicy { CREATE_ONLY }
         public enum ConflictPolicy { FAIL }
@@ -436,6 +437,7 @@ public record MeshingressProperties(
 
         public record External(
                 String defaultTarget,
+                String delegatedTarget,
                 @NotNull AccessMode accessMode,
                 @NotNull MutationPolicy mutationPolicy,
                 @NotNull ConflictPolicy conflictPolicy,
@@ -447,6 +449,7 @@ public record MeshingressProperties(
         ) {
             public External {
                 defaultTarget = defaultTarget == null ? "" : defaultTarget.trim();
+                delegatedTarget = delegatedTarget == null ? "" : delegatedTarget.trim();
                 accessMode = accessMode == null ? AccessMode.WRITE_ONLY : accessMode;
                 mutationPolicy = mutationPolicy == null ? MutationPolicy.CREATE_ONLY : mutationPolicy;
                 conflictPolicy = conflictPolicy == null ? ConflictPolicy.FAIL : conflictPolicy;
@@ -456,10 +459,17 @@ public record MeshingressProperties(
                 asyncHandoff = asyncHandoff == null ? AsyncHandoff.defaults() : asyncHandoff;
                 targets = targets == null ? Map.of() : Map.copyOf(targets);
             }
-            public static External defaults() { return new External("", AccessMode.WRITE_ONLY, MutationPolicy.CREATE_ONLY, ConflictPolicy.FAIL, RetentionPolicy.PROVIDER_MANAGED, 8, Duration.ofMinutes(30), AsyncHandoff.defaults(), Map.of()); }
+            /** Compatibility constructor: the former default target remains the local-byte target. */
+            public External(String defaultTarget, AccessMode accessMode, MutationPolicy mutationPolicy, ConflictPolicy conflictPolicy,
+                            RetentionPolicy retentionPolicy, int maxConcurrentUploads, Duration uploadTimeout,
+                            AsyncHandoff asyncHandoff, Map<String, Target> targets) {
+                this(defaultTarget, "", accessMode, mutationPolicy, conflictPolicy, retentionPolicy, maxConcurrentUploads,
+                        uploadTimeout, asyncHandoff, targets);
+            }
+            public static External defaults() { return new External("", "", AccessMode.WRITE_ONLY, MutationPolicy.CREATE_ONLY, ConflictPolicy.FAIL, RetentionPolicy.PROVIDER_MANAGED, 8, Duration.ofMinutes(30), AsyncHandoff.defaults(), Map.of()); }
         }
 
-        /** Durable-worker policy for LOCAL_ASYNC_EXTERNAL. */
+        /** Durable-worker policy for tool-requested queued LOCAL_BYTES handoffs. */
         public record AsyncHandoff(
                 @NotNull Duration workerInterval,
                 @NotNull Duration leaseDuration,

@@ -12,6 +12,7 @@ import dev.mrk.meshingress.storage.workspace.DelegatedViewerCapabilityStore;
 import dev.mrk.meshingress.storage.workspace.DelegatedViewerService;
 import dev.mrk.meshingress.storage.workspace.NextcloudDelegatedWorkspaceClient;
 import dev.mrk.meshingress.storage.workspace.AsyncExternalHandoffWorker;
+import dev.mrk.meshingress.storage.workspace.ToolStorageRouter;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -51,19 +52,20 @@ public class MeshingressStorageConfiguration {
     @Bean
     ToolStorageService toolStorageService(MeshingressProperties properties, WorkspaceMetadataStore metadata, WorkspaceFiles files,
                                           WorkspacePathLayout paths, ObjectMapper objectMapper, StorageLifecyclePolicy lifecyclePolicy, JdbcTemplate jdbc) {
-        if (properties.storage().lifecycle() == MeshingressProperties.Storage.Lifecycle.DELEGATED_EXTERNAL) {
-            var target = properties.storage().external().targets().get(properties.storage().external().defaultTarget());
+        ToolStorageService local = new ToolWorkspaceStorageService(properties.storage(), metadata, files, paths, objectMapper, lifecyclePolicy.publisher().orElse(null));
+        DelegatedViewerCapabilityStore viewers = new DelegatedViewerCapabilityStore(jdbc, properties.storage().metadata().sql());
+        ToolStorageService delegated = lifecyclePolicy.delegatedTarget().map(target -> {
             NextcloudDelegatedWorkspaceClient client = new NextcloudDelegatedWorkspaceClient(target, properties.storage().external().uploadTimeout(), StorageLifecyclePolicy.authorization(target.credentialRef()), objectMapper);
-            DelegatedViewerCapabilityStore viewers = new DelegatedViewerCapabilityStore(jdbc, properties.storage().metadata().sql());
             return new dev.mrk.meshingress.storage.workspace.NextcloudDelegatedStorageService(client, viewers, properties.identity().publicBaseUrl().toString(), properties.storage());
-        }
-        return new ToolWorkspaceStorageService(properties.storage(), metadata, files, paths, objectMapper, lifecyclePolicy.publisher().orElse(null));
+        }).orElse(null);
+        return new ToolStorageRouter(local, delegated, viewers);
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "meshingress.storage", name = "lifecycle", havingValue = "delegated-external")
-    DelegatedViewerService delegatedViewerService(MeshingressProperties properties, ObjectMapper objectMapper, JdbcTemplate jdbc) {
-        var target = properties.storage().external().targets().get(properties.storage().external().defaultTarget());
+    @ConditionalOnProperty(prefix = "meshingress.storage.external", name = "delegated-target")
+    DelegatedViewerService delegatedViewerService(MeshingressProperties properties, ObjectMapper objectMapper, JdbcTemplate jdbc,
+                                                  StorageLifecyclePolicy lifecyclePolicy) {
+        var target = lifecyclePolicy.delegatedTarget().orElseThrow(() -> new IllegalStateException("No delegated-source target is configured."));
         NextcloudDelegatedWorkspaceClient client = new NextcloudDelegatedWorkspaceClient(target, properties.storage().external().uploadTimeout(), StorageLifecyclePolicy.authorization(target.credentialRef()), objectMapper);
         return new DelegatedViewerService(new DelegatedViewerCapabilityStore(jdbc, properties.storage().metadata().sql()), client);
     }
@@ -80,7 +82,7 @@ public class MeshingressStorageConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "meshingress.storage", name = "lifecycle", havingValue = "local-async-external")
+    @ConditionalOnProperty(prefix = "meshingress.storage", name = "lifecycle", havingValue = "local-external")
     AsyncExternalHandoffWorker asyncExternalHandoffWorker(MeshingressProperties properties, WorkspaceMetadataStore metadata,
                                                           WorkspaceFiles files, StorageLifecyclePolicy lifecyclePolicy) {
         return new AsyncExternalHandoffWorker(properties.storage(), metadata, files,

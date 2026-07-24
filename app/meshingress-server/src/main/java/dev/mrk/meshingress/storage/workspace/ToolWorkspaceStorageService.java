@@ -4,7 +4,9 @@ import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.storage.ToolStorageException;
 import dev.mrk.meshingress.api.storage.ToolStorageFile;
 import dev.mrk.meshingress.api.storage.ToolStorageFileRequest;
+import dev.mrk.meshingress.api.storage.ToolStorageLocalPublicationMode;
 import dev.mrk.meshingress.api.storage.ToolStorageService;
+import dev.mrk.meshingress.api.storage.ToolStorageTransferMode;
 import dev.mrk.meshingress.api.storage.ToolStorageWorkspace;
 import dev.mrk.meshingress.api.storage.ToolStorageWorkspaceRequest;
 import dev.mrk.meshingress.api.storage.ToolStoragePublicationStatus;
@@ -43,6 +45,8 @@ public final class ToolWorkspaceStorageService implements ToolStorageService {
     @Override
     public ToolStorageWorkspace openWorkspace(String toolId, McpCallContext context, ToolStorageWorkspaceRequest request) {
         if (!properties.enabled()) throw new ToolStorageException("Ephemeral storage is disabled.");
+        if (request != null && request.transferMode() != ToolStorageTransferMode.LOCAL_BYTES)
+            throw new ToolStorageException("Local workspace storage accepts only LOCAL_BYTES workspaces.");
         if (toolId == null || toolId.isBlank()) throw new ToolStorageException("A tool ID is required.");
         String requestId = "req_" + UUID.randomUUID().toString().replace("-", "");
         String sessionId = context == null ? null : context.sessionId();
@@ -56,7 +60,7 @@ public final class ToolWorkspaceStorageService implements ToolStorageService {
         OffsetDateTime created = OffsetDateTime.now();
         WorkspaceRecord workspace = new WorkspaceRecord(sessionId, requestId, toolId.trim(), WorkspaceState.STAGING, 0, maxRequests, 0, created, created.plus(ttl));
         metadata.create(workspace, properties.local().maxEntries());
-        return view(workspace, false);
+        return view(workspace, false, publicationMode(request));
     }
 
     @Override
@@ -93,28 +97,31 @@ public final class ToolWorkspaceStorageService implements ToolStorageService {
         try {
             List<WorkspaceFileRecord> entries = metadata.files(workspace.sessionId(), workspace.requestId());
             writeManifest(workspace, entries);
+            ToolStorageLocalPublicationMode mode = workspace.localPublicationMode();
             if (properties.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_LOCAL) {
+                if (mode != ToolStorageLocalPublicationMode.INLINE)
+                    throw new ToolStorageException("Queued publication requires meshingress.storage.lifecycle=local-external.");
                 WorkspaceRecord published = metadata.publish(workspace.sessionId(), workspace.requestId(), properties.local().published().maxBytes().toBytes(), OffsetDateTime.now());
                 files.publish(workspace.sessionId(), workspace.requestId());
-                return view(published, true);
+                return view(published, true, mode);
             }
             ExternalHandoffPublisher publisher = handoffPublisher.orElseThrow(() -> new ToolStorageException("No external handoff publisher is configured."));
-            if (properties.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_ASYNC_EXTERNAL) {
+            if (mode == ToolStorageLocalPublicationMode.QUEUED) {
                 WorkspaceRecord queued = metadata.enqueueHandoff(workspace.sessionId(), workspace.requestId(), publisher.target(), OffsetDateTime.now());
-                return view(queued, true);
+                return view(queued, true, mode);
             }
             ExternalHandoffPublisher.HandoffReceipt receipt = publisher.publish(workspace, entries, files);
             WorkspaceRecord handedOff = metadata.handoff(workspace.sessionId(), workspace.requestId(), receipt, OffsetDateTime.now());
             files.deleteStaging(workspace.sessionId(), workspace.requestId());
-            return view(handedOff, true);
+            return view(handedOff, true, mode);
         } catch (Exception exception) {
             if (properties.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_LOCAL)
                 metadata.failed(workspace.sessionId(), workspace.requestId());
-            else if (properties.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_ASYNC_EXTERNAL)
+            else if (workspace.localPublicationMode() == ToolStorageLocalPublicationMode.QUEUED)
                 metadata.handoffAttemptFailed(new HandoffJob(workspace.sessionId(), workspace.requestId(), handoffPublisher.map(ExternalHandoffPublisher::target).orElse(""), HandoffJobState.QUEUED, 0, OffsetDateTime.now(), null, null), exception.getMessage(), false, 1, Duration.ZERO, OffsetDateTime.now());
             else
                 metadata.handoffFailed(workspace.sessionId(), workspace.requestId(), handoffPublisher.map(ExternalHandoffPublisher::target).orElse(null));
-            if (properties.lifecycle() != MeshingressProperties.Storage.Lifecycle.LOCAL_ASYNC_EXTERNAL) {
+            if (workspace.localPublicationMode() != ToolStorageLocalPublicationMode.QUEUED) {
                 try {
                     files.deleteStaging(workspace.sessionId(), workspace.requestId());
                 } catch (Exception ignored) {
@@ -175,9 +182,13 @@ public final class ToolWorkspaceStorageService implements ToolStorageService {
         }
     }
 
-    private ToolStorageWorkspace view(WorkspaceRecord workspace, boolean published) {
+    private ToolStorageWorkspace view(WorkspaceRecord workspace, boolean published, ToolStorageLocalPublicationMode publicationMode) {
         String base = properties.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_LOCAL ? "/storage/" + workspace.sessionId() + "/" + workspace.requestId() + "/files/" : "";
-        return new ToolStorageWorkspace(workspace.sessionId(), workspace.requestId(), workspace.toolId(), base, workspace.createdAt(), workspace.expiresAt(), workspace.remainingRequests(), published, workspace.state().name());
+        return new ToolStorageWorkspace(workspace.sessionId(), workspace.requestId(), workspace.toolId(), base, workspace.createdAt(), workspace.expiresAt(), workspace.remainingRequests(), published, workspace.state().name(), ToolStorageTransferMode.LOCAL_BYTES, publicationMode);
+    }
+
+    private static ToolStorageLocalPublicationMode publicationMode(ToolStorageWorkspaceRequest request) {
+        return request == null || request.localPublicationMode() == null ? ToolStorageLocalPublicationMode.INLINE : request.localPublicationMode();
     }
 
     private ToolStorageFile file(ToolStorageWorkspace workspace, WorkspaceFileRecord file) {

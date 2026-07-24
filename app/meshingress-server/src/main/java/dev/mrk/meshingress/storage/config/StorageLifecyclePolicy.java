@@ -14,38 +14,47 @@ import java.util.Optional;
 final class StorageLifecyclePolicy {
     private static final Logger logger = LoggerFactory.getLogger(StorageLifecyclePolicy.class);
     private final ExternalHandoffPublisher publisher;
+    private final MeshingressProperties.Storage.Target delegatedTarget;
 
     StorageLifecyclePolicy(MeshingressProperties.Storage storage) {
         if (storage.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_LOCAL) {
             publisher = null;
-            return;
+        } else {
+            logger.info("Initializing external local-byte storage for lifecycle: {}", storage.lifecycle());
+            publisher = localPublisher(storage);
         }
-        logger.info("Initializing external storage for lifecycle: {}", storage.lifecycle());
 
-        if (storage.external().defaultTarget().isBlank()) throw new IllegalStateException("meshingress.storage.external.default-target is required for an external lifecycle.");
+        delegatedTarget = delegatedTarget(storage);
+    }
+
+    private static ExternalHandoffPublisher localPublisher(MeshingressProperties.Storage storage) {
+        if (storage.external().defaultTarget().isBlank())
+            throw new IllegalStateException("meshingress.storage.external.default-target is required for lifecycle=local-external.");
         MeshingressProperties.Storage.Target target = storage.external().targets().get(storage.external().defaultTarget());
-        if (target == null || !target.enabled()) throw new IllegalStateException("The selected external storage target must exist and be enabled.");
-        if (storage.lifecycle() == MeshingressProperties.Storage.Lifecycle.EXTERNAL_EXTERNAL) {
-            if (target.stagingMode() != MeshingressProperties.Storage.StagingMode.PROVIDER_SESSION)
-                throw new IllegalStateException("external-external requires a target with provider-session staging.");
-            throw new IllegalStateException("No provider-session storage adapter is installed for external-external.");
-        }
-        if (storage.lifecycle() == MeshingressProperties.Storage.Lifecycle.DELEGATED_EXTERNAL) {
-            if (target.provider() != MeshingressProperties.Storage.Provider.NEXTCLOUD)
-                throw new IllegalStateException("delegated-external requires an enabled Nextcloud target.");
-            if (target.endpoint().isBlank())
-                throw new IllegalStateException("delegated-external requires a Nextcloud target endpoint.");
-            publisher = null;
-            return;
-        }
+        if (target == null || !target.enabled()) throw new IllegalStateException("The selected local-byte storage target must exist and be enabled.");
         if (target.provider() != MeshingressProperties.Storage.Provider.WEBDAV || target.stagingMode() != MeshingressProperties.Storage.StagingMode.DIRECT_FINAL_ONLY) {
-            throw new IllegalStateException("local-external and local-async-external currently require an enabled WebDAV direct-final-only target.");
+            throw new IllegalStateException("local-external currently requires an enabled WebDAV direct-final-only target.");
         }
-        publisher = new WebDavHandoffPublisher(storage.external().defaultTarget(), target, storage.external().uploadTimeout(), authorization(target.credentialRef()));
+        return new WebDavHandoffPublisher(storage.external().defaultTarget(), target, storage.external().uploadTimeout(), authorization(target.credentialRef()));
+    }
+
+    private static MeshingressProperties.Storage.Target delegatedTarget(MeshingressProperties.Storage storage) {
+        if (storage.external().delegatedTarget().isBlank()) return null;
+        MeshingressProperties.Storage.Target target = storage.external().targets().get(storage.external().delegatedTarget());
+        if (target == null || !target.enabled()) throw new IllegalStateException("The selected delegated-source target must exist and be enabled.");
+        if (target.provider() != MeshingressProperties.Storage.Provider.NEXTCLOUD)
+            throw new IllegalStateException("meshingress.storage.external.delegated-target requires an enabled Nextcloud target.");
+        if (target.endpoint().isBlank())
+            throw new IllegalStateException("meshingress.storage.external.delegated-target requires a Nextcloud target endpoint.");
+        return target;
     }
 
     Optional<ExternalHandoffPublisher> publisher() {
         return Optional.ofNullable(publisher);
+    }
+
+    Optional<MeshingressProperties.Storage.Target> delegatedTarget() {
+        return Optional.ofNullable(delegatedTarget);
     }
 
     /**
