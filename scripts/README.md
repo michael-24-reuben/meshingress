@@ -9,7 +9,7 @@ Meshingress runs as one packaged Spring Boot application:
 Use the root script for your operating system; it forwards to the platform-specific action dispatcher:
 
 ```powershell
-.\scripts\Meshingress.ps1 -Action Start
+.\Meshingress.ps1 -Action Start
 ```
 
 ```bash
@@ -19,11 +19,15 @@ bash ./scripts/Meshingress.sh Start
 The launchers use the existing JAR and build it only when missing. Use `Build` / `--build` to package a fresh JAR, and `SkipTests` / `--skip-tests` only when tests were run separately.
 
 ```powershell
-.\scripts\Meshingress.ps1 -Action Start -Build
-.\scripts\Meshingress.ps1 -Action Start -Headless
-.\scripts\Meshingress.ps1 -Action Status
-.\scripts\Meshingress.ps1 -Action Stop
+.\Meshingress.ps1 -Action Start -Build
+.\Meshingress.ps1 -Action Start -Headless
+.\Meshingress.ps1 -Action Status
+.\Meshingress.ps1 -Action Stop
+.\Meshingress.ps1 -Docs OpenAPI
+.\Meshingress.ps1 -Docs README
 ```
+
+`-Docs` is separate from `-Action`. Its values are `OpenAPI`, `README`, `LICENSE`, and `CHANGELOG`.
 
 ```bash
 bash ./scripts/Meshingress.sh Start --build

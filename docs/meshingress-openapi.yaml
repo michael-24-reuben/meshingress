@@ -893,6 +893,34 @@ paths:
             \ attachment filename."
         "404":
           description: The workspace or requested file is unavailable.
+  /storage/delegated/{token}/files/{relativePath}:
+    get:
+      tags:
+      - delegated-viewer-controller
+      operationId: get_2
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: relativePath
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Range
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
   /artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}:
     get:
       tags:
@@ -2338,7 +2366,17 @@ components:
           type: boolean
         float:
           type: boolean
+        binary:
+          type: boolean
+        pojo:
+          type: boolean
         number:
+          type: boolean
+        missingNode:
+          type: boolean
+        container:
+          type: boolean
+        valueNode:
           type: boolean
         nodeType:
           type: string
@@ -2354,36 +2392,26 @@ components:
           - STRING
         integralNumber:
           type: boolean
-        container:
-          type: boolean
-        bigDecimal:
-          type: boolean
-        missingNode:
-          type: boolean
-        valueNode:
-          type: boolean
         bigInteger:
           type: boolean
         floatingPointNumber:
           type: boolean
+        bigDecimal:
+          type: boolean
         string:
           type: boolean
-        short:
-          type: boolean
-        int:
-          type: boolean
-        boolean:
-          type: boolean
         double:
+          type: boolean
+        short:
           type: boolean
         textual:
           type: boolean
           deprecated: true
         long:
           type: boolean
-        binary:
+        int:
           type: boolean
-        pojo:
+        boolean:
           type: boolean
         embeddedValue:
           type: boolean

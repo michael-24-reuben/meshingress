@@ -38,7 +38,6 @@ public class InMemoryToolRegistry implements ToolRegistry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryToolRegistry.class);
     private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^" + McpTool.QUALIFIED_TOOL_NAME_REGEX + "$");
-    //    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]*(\\.[a-z][a-z0-9-_]*)*$");
     private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile("^" + McpFunction.QUALIFIED_TOOL_FUNCTION_NAME_REGEX + "$");
 
     private final ObjectMapper objectMapper;

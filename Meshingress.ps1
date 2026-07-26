@@ -9,6 +9,8 @@ platform-specific script path.
 param(
     [ValidateSet("Menu", "Start", "Restart", "Stop", "Status", "Logs")]
     [string]$Action = "Menu",
+    [ValidateSet("OpenAPI", "README", "LICENSE", "CHANGELOG")]
+    [string]$Docs,
     [switch]$Headless,
     [switch]$Detached,
     [switch]$Debug,
@@ -24,7 +26,11 @@ param(
     [switch]$SkipServerHealthCheck
 )
 
-$windowsDispatcher = Join-Path $PSScriptRoot "windows\Meshingress.ps1"
+if ($PSBoundParameters.ContainsKey("Action") -and $PSBoundParameters.ContainsKey("Docs")) {
+    throw "Specify either -Action or -Docs, not both."
+}
+
+$windowsDispatcher = Join-Path $PSScriptRoot "scripts\windows\Launcher.ps1"
 if (-not (Test-Path -LiteralPath $windowsDispatcher -PathType Leaf)) {
     throw "Windows Meshingress dispatcher not found: $windowsDispatcher"
 }

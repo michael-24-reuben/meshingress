@@ -7,6 +7,8 @@ tools/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+/app/**/target/
+
 
 ### Architect ###
 architect/
@@ -54,7 +56,7 @@ toolspace/x-*
 !toolspace/x-transform/
 !toolspace/x-transform/**
 toolspace/x-transform/**/node_modules/
-toolspace/x-transform/target/
+toolspace/**/target/
 
 ### Secure Files ###
 *.pem

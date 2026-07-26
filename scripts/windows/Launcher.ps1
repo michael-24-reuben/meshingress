@@ -9,6 +9,8 @@ remains private to this platform and will be replaced by the universal launcher 
 param(
     [ValidateSet("Menu", "Start", "Restart", "Stop", "Status", "Logs")]
     [string]$Action = "Menu",
+    [ValidateSet("OpenAPI", "README", "LICENSE", "CHANGELOG")]
+    [string]$Docs,
     [switch]$Headless,
     [switch]$Detached,
     [switch]$Debug,
@@ -24,16 +26,35 @@ param(
     [switch]$SkipServerHealthCheck
 )
 
-$actionScript = Join-Path $PSScriptRoot "actions\$Action.ps1"
+$isDocsCommand = $PSBoundParameters.ContainsKey("Docs")
+if ($PSBoundParameters.ContainsKey("Action") -and $isDocsCommand) {
+    throw "Specify either -Action or -Docs, not both."
+}
+
+$actionName = if ($isDocsCommand) {
+    "Documents"
+}
+else {
+    $Action
+}
+
+$actionScript = Join-Path $PSScriptRoot "actions\$actionName.ps1"
 if (-not (Test-Path -LiteralPath $actionScript -PathType Leaf)) {
     throw "Windows Meshingress action is not available: $actionScript"
 }
 
 $forwardedParameters = @{}
 foreach ($parameter in $PSBoundParameters.GetEnumerator()) {
-    if ($parameter.Key -ne "Action") {
-        $forwardedParameters[$parameter.Key] = $parameter.Value
+    if ($parameter.Key -ne "Action" -and $parameter.Key -ne "Docs") {
+        if (-not $isDocsCommand -or $parameter.Key -in @("ServerAddress", "ServerPort")) {
+            $forwardedParameters[$parameter.Key] = $parameter.Value
+        }
     }
 }
 
-& $actionScript @forwardedParameters
+if ($isDocsCommand) {
+    & $actionScript -Docs $Docs @forwardedParameters
+}
+else {
+    & $actionScript @forwardedParameters
+}
