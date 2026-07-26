@@ -157,7 +157,7 @@ paths:
       responses:
         "200":
           description: OK
-  /artifact/{groupId}/{artifactId}/{version}:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}:
     post:
       tags:
       - Artifact repository
@@ -266,7 +266,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
-  /artifact/{groupId}/{artifactId}/{version}/revoke:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/revoke:
     post:
       tags:
       - Artifact repository
@@ -346,7 +346,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactPublicationRecord"
-  /artifact/{groupId}/{artifactId}/{version}/restore:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/restore:
     post:
       tags:
       - Artifact repository
@@ -424,7 +424,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
-  /artifact/{groupId}/{artifactId}/{version}/reject:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/reject:
     post:
       tags:
       - Artifact repository
@@ -502,7 +502,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
-  /artifact/{groupId}/{artifactId}/{version}/publish:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/publish:
     post:
       tags:
       - Artifact repository
@@ -576,7 +576,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactPublicationRecord"
-  /artifact/{groupId}/{artifactId}/{version}/delete:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/delete:
     post:
       tags:
       - Artifact repository
@@ -654,7 +654,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
-  /artifact/{groupId}/{artifactId}/{version}/assess:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/assess:
     post:
       tags:
       - Artifact repository
@@ -728,7 +728,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
-  /artifact/{groupId}/{artifactId}/{version}/approve:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/approve:
     post:
       tags:
       - Artifact repository
@@ -807,7 +807,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
-  /storage/{sessionId}/{requestId}/files/{relativePath}:
+  /api/v1/storage/{sessionId}/{requestId}/files/{relativePath}:
     get:
       tags:
       - Workspace storage
@@ -893,7 +893,7 @@ paths:
             \ attachment filename."
         "404":
           description: The workspace or requested file is unavailable.
-  /storage/delegated/{token}/files/{relativePath}:
+  /api/v1/storage/delegated/{token}/files/{relativePath}:
     get:
       tags:
       - delegated-viewer-controller
@@ -921,7 +921,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/StreamingResponseBody"
-  /artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}:
     get:
       tags:
       - Artifact repository
@@ -1010,7 +1010,7 @@ paths:
               schema:
                 type: string
                 format: binary
-  /artifact/{groupId}/{artifactId}/{version}/publication:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/publication:
     get:
       tags:
       - Artifact repository
@@ -1083,7 +1083,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactPublicationRecord"
-  /artifact/{groupId}/{artifactId}/{version}/metadata:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/metadata:
     get:
       tags:
       - Artifact repository
@@ -1156,7 +1156,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
-  /artifact/{groupId}/{artifactId}/{version}/file:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/file:
     get:
       tags:
       - Artifact repository
@@ -1232,7 +1232,7 @@ paths:
               schema:
                 type: string
                 format: binary
-  /artifact/{groupId}/{artifactId}/{version}/assessment:
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/assessment:
     get:
       tags:
       - Artifact repository
@@ -1310,7 +1310,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ScannerResult"
-  /artifact/reviews/pending:
+  /api/v1/artifact/reviews/pending:
     get:
       tags:
       - Artifact repository
@@ -1366,7 +1366,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ArtifactReviewQueueItem"
-  /artifact/jars:
+  /api/v1/artifact/jars:
     get:
       tags:
       - Artifact repository

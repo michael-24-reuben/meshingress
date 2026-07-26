@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
-@RequestMapping("/storage")
+@RequestMapping("/api/v1/storage")
 @ConditionalOnProperty(prefix = "meshingress.storage", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Tag(name = "Workspace storage", description = "Retrieve files published by a Meshingress tool workspace.")
 public class StorageController {

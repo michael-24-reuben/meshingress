@@ -35,7 +35,7 @@ class StorageServiceTests {
         Fixture fixture = fixture(DataSize.ofKilobytes(8), 10);
         ToolStorageWorkspace staging = fixture.service.openWorkspace("toonverse.fetch-chapters", context(), new ToolStorageWorkspaceRequest(Duration.ofMinutes(2), 2));
         assertEquals("session-1", staging.sessionId());
-        assertEquals("/storage/session-1/" + staging.requestId() + "/files/", staging.filesUri());
+        assertEquals("/api/v1/storage/session-1/" + staging.requestId() + "/files/", staging.filesUri());
 
         fixture.service.writeFile(staging, "chapters/001.webp", new ByteArrayInputStream("image".getBytes(StandardCharsets.UTF_8)), new ToolStorageFileRequest("image/webp"));
         ToolStorageWorkspace published = fixture.service.publish(staging);

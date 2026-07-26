@@ -11,7 +11,7 @@ function Join-MeshingressRepositoryArtifactUri {
   )
 
   $base = $BaseUri.TrimEnd('/')
-  $path = '/artifact/{0}/{1}/{2}' -f `
+  $path = '/api/v1/artifact/{0}/{1}/{2}' -f `
     [uri]::EscapeDataString($GroupId), `
     [uri]::EscapeDataString($ArtifactId), `
     [uri]::EscapeDataString($Version)

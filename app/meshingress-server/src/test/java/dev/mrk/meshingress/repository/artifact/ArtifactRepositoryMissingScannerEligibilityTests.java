@@ -45,7 +45,7 @@ class ArtifactRepositoryMissingScannerEligibilityTests {
     void publicationPolicyRejectsMissingRequiredScannerEvidence() throws Exception {
         uploadAssessAndApprove("missing-scanner-sample");
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/missing-scanner-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/missing-scanner-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail", containsString("MISSING_REQUIRED_SCANNER:missing-eligibility-scanner")));
@@ -59,17 +59,17 @@ class ArtifactRepositoryMissingScannerEligibilityTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/" + artifactId + "/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/" + artifactId + "/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

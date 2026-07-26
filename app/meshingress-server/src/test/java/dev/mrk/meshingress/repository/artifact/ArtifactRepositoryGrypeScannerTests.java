@@ -65,19 +65,19 @@ class ArtifactRepositoryGrypeScannerTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/grype-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/grype-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/grype-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/grype-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("BLOCKED_POLICY"))
                 .andExpect(jsonPath("$.assessment.scanners", hasItem("grype-vulnerability-scanner")));
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/grype-sample/1.0.0/assessment")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/grype-sample/1.0.0/assessment")
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())

@@ -84,7 +84,7 @@ public final class NextcloudDelegatedStorageService implements ToolStorageServic
     private DelegatedViewerCapabilityStore.Capability viewer(ToolStorageWorkspace workspace) {
         DelegatedViewerCapabilityStore.Capability persisted = viewers.findByRequest(workspace.requestId())
                 .orElseThrow(() -> new ToolStorageException("The delegated viewer capability is unavailable."));
-        String marker = "/storage/delegated/";
+        String marker = "/api/v1/storage/delegated/";
         int start = workspace.filesUri().indexOf(marker);
         int end = workspace.filesUri().indexOf("/files/", start + marker.length());
         if (start < 0 || end < 0) throw new ToolStorageException("The delegated viewer capability is unavailable.");
@@ -95,7 +95,7 @@ public final class NextcloudDelegatedStorageService implements ToolStorageServic
     private ToolStorageWorkspace workspace(JsonNode remote, String toolId, String sessionId, String requestId, boolean published, DelegatedViewerCapabilityStore.Capability viewer) {
         OffsetDateTime now = OffsetDateTime.now();
         return new ToolStorageWorkspace(sessionId, remote.path("workspaceId").asText(requestId), toolId,
-                viewerBaseUri + "/storage/delegated/" + viewer.token() + "/files/", now, viewer.expiresAt(), viewer.remainingRequests(), published,
+                viewerBaseUri + "/api/v1/storage/delegated/" + viewer.token() + "/files/", now, viewer.expiresAt(), viewer.remainingRequests(), published,
                 remote.path("state").asText(published ? "QUEUED" : "OPEN"), ToolStorageTransferMode.DELEGATED_SOURCE_URLS, null);
     }
 }

@@ -28,19 +28,19 @@ class HttpRouteOpenApiDocumentationTests {
     void artifactRoutesDocumentLifecycleAndRepositoryRoleHeaders() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paths['/artifact/{groupId}/{artifactId}/{version}'].post.tags", hasItem("Artifact repository")))
-                .andExpect(jsonPath("$.paths['/artifact/{groupId}/{artifactId}/{version}'].post.summary", is("Upload an artifact")))
-                .andExpect(jsonPath("$.paths['/artifact/{groupId}/{artifactId}/{version}'].post.parameters[?(@.name == 'X-Repository-Role')].description", hasItem("Repository role or roles, separated by commas or whitespace. Required by the access policy; use uploader, reviewer, publisher, or admin as appropriate.")))
-                .andExpect(jsonPath("$.paths['/artifact/{groupId}/{artifactId}/{version}/publish'].post.responses.403.description", is("The caller does not have the publisher or admin repository role.")));
+                .andExpect(jsonPath("$.paths['/api/v1/artifact/{groupId}/{artifactId}/{version}'].post.tags", hasItem("Artifact repository")))
+                .andExpect(jsonPath("$.paths['/api/v1/artifact/{groupId}/{artifactId}/{version}'].post.summary", is("Upload an artifact")))
+                .andExpect(jsonPath("$.paths['/api/v1/artifact/{groupId}/{artifactId}/{version}'].post.parameters[?(@.name == 'X-Repository-Role')].description", hasItem("Repository role or roles, separated by commas or whitespace. Required by the access policy; use uploader, reviewer, publisher, or admin as appropriate.")))
+                .andExpect(jsonPath("$.paths['/api/v1/artifact/{groupId}/{artifactId}/{version}/publish'].post.responses.403.description", is("The caller does not have the publisher or admin repository role.")));
     }
 
     @Test
     void storageRoutesDocumentRetrievalAndRangeBehavior() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paths['/storage/{sessionId}/{requestId}/files/{relativePath}'].get.tags", hasItem("Workspace storage")))
-                .andExpect(jsonPath("$.paths['/storage/{sessionId}/{requestId}/files/{relativePath}'].get.summary", is("Download a workspace file")))
-                .andExpect(jsonPath("$.paths['/storage/{sessionId}/{requestId}/files/{relativePath}'].get.responses.416.description", is("A Range header was supplied; partial-content retrieval is not supported.")))
-                .andExpect(jsonPath("$.paths['/storage/{sessionId}/{requestId}/files/{relativePath}'].head.summary", is("Inspect a workspace file")));
+                .andExpect(jsonPath("$.paths['/api/v1/storage/{sessionId}/{requestId}/files/{relativePath}'].get.tags", hasItem("Workspace storage")))
+                .andExpect(jsonPath("$.paths['/api/v1/storage/{sessionId}/{requestId}/files/{relativePath}'].get.summary", is("Download a workspace file")))
+                .andExpect(jsonPath("$.paths['/api/v1/storage/{sessionId}/{requestId}/files/{relativePath}'].get.responses.416.description", is("A Range header was supplied; partial-content retrieval is not supported.")))
+                .andExpect(jsonPath("$.paths['/api/v1/storage/{sessionId}/{requestId}/files/{relativePath}'].head.summary", is("Inspect a workspace file")));
     }
 }

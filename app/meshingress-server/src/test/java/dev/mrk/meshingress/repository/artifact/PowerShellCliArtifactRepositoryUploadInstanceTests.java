@@ -83,7 +83,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 Files.readAllBytes(jar)
         );
 
-        MvcResult uploadResult = mockMvc.perform(multipart("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION)
+        MvcResult uploadResult = mockMvc.perform(multipart("/api/v1/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION)
                         .header("X-Repository-Role", "admin")
                         .file(file)
                         .param("requestedScopes", "SHELL_EXECUTE")
@@ -132,7 +132,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
         assertThat(Files.isDirectory(quarantineRoot)).isTrue();
         assertThat(countEntries(quarantineRoot)).isGreaterThan(0);
 
-        MvcResult assessResult = mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assess")
+        MvcResult assessResult = mockMvc.perform(post("/api/v1/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assess")
                         .header("X-Repository-Role", "admin")
                 )
                 .andDo(print())
@@ -150,7 +150,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
         System.out.println("assessResponse=" + assessed.toPrettyString());
         assertThat(Files.exists(quarantineRoot)).isFalse();
 
-        mockMvc.perform(get("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assessment")
+        mockMvc.perform(get("/api/v1/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/assessment")
                 .header("X-Repository-Role", "admin"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -166,7 +166,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andExpect(jsonPath("$[2].scanner").value("bytecode-scope-scanner"))
                 .andExpect(jsonPath("$[2].status").value("REVIEW"));
 
-        MvcResult approveResult = mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/approve")
+        MvcResult approveResult = mockMvc.perform(post("/api/v1/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/approve")
                         .header("X-Repository-Role", "admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -191,7 +191,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
         JsonNode approved = objectMapper.readTree(approveResult.getResponse().getContentAsByteArray());
         System.out.println("approveResponse=" + approved.toPrettyString());
 
-        mockMvc.perform(post("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publish")
+        mockMvc.perform(post("/api/v1/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publish")
                 .header("X-Repository-Role", "admin"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -201,7 +201,7 @@ class PowerShellCliArtifactRepositoryUploadInstanceTests {
                 .andExpect(jsonPath("$.provenance.generatedBy").value("meshingress-repository"))
                 .andExpect(jsonPath("$.signature", not(blankOrNullString())));
 
-        mockMvc.perform(get("/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publication")
+        mockMvc.perform(get("/api/v1/artifact/" + GROUP_ID + "/" + ARTIFACT_ID + "/" + VERSION + "/publication")
                 .header("X-Repository-Role", "admin"))
                 .andDo(print())
                 .andExpect(status().isOk())

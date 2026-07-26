@@ -32,7 +32,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 @RestController
-@RequestMapping("/artifact")
+@RequestMapping("/api/v1/artifact")
 @Tag(name = "Artifact repository", description = "Upload, assess, review, publish, and retrieve Meshingress tool artifacts.")
 public class ArtifactController {
 

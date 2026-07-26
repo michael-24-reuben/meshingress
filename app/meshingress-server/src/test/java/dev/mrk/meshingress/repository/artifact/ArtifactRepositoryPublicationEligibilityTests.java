@@ -44,7 +44,7 @@ class ArtifactRepositoryPublicationEligibilityTests {
     void publicationPolicyRejectsInsufficientReviewerApprovals() throws Exception {
         uploadAssessAndApprove("review-count-sample");
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/review-count-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/review-count-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("publication eligibility denied: INSUFFICIENT_REVIEW_APPROVALS"));
@@ -58,17 +58,17 @@ class ArtifactRepositoryPublicationEligibilityTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/" + artifactId + "/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/" + artifactId + "/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/" + artifactId + "/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
-@RequestMapping("/storage/delegated")
+@RequestMapping("/api/v1/storage/delegated")
 @Conditional(DelegatedSourceTargetConfiguredCondition.class)
 public final class DelegatedViewerController {
     private final DelegatedViewerService viewer;

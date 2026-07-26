@@ -25,12 +25,12 @@ class StorageControllerTests {
     }
     @Test void headUsesTheExplicitSessionRequestFileRoute() throws Exception {
         when(retrieval.inspect("session-1", "req-1", "chapters/001.webp")).thenReturn(new WorkspaceFileRecord("chapters/001.webp", "image/webp", 4, "abc"));
-        mvc.perform(head("/storage/session-1/req-1/files/chapters/001.webp"))
+        mvc.perform(head("/api/v1/storage/session-1/req-1/files/chapters/001.webp"))
                 .andExpect(status().isOk()).andExpect(header().string("Content-Type", "image/webp"))
                 .andExpect(header().string("Content-Length", "4"))
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"001.webp\""));
     }
     @Test void rangeIsRejectedBeforeWorkspaceLookup() throws Exception {
-        mvc.perform(get("/storage/session-1/req-1/files/note.txt").header("Range", "bytes=0-1")).andExpect(status().isRequestedRangeNotSatisfiable());
+        mvc.perform(get("/api/v1/storage/session-1/req-1/files/note.txt").header("Range", "bytes=0-1")).andExpect(status().isRequestedRangeNotSatisfiable());
     }
 }

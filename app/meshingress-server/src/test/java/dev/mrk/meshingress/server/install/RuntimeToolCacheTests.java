@@ -39,11 +39,11 @@ class RuntimeToolCacheTests {
     private static final String ARTIFACT_ID = "sample-module";
     private static final String VERSION = "0.0.1-SNAPSHOT";
     private static final String JAR_NAME = "sample-module.jar";
-    private static final String DOWNLOAD_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/file";
-    private static final String PUBLICATION_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/publication";
-    private static final String APPLICATION_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/application.properties";
-    private static final String README_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/README.md";
-    private static final String MANIFEST_RESOURCE_PATH = "/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/tool-manifest.json";
+    private static final String DOWNLOAD_PATH = "/api/v1/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/file";
+    private static final String PUBLICATION_PATH = "/api/v1/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/publication";
+    private static final String APPLICATION_RESOURCE_PATH = "/api/v1/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/application.properties";
+    private static final String README_RESOURCE_PATH = "/api/v1/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/README.md";
+    private static final String MANIFEST_RESOURCE_PATH = "/api/v1/artifact/dev.mrk.tools/sample-module/0.0.1-SNAPSHOT/resources/tool-manifest.json";
 
     @TempDir
     Path tempDir;

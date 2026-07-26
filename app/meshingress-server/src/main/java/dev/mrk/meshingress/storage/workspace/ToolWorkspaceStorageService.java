@@ -183,7 +183,7 @@ public final class ToolWorkspaceStorageService implements ToolStorageService {
     }
 
     private ToolStorageWorkspace view(WorkspaceRecord workspace, boolean published, ToolStorageLocalPublicationMode publicationMode) {
-        String base = properties.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_LOCAL ? "/storage/" + workspace.sessionId() + "/" + workspace.requestId() + "/files/" : "";
+        String base = properties.lifecycle() == MeshingressProperties.Storage.Lifecycle.LOCAL_LOCAL ? "/api/v1/storage/" + workspace.sessionId() + "/" + workspace.requestId() + "/files/" : "";
         return new ToolStorageWorkspace(workspace.sessionId(), workspace.requestId(), workspace.toolId(), base, workspace.createdAt(), workspace.expiresAt(), workspace.remainingRequests(), published, workspace.state().name(), ToolStorageTransferMode.LOCAL_BYTES, publicationMode);
     }
 

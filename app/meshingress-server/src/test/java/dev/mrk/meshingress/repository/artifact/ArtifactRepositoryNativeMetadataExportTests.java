@@ -54,13 +54,13 @@ class ArtifactRepositoryNativeMetadataExportTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/native-metadata-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk());
 
@@ -78,11 +78,11 @@ class ArtifactRepositoryNativeMetadataExportTests {
                 .contains("\"toolId\":\"sample.native\"")
                 .contains("\"meshingress.sample.native.command\"");
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/application.properties")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/application.properties")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("meshingress.sample.native.command=sample-tool")));
-        mockMvc.perform(get("/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/tool-manifest.json")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/tool-manifest.json")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("\"toolId\":\"sample.native\"")));

@@ -37,7 +37,7 @@ class DelegatedViewerControllerTests {
         when(viewer.open("capability", "book.json"))
                 .thenReturn(new DelegatedViewerService.OpenFile(new ByteArrayInputStream(json), "application/json", json.length, "book.json"));
 
-        var result = mvc.perform(get("/storage/delegated/capability/files/book.json"))
+        var result = mvc.perform(get("/api/v1/storage/delegated/capability/files/book.json"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
         mvc.perform(asyncDispatch(result))
@@ -51,7 +51,7 @@ class DelegatedViewerControllerTests {
 
     @Test
     void rejectsRangeRequestsBeforeOpeningTheCapability() throws Exception {
-        mvc.perform(get("/storage/delegated/capability/files/book.json").header("Range", "bytes=0-1"))
+        mvc.perform(get("/api/v1/storage/delegated/capability/files/book.json").header("Range", "bytes=0-1"))
                 .andExpect(status().isRequestedRangeNotSatisfiable());
     }
 
@@ -60,7 +60,7 @@ class DelegatedViewerControllerTests {
         when(viewer.open("capability", "book.json"))
                 .thenReturn(new DelegatedViewerService.OpenFile(new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8)), "application/json", -1, "book.json"));
 
-        var result = mvc.perform(get("/storage/delegated/capability/files/book.json"))
+        var result = mvc.perform(get("/api/v1/storage/delegated/capability/files/book.json"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
         mvc.perform(asyncDispatch(result))

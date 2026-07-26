@@ -263,7 +263,7 @@ public class RepositoryArtifactFetcher {
 
     private URI downloadUri(ArtifactPublicationRecord publication, String apiBaseUrl) {
         URI base = URI.create(apiBaseUrl.endsWith("/") ? apiBaseUrl : apiBaseUrl + "/");
-        String path = "artifact/%s/%s/%s/file".formatted(
+        String path = "api/v1/artifact/%s/%s/%s/file".formatted(
                 segment(publication.coordinate().groupId()),
                 segment(publication.coordinate().artifactId()),
                 segment(publication.coordinate().version())
@@ -273,7 +273,7 @@ public class RepositoryArtifactFetcher {
 
     private URI resourceUri(ArtifactPublicationRecord publication, String apiBaseUrl, String resourceName) {
         URI base = URI.create(apiBaseUrl.endsWith("/") ? apiBaseUrl : apiBaseUrl + "/");
-        String path = "artifact/%s/%s/%s/resources/%s".formatted(
+        String path = "api/v1/artifact/%s/%s/%s/resources/%s".formatted(
                 segment(publication.coordinate().groupId()),
                 segment(publication.coordinate().artifactId()),
                 segment(publication.coordinate().version()),
@@ -287,7 +287,7 @@ public class RepositoryArtifactFetcher {
             throw invalidParams("Publication coordinate is required.");
         }
         URI base = URI.create(apiBaseUrl.endsWith("/") ? apiBaseUrl : apiBaseUrl + "/");
-        String path = "artifact/%s/%s/%s/publication".formatted(
+        String path = "api/v1/artifact/%s/%s/%s/publication".formatted(
                 segment(coordinate.groupId()),
                 segment(coordinate.artifactId()),
                 segment(coordinate.version())

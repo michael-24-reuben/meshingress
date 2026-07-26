@@ -63,14 +63,14 @@ class ArtifactRepositoryScannerPipelineTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/blocked-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/blocked-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("QUARANTINED"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/blocked-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/blocked-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("BLOCKED_POLICY"))
@@ -78,7 +78,7 @@ class ArtifactRepositoryScannerPipelineTests {
                 .andExpect(jsonPath("$.assessment.scanners", hasItem("embedded-jar-sandbox")))
                 .andExpect(jsonPath("$.assessment.summary.pipeline.requiredScanners", hasItem("policy-blocking-scanner")));
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/blocked-sample/1.0.0/assessment")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/blocked-sample/1.0.0/assessment")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].scanner").value("policy-blocking-scanner"))
@@ -87,7 +87,7 @@ class ArtifactRepositoryScannerPipelineTests {
                 .andExpect(jsonPath("$[0].rawSummary.pipeline.timeout").value("PT5S"))
                 .andExpect(jsonPath("$[0].rawSummary.pipeline.failurePolicy").value("BLOCK"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/blocked-sample/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/blocked-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -100,7 +100,7 @@ class ArtifactRepositoryScannerPipelineTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be REVIEW_PENDING before approval"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/blocked-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/blocked-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be approved before publication"));

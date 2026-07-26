@@ -73,7 +73,7 @@ class ArtifactRepositoryFlowTests {
                 artifactBytes
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/generated-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/generated-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "SHELL_EXECUTE")
                         .param("requestedScopes", "FILES_READ")
@@ -85,13 +85,13 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$.artifactChecksum.algorithm").value("SHA-256"))
                 .andExpect(jsonPath("$.files[0].path").exists());
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/generated-sample/1.0.0/file")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/generated-sample/1.0.0/file")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
                 .andExpect(content().bytes(artifactBytes));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/generated-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/generated-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer")
                         .header("X-Repository-Actor", "review-agent")
                         .header("X-Request-Id", "req-assess-1"))
@@ -111,7 +111,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$.assessment.summary.sandbox.strategy").value("static-quarantine-inspection"))
                 .andExpect(jsonPath("$.scopes.inferredScopes", hasItem("FILES_READ")));
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/generated-sample/1.0.0/assessment")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/generated-sample/1.0.0/assessment")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].scanner").value("cyclonedx-sbom"))
@@ -129,11 +129,11 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$[2].scanner").value("bytecode-scope-scanner"))
                 .andExpect(jsonPath("$[2].status").value("PASSED"));
 
-        mockMvc.perform(get("/artifact/reviews/pending"))
+        mockMvc.perform(get("/api/v1/artifact/reviews/pending"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to read"));
 
-        mockMvc.perform(get("/artifact/reviews/pending")
+        mockMvc.perform(get("/api/v1/artifact/reviews/pending")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].artifact.coordinate.groupId").value("dev.mrk.tools"))
@@ -147,7 +147,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$[0].assessment[1].scanner").value("embedded-jar-sandbox"))
                 .andExpect(jsonPath("$[0].assessment[2].scanner").value("bytecode-scope-scanner"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/generated-sample/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/generated-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -169,12 +169,12 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
                 .andExpect(jsonPath("$.scopes.approvedScopes[0]").value("FILES_READ"));
 
-        mockMvc.perform(get("/artifact/reviews/pending")
+        mockMvc.perform(get("/api/v1/artifact/reviews/pending")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.artifact.coordinate.artifactId == 'generated-sample')]").isEmpty());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/generated-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/generated-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher")
                         .header("X-Repository-Actor", "publisher-agent")
                         .header("X-Request-Id", "req-publish-1"))
@@ -189,7 +189,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$.eligibilityDecision.evidence.reviewerApprovalCount").value(1))
                 .andExpect(jsonPath("$.signature", not(blankOrNullString())));
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/generated-sample/1.0.0/publication")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/generated-sample/1.0.0/publication")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"))
@@ -276,7 +276,7 @@ class ArtifactRepositoryFlowTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/listed-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/listed-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader")
@@ -284,11 +284,11 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("QUARANTINED"));
 
-        mockMvc.perform(get("/artifact/jars"))
+        mockMvc.perform(get("/api/v1/artifact/jars"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to read"));
 
-        mockMvc.perform(get("/artifact/jars")
+        mockMvc.perform(get("/api/v1/artifact/jars")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.coordinate.artifactId == 'listed-sample')]").isNotEmpty())
@@ -309,7 +309,7 @@ class ArtifactRepositoryFlowTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader")
@@ -317,7 +317,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("QUARANTINED"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -330,7 +330,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be assessed before approval"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/reject")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/reject")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -342,12 +342,12 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be assessed before rejection"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be assessed before publication"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/revoke")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/revoke")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -359,7 +359,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be published before revocation"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/restore")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/restore")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -371,12 +371,12 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be DELETED before restore"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("REVIEW_PENDING"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/stage-bypass-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail", containsString("approved before publication")));
@@ -391,19 +391,19 @@ class ArtifactRepositoryFlowTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/rejected-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/rejected-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "SHELL_EXECUTE")
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/rejected-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/rejected-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("REVIEW_PENDING"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/rejected-sample/1.0.0/reject")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/rejected-sample/1.0.0/reject")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -427,12 +427,12 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$.scopes.approvedScopes").isEmpty())
                 .andExpect(jsonPath("$.scopes.deniedScopes[0].scope").value("SHELL_EXECUTE"));
 
-        mockMvc.perform(get("/artifact/reviews/pending")
+        mockMvc.perform(get("/api/v1/artifact/reviews/pending")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.artifact.coordinate.artifactId == 'rejected-sample')]").isEmpty());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/rejected-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/rejected-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail", containsString("approved before publication")));
@@ -459,17 +459,17 @@ class ArtifactRepositoryFlowTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/revoked-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/revoked-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/revoked-sample/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -482,13 +482,13 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/revoked-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/publish")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.revoked").value(false))
                 .andExpect(jsonPath("$.signature", not(blankOrNullString())));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/revoked-sample/1.0.0/delete")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -500,7 +500,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("published artifacts must be revoked before deletion"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/revoked-sample/1.0.0/revoke")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/revoke")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -518,18 +518,18 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(jsonPath("$.signatureAlgorithm").value("HmacSHA256"))
                 .andExpect(jsonPath("$.signature", not(blankOrNullString())));
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/revoked-sample/1.0.0/metadata")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/metadata")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("REVOKED"));
 
-        mockMvc.perform(get("/artifact/dev.mrk.tools/revoked-sample/1.0.0/publication")
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/publication")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("REVOKED"))
                 .andExpect(jsonPath("$.revoked").value(true));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/revoked-sample/1.0.0/revoke")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/revoked-sample/1.0.0/revoke")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("publication is already revoked"));
@@ -565,17 +565,17 @@ class ArtifactRepositoryFlowTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/deleted-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/deleted-sample/1.0.0")
                         .file(file)
                         .param("requestedScopes", "FILES_READ")
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/deleted-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/deleted-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/deleted-sample/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/deleted-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -588,7 +588,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/deleted-sample/1.0.0/delete")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/deleted-sample/1.0.0/delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -602,7 +602,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("DELETED"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/deleted-sample/1.0.0/delete")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/deleted-sample/1.0.0/delete")
                         .header("X-Repository-Role", "admin"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact is already deleted"));
@@ -617,7 +617,7 @@ class ArtifactRepositoryFlowTests {
         org.assertj.core.api.Assertions.assertThat(deletedEntry.record().trustStatus().name()).isEqualTo("DELETED");
         org.assertj.core.api.Assertions.assertThat(Files.isRegularFile(deletedEntry.artifactPath())).isTrue();
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/deleted-sample/1.0.0/restore")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/deleted-sample/1.0.0/restore")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -631,7 +631,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.trustStatus").value("APPROVED_LIMITED"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/deleted-sample/1.0.0/restore")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/deleted-sample/1.0.0/restore")
                         .header("X-Repository-Role", "admin"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("artifact must be DELETED before restore"));
@@ -672,16 +672,16 @@ class ArtifactRepositoryFlowTests {
                 sampleJarBytes()
         );
 
-        mockMvc.perform(multipart("/artifact/dev.mrk.tools/role-gated-sample/1.0.0")
+        mockMvc.perform(multipart("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0")
                         .file(file)
                         .header("X-Repository-Role", "uploader"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/role-gated-sample/1.0.0/assess")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0/assess")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/role-gated-sample/1.0.0/approve")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -694,7 +694,7 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to approve"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/role-gated-sample/1.0.0/reject")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0/reject")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -705,22 +705,22 @@ class ArtifactRepositoryFlowTests {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to reject"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/role-gated-sample/1.0.0/publish")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0/publish")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to publish"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/role-gated-sample/1.0.0/revoke")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0/revoke")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to revoke"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/role-gated-sample/1.0.0/delete")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0/delete")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to delete"));
 
-        mockMvc.perform(post("/artifact/dev.mrk.tools/role-gated-sample/1.0.0/restore")
+        mockMvc.perform(post("/api/v1/artifact/dev.mrk.tools/role-gated-sample/1.0.0/restore")
                         .header("X-Repository-Role", "publisher"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.detail").value("repository role is not allowed to restore"));
