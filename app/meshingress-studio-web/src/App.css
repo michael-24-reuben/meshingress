@@ -1,0 +1,59 @@
+#root {
+  min-height: 100vh;
+}
+
+.studio-shell {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.studio-card {
+  width: min(100%, 46rem);
+  border: 1px solid #28364a;
+  border-radius: 0.5rem;
+  background: #111a27;
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 22%);
+}
+
+.studio-card__header,
+.studio-card__body {
+  padding: 1.5rem;
+}
+
+.studio-card__header {
+  border-bottom: 1px solid #28364a;
+}
+
+.studio-card__eyebrow {
+  margin: 0 0 0.5rem;
+  color: #65b6ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.studio-card h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+}
+
+.studio-card p {
+  color: #b8c5d6;
+  line-height: 1.6;
+}
+
+.studio-card ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0;
+  padding-left: 1.25rem;
+  color: #d9e3ee;
+}
+
+.studio-card code {
+  color: #8dd4ff;
+}
