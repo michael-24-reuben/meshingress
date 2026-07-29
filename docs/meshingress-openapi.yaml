@@ -8,6 +8,8 @@ servers:
 tags:
 - name: Artifact repository
   description: "Upload, assess, review, publish, and retrieve Meshingress tool artifacts."
+- name: Workflow samples
+  description: Run explicitly named in-process workflow beta samples.
 - name: Workspace storage
   description: Retrieve files published by a Meshingress tool workspace.
 paths:
@@ -157,6 +159,48 @@ paths:
       responses:
         "200":
           description: OK
+  /api/v1/workflows/samples/desktop-volume-greeting-solo-leveling/run:
+    post:
+      tags:
+      - Workflow samples
+      summary: "Run the desktop volume, greeting, and Toonverse-search sample"
+      description: "Sets the default Windows render volume to 100 percent, greets\
+        \ Alphasunny, and searches Toonverse for Solo Leveling. This beta route executes\
+        \ immediately and does not persist a workflow instance."
+      operationId: runDesktopVolumeGreetingAndSoloLeveling
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Mcp-Role
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Mcp-Admin
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: Mcp-Session-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowRun"
   /api/v1/artifact/{groupId}/{artifactId}/{version}:
     post:
       tags:
@@ -2366,17 +2410,13 @@ components:
           type: boolean
         float:
           type: boolean
-        binary:
-          type: boolean
-        pojo:
-          type: boolean
         number:
           type: boolean
-        missingNode:
+        bigDecimal:
           type: boolean
         container:
           type: boolean
-        valueNode:
+        missingNode:
           type: boolean
         nodeType:
           type: string
@@ -2390,31 +2430,69 @@ components:
           - OBJECT
           - POJO
           - STRING
-        integralNumber:
+        floatingPointNumber:
+          type: boolean
+        valueNode:
           type: boolean
         bigInteger:
           type: boolean
-        floatingPointNumber:
+        integralNumber:
           type: boolean
-        bigDecimal:
-          type: boolean
-        string:
-          type: boolean
-        double:
+        boolean:
           type: boolean
         short:
+          type: boolean
+        binary:
+          type: boolean
+        pojo:
           type: boolean
         textual:
           type: boolean
           deprecated: true
         long:
           type: boolean
+        string:
+          type: boolean
         int:
           type: boolean
-        boolean:
+        double:
           type: boolean
         embeddedValue:
           type: boolean
+    NodeOutcome:
+      type: object
+      properties:
+        requestId:
+          type: string
+        port:
+          type: string
+        attempts:
+          type: integer
+          format: int32
+        failed:
+          type: boolean
+        message:
+          type: string
+    WorkflowRun:
+      type: object
+      properties:
+        runId:
+          type: string
+        status:
+          type: string
+          enum:
+          - COMPLETED
+          - FAILED
+        results:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/JsonNode"
+        nodeOutcomes:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodeOutcome"
+        failureMessage:
+          type: string
     ArtifactFileEntry:
       type: object
       properties:
