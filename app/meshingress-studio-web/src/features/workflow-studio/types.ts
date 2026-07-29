@@ -33,6 +33,11 @@ export interface LogEntry {
   message: string
 }
 
+export interface RegisteredTool {
+  id: string
+  functions: Array<{ name: string; description?: string }>
+}
+
 export interface WorkflowRunResult {
   runId?: string
   status?: string

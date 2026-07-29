@@ -22,14 +22,14 @@ interface TopBarProps {
 export function TopBar({ workflowName, running, onRun, onValidate, onStatus }: TopBarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [openAction, setOpenAction] = useState<'run' | 'runtime' | null>(null)
-  const rootRef = useRef<HTMLElement>(null)
+  const [brandHovered, setBrandHovered] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
+  const brandRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpenMenu(null)
-        setOpenAction(null)
-      }
+      if (!brandRef.current?.contains(event.target as Node)) setOpenMenu(null)
+      if (!headerRef.current?.contains(event.target as Node)) setOpenAction(null)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
@@ -43,9 +43,22 @@ export function TopBar({ workflowName, running, onRun, onValidate, onStatus }: T
     else onStatus(`${label} is ready to connect.`)
   }
 
+  const updateBrandHover = (event: React.PointerEvent<HTMLDivElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const withinVisibleBar = event.clientX >= bounds.left && event.clientX <= bounds.right
+      && event.clientY >= bounds.top && event.clientY <= bounds.bottom
+    setBrandHovered(withinVisibleBar)
+  }
+
   return (
-    <header className="topbar" ref={rootRef}>
-      <div className={`brand-wrap${openMenu ? ' menu-locked' : ''}`}>
+    <header className="topbar" ref={headerRef}>
+      <div
+        className={`brand-wrap${brandHovered ? ' is-hovered' : ''}${openMenu ? ' menu-locked' : ''}`}
+        onPointerEnter={updateBrandHover}
+        onPointerLeave={() => setBrandHovered(false)}
+        onPointerMove={updateBrandHover}
+        ref={brandRef}
+      >
         <div className="brand">M</div>
         <div className="brand-switcher">
           <div className="brand-switcher-track">
@@ -55,10 +68,8 @@ export function TopBar({ workflowName, running, onRun, onValidate, onStatus }: T
             </div>
             <nav aria-label="Meshingress menu" className="brand-menu">
               {menus.map((menu) => (
-                <div className={`brand-menu-entry${openMenu === menu.label ? ' is-open' : ''}`} key={menu.label} onMouseEnter={() => openMenu && setOpenMenu(menu.label)}>
-                  <button className="brand-menu-item" onClick={() => { setOpenAction(null); setOpenMenu(menu.label) }} onFocus={() => setOpenMenu(menu.label)} type="button">
-                    <span>{menu.label}</span><CodeSquareFilledIcon className="menu-icon" size={16} />
-                  </button>
+                <div className={`brand-menu-entry${openMenu === menu.label ? ' is-open' : ''}`} key={menu.label} onMouseEnter={() => { setOpenAction(null); setOpenMenu(menu.label) }}>
+                  <span className="brand-menu-item">{menu.label}</span>
                   <div aria-label={`${menu.label} commands`} className="brand-menu-children">
                     {menu.commands.map((command) => (
                       <span key={command.label}>
