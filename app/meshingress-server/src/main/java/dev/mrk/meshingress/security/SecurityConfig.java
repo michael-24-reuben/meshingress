@@ -51,6 +51,7 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/mcp", mcpCors);
+        source.registerCorsConfiguration("/api/v1/workflows/**", mcpCors);
         return source;
     }
 }
