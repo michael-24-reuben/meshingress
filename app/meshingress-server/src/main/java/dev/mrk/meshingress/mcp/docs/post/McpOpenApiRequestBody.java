@@ -54,7 +54,7 @@ import java.lang.annotation.Target;
                                 name = "tools/call",
                                 summary = "Invoke a tool",
                                 value = """
-                                        {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"helloworld.greet","arguments":{"name":"Meshingress"}}}
+                                        {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"helloworld.greeting.greet","arguments":{"name":"Meshingress"}}}
                                         """
                         ),
                         @ExampleObject(

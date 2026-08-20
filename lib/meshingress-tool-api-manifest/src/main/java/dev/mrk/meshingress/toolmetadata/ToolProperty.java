@@ -19,16 +19,32 @@ public record ToolProperty(
         return new ToolProperty(name, "", "", "string", false, false);
     }
 
+    public static ToolProperty string(String name, String defaultValue) {
+        return new ToolProperty(name, "", defaultValue, "string", false, false);
+    }
+
     public static ToolProperty longValue(String name) {
         return new ToolProperty(name, "", "", "long", false, false);
+    }
+
+    public static ToolProperty longValue(String name, Long defaultValue) {
+        return new ToolProperty(name, "", defaultValue == null ? "" : defaultValue.toString(), "long", false, false);
     }
 
     public static ToolProperty booleanValue(String name) {
         return new ToolProperty(name, "", "", "boolean", false, false);
     }
 
+    public static ToolProperty booleanValue(String name, Boolean defaultValue) {
+        return new ToolProperty(name, "", defaultValue == null ? "" : defaultValue.toString(), "boolean", false, false);
+    }
+
     public static ToolProperty secretRef(String name) {
         return new ToolProperty(name, "", "", "secret-ref", true, true);
+    }
+
+    public static ToolProperty secretRef(String name, String defaultValue) {
+        return new ToolProperty(name, "", defaultValue, "secret-ref", true, true);
     }
 
     public ToolProperty description(String value) {

@@ -10,12 +10,17 @@ import dev.mrk.meshingress.controller.roles.params.RolesToolCheckParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolDeleteParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolInstallPublicationParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolListParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolContributionListParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolContributionUpdateParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolUpdateParams;
 import dev.mrk.meshingress.controller.roles.params.ToolDescriptorParams;
 import dev.mrk.meshingress.controller.roles.params.ToolFunctionParams;
 import dev.mrk.meshingress.controller.roles.params.ToolPatchParams;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationParams;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationService;
+import dev.mrk.meshingress.controller.roles.registration.ToolContributionRecord;
+import dev.mrk.meshingress.controller.roles.registration.ToolContributionStore;
+import dev.mrk.meshingress.mcp.tools.runtime.RuntimeToolRegistryBridge;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolAuditEvent;
@@ -45,6 +50,8 @@ public class RoleToolService {
     private final ToolRegistrationService toolRegistrationService;
     private final ArtifactInstaller artifactInstaller;
     private final RepositoryArtifactFetcher repositoryArtifactFetcher;
+    private final ToolContributionStore contributionStore;
+    private final RuntimeToolRegistryBridge runtimeToolRegistryBridge;
 
     public RoleToolService(
             ObjectMapper objectMapper,
@@ -52,7 +59,9 @@ public class RoleToolService {
             McpAccessPolicyService accessPolicyService,
             ToolRegistrationService toolRegistrationService,
             ArtifactInstaller artifactInstaller,
-            RepositoryArtifactFetcher repositoryArtifactFetcher
+            RepositoryArtifactFetcher repositoryArtifactFetcher,
+            ToolContributionStore contributionStore,
+            RuntimeToolRegistryBridge runtimeToolRegistryBridge
     ) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
@@ -60,6 +69,8 @@ public class RoleToolService {
         this.toolRegistrationService = toolRegistrationService;
         this.artifactInstaller = artifactInstaller;
         this.repositoryArtifactFetcher = repositoryArtifactFetcher;
+        this.contributionStore = contributionStore;
+        this.runtimeToolRegistryBridge = runtimeToolRegistryBridge;
     }
 
     public ObjectNode check(McpCallContext context, RolesToolCheckParams params) {
@@ -208,6 +219,52 @@ public class RoleToolService {
     public ObjectNode reload(McpCallContext context) {
         accessPolicyService.requireAdmin(context);
         return toolRegistrationService.reloadStatus();
+    }
+
+    public ObjectNode listContributions(McpCallContext context, RolesToolContributionListParams params) {
+        accessPolicyService.requireAdmin(context);
+        String namespace = params == null ? "" : textOrEmpty(params.namespace());
+        List<ToolContributionRecord> contributions = namespace.isBlank()
+                ? contributionStore.listContributions()
+                : contributionStore.listNamespace(namespace);
+        ObjectNode result = objectMapper.createObjectNode();
+        result.set("contributions", objectMapper.valueToTree(contributions));
+        result.set("conflicts", objectMapper.valueToTree(contributionStore.listConflicts(namespace)));
+        return result;
+    }
+
+    public ObjectNode updateContribution(McpCallContext context, RolesToolContributionUpdateParams params) {
+        accessPolicyService.requireAdmin(context);
+        if (params == null || textOrEmpty(params.toolId()).isBlank() || textOrEmpty(params.namespace()).isBlank()
+                || params.precedence() == null || params.activationMode() == null) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS,
+                    "roles/tools/contributions/update requires toolId, namespace, precedence, and activationMode");
+        }
+        String toolId = textOrEmpty(params.toolId());
+        String namespace = textOrEmpty(params.namespace());
+        ToolContributionRecord existing = contributionStore.listNamespace(namespace).stream()
+                .filter(candidate -> candidate.toolId().equals(toolId))
+                .findFirst()
+                .orElseThrow(() -> new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS,
+                        "tool contribution does not exist for the supplied namespace and toolId"));
+        if (params.precedence() < 0 || contributionStore.listNamespace(namespace).stream()
+                .anyMatch(candidate -> !candidate.toolId().equals(toolId) && candidate.precedence() == params.precedence())) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS,
+                    "tool contribution precedence must be non-negative and unique within its namespace");
+        }
+        if (params.activationMode() == dev.mrk.meshingress.controller.roles.registration.ToolContributionActivationMode.PRIMARY
+                && contributionStore.listNamespace(namespace).stream().anyMatch(candidate -> !candidate.toolId().equals(toolId)
+                && candidate.activationMode() == dev.mrk.meshingress.controller.roles.registration.ToolContributionActivationMode.PRIMARY)) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "a namespace can have only one primary contribution");
+        }
+        ToolContributionRecord updated = contributionStore.reserve(new ToolContributionRecord(
+                existing.toolId(), existing.namespace(), params.precedence(), params.activationMode(),
+                existing.status(), existing.reservedAt(), existing.runtimeModuleId()));
+        runtimeToolRegistryBridge.refreshNamespace(namespace);
+        ObjectNode result = objectMapper.createObjectNode();
+        result.put("updated", true);
+        result.set("contribution", objectMapper.valueToTree(updated));
+        return result;
     }
 
 

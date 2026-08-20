@@ -8,6 +8,9 @@ import dev.mrk.meshingress.artifact.model.ArtifactPublicationRecord;
 import dev.mrk.meshingress.artifact.storage.ProjectRootResolver;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationRecord;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationStore;
+import dev.mrk.meshingress.controller.roles.registration.ToolContributionActivationMode;
+import dev.mrk.meshingress.controller.roles.registration.ToolContributionRecord;
+import dev.mrk.meshingress.controller.roles.registration.ToolContributionStore;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationPhase;
 import dev.mrk.meshingress.controller.roles.registration.ToolSourceKind;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
@@ -16,6 +19,8 @@ import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.runtime.artifacts.LocalJarSource;
 import dev.mrk.meshingress.runtime.lifecycle.ToolModuleHandle;
 import dev.mrk.meshingress.runtime.loader.ToolRuntimeLoader;
+import dev.mrk.meshingress.toolmetadata.McpToolManifestJson;
+import dev.mrk.meshingress.toolmetadata.McpToolNativeMetadata;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -58,6 +63,7 @@ public class ArtifactInstaller {
         verifier.verifySignature(publication);
         policyEvaluator.requireInstallable(publication);
         Path cachedJar = runtimeToolCache.install(publication);
+        ToolContributionRecord reservedContribution = reserveContributionBeforeActivation(cachedJar, requestedToolId);
         ToolModuleHandle handle = null;
         ToolRegistrationRecord savedRecord = null;
         try {
@@ -97,12 +103,31 @@ public class ArtifactInstaller {
             if (savedRecord != null) {
                 markRegistrationRolledBackAfterInstallFailure(savedRecord, exception);
             }
+            if (reservedContribution != null && registrationStore instanceof ToolContributionStore contributionStore) {
+                contributionStore.reserve(reservedContribution.withStatus("install-failed"));
+            }
             if (handle != null) {
                 deactivateAfterInstallFailure(handle, exception);
             }
             removeCachedJarAfterInstallFailure(cachedJar, exception);
             throw exception;
         }
+    }
+
+    private ToolContributionRecord reserveContributionBeforeActivation(Path cachedJar, String requestedToolId) {
+        if (!(registrationStore instanceof ToolContributionStore contributionStore)) return null;
+        Path manifestPath = cachedJar.getParent().resolve("resources").resolve("tool-manifest.json");
+        if (!java.nio.file.Files.isRegularFile(manifestPath)) return null;
+        McpToolNativeMetadata manifest = McpToolManifestJson.read(manifestPath);
+        String namespace = manifest.metadata().namespace();
+        if (namespace.isBlank()) return null;
+        String toolId = requestedToolId == null || requestedToolId.isBlank() ? cachedJar.getFileName().toString().replaceFirst("\\.jar$", "") : requestedToolId.strip();
+        List<ToolContributionRecord> existing = contributionStore.listNamespace(namespace);
+        ToolContributionActivationMode mode = existing.isEmpty() ? ToolContributionActivationMode.PRIMARY : ToolContributionActivationMode.REQUIRES_PRIMARY;
+        int precedence = existing.stream().mapToInt(ToolContributionRecord::precedence).max().orElse(-1) + 1;
+        ToolContributionRecord contribution = new ToolContributionRecord(toolId, namespace, precedence, mode, "reserved", OffsetDateTime.now(),
+                cachedJar.getFileName().toString().replaceFirst("\\.jar$", ""));
+        return contributionStore.reserve(contribution);
     }
 
     private void markRegistrationRolledBackAfterInstallFailure(ToolRegistrationRecord record, RuntimeException exception) {
@@ -163,12 +188,6 @@ public class ArtifactInstaller {
     }
 
     private String actor(McpCallContext context) {
-        if (context.authorizationHeader() != null && context.authorizationHeader().startsWith("Bearer ")) {
-            return "bearer-role-admin";
-        }
-        if (context.roleHeader() != null && !context.roleHeader().isBlank()) {
-            return "role-" + context.roleHeader();
-        }
-        return "anonymous";
+        return context == null ? "unknown" : context.principal().subject();
     }
 }

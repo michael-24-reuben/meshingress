@@ -54,7 +54,7 @@ public final class NextcloudDelegatedStorageService implements ToolStorageServic
         requireOpen(workspace);
         if (request == null || request.mimeType() == null || request.mimeType().isBlank()) throw new ToolStorageException("A file MIME type is required.");
         JsonNode stored = client.upload(workspace.requestId(), workspace.toolId(), relativePath, content, request.mimeType());
-        return new ToolStorageFile(relativePath, workspace.filesUri() + relativePath, request.mimeType(), stored.path("byteSize").asLong(0), stored.path("checksumSha256").asText(""));
+        return new ToolStorageFile(relativePath, workspace.filesUri() + relativePath, request.mimeType(), stored.path("byteSize").asLong(0), stored.path("checksumSha256").asString(""));
     }
 
     @Override
@@ -74,7 +74,7 @@ public final class NextcloudDelegatedStorageService implements ToolStorageServic
     @Override
     public ToolStoragePublicationStatus publicationStatus(String sessionId, String requestId) {
         JsonNode status = client.status(requestId);
-        return new ToolStoragePublicationStatus(sessionId, requestId, status.path("state").asText("UNKNOWN"), "nextcloud", status.path("attempts").asInt(0), null, status.path("error").isNull() ? null : status.path("error").asText(null));
+        return new ToolStoragePublicationStatus(sessionId, requestId, status.path("state").asString("UNKNOWN"), "nextcloud", status.path("attempts").asInt(0), null, status.path("error").isNull() ? null : status.path("error").asString(null));
     }
 
     private static void requireOpen(ToolStorageWorkspace workspace) {
@@ -94,8 +94,8 @@ public final class NextcloudDelegatedStorageService implements ToolStorageServic
 
     private ToolStorageWorkspace workspace(JsonNode remote, String toolId, String sessionId, String requestId, boolean published, DelegatedViewerCapabilityStore.Capability viewer) {
         OffsetDateTime now = OffsetDateTime.now();
-        return new ToolStorageWorkspace(sessionId, remote.path("workspaceId").asText(requestId), toolId,
+        return new ToolStorageWorkspace(sessionId, remote.path("workspaceId").asString(requestId), toolId,
                 viewerBaseUri + "/api/v1/storage/delegated/" + viewer.token() + "/files/", now, viewer.expiresAt(), viewer.remainingRequests(), published,
-                remote.path("state").asText(published ? "QUEUED" : "OPEN"), ToolStorageTransferMode.DELEGATED_SOURCE_URLS, null);
+                remote.path("state").asString(published ? "QUEUED" : "OPEN"), ToolStorageTransferMode.DELEGATED_SOURCE_URLS, null);
     }
 }

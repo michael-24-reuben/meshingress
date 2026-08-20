@@ -25,6 +25,11 @@ public interface ToolRegistry {
 
     Optional<McpToolDescriptor> findOwningTool(String functionName);
 
+    /** Optional opaque module catalog identity for a callable function. */
+    default Optional<String> findOwningModuleToolId(String functionName) {
+        return Optional.empty();
+    }
+
     Optional<McpToolDescriptor> findTool(String name);
 
     Optional<McpToolHandler> findHandler(String handlerKey);

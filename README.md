@@ -41,7 +41,6 @@ Tool modules live under `toolspace/<module-name>/`, are Maven modules, and are a
 The annotation path for declaring tools includes:
 
 - `@McpTool`
-- `@McpToolMapping`
 - `@McpFunction`
 - `@McpInputField`
 - `@McpFunctionParam`
@@ -97,7 +96,7 @@ Run the server module from `app/meshingress-server` using Spring Boot/Maven once
    - `spring-boot-autoconfigure`
 4. Add the module to the root Maven `<modules>` list.
 5. Add the tool module as a dependency of `app/meshingress-tool-bundle/pom.xml` (the server depends on this bundle).
-6. Create a tool class with `@McpTool`, `@McpToolMapping`, and one or more `@McpFunction` methods.
+6. Create a tool class with `@McpTool` and one or more `@McpFunction` methods.
 7. Add input records or function parameters.
 8. Declare least-privilege scopes with `@McpToolScopes`.
 9. Add Spring auto-configuration for the tool bean.
@@ -115,7 +114,6 @@ import dev.mrk.meshingress.api.result.ResultContent;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpInputField;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import tools.jackson.databind.ObjectMapper;
@@ -127,7 +125,6 @@ import tools.jackson.databind.node.ObjectNode;
         description = "Echoes input and returns structured content.",
         defaultFunction = "echo"
 )
-@McpToolMapping("tools")
 @McpToolScopes(McpToolScope.RUNTIME_READ)
 public class ExampleEchoTool {
 

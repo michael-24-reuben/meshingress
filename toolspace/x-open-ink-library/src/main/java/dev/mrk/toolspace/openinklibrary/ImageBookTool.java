@@ -5,7 +5,6 @@ import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import tools.jackson.databind.JsonNode;
@@ -14,12 +13,11 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Objects;
 
 @McpTool(
-        value = "book.image",
+        value = "image",
         title = "Open Ink Library: Image Books",
         description = "Retrieve normalized metadata for installed manga, manhwa, webtoon, comic, and graphic-novel sources."
 )
 @McpToolScopes({McpToolScope.HTTP_CLIENT, McpToolScope.EXTERNAL_API_READ})
-@McpToolMapping("tools")
 public final class ImageBookTool {
     private final BookSourceRegistry<ImageBookSource> sources;
     private final ObjectMapper objectMapper;

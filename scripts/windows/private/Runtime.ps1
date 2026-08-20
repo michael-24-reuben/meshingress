@@ -75,7 +75,7 @@ if ($PSVersionTable.PSVersion.Major -lt 6) {
 }
 
 $asciiArt = Get-Content `
-    -Path "$PSScriptRoot\..\..\..\data\assets\logo\meshingress-bloody.ascii.txt" `
+    -Path "$PSScriptRoot\..\..\..\data\assets\logo\meshingress-bloody.ascii" `
     -Raw `
     -Encoding utf8
 
@@ -317,10 +317,27 @@ $logDirectory = Join-Path $projectRoot "var\logs\meshingress"
 $runDirectory = Join-Path $projectRoot "var\run"
 $statePath = Join-Path $runDirectory "meshingress-services.json"
 
+function ConvertTo-MeshingressRelativePath {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ProjectRoot,
+
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    $absoluteProjectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
+    $absolutePath = [System.IO.Path]::GetFullPath($Path)
+    return [System.IO.Path]::GetRelativePath($absoluteProjectRoot, $absolutePath)
+}
+
 function Show-MeshingressControlCenter {
     param(
         [Parameter(Mandatory)]
         [string]$StatePath,
+
+        [Parameter(Mandatory)]
+        [string]$ProjectRoot,
 
         [Parameter(Mandatory)]
         [string]$ServerAddress,
@@ -335,7 +352,11 @@ function Show-MeshingressControlCenter {
     while ($true) {
         Clear-Host
 
-        $state = Get-State -StatePath $StatePath
+        $state = Get-OrDiscoverMeshingressState `
+            -StatePath $StatePath `
+            -ProjectRoot $ProjectRoot `
+            -ServerAddress $ServerAddress `
+            -ServerPort $ServerPort
         $serverProcess = $null
 
         if ($null -ne $state) {
@@ -377,11 +398,10 @@ function Show-MeshingressControlCenter {
         $rows = @(
             "Runtime       $runtimeState"
             "Server        http://$(Get-ProbeAddress $ServerAddress):$ServerPort"
-            "Artifacts     http://$(Get-ProbeAddress $ServerAddress):$ServerPort/artifact"
             "Started       $startedAt"
             "Uptime        $uptime"
             "Java          $javaVersion"
-            "Logs          $LogDirectory"
+            "Logs          $(ConvertTo-MeshingressRelativePath -ProjectRoot $ProjectRoot -Path $LogDirectory)"
         )
 
         Write-Host $asciiArt
@@ -632,12 +652,132 @@ function Get-ManagedProcess {
     }
 
     $commandLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $($Service.pid)" -ErrorAction SilentlyContinue).CommandLine
+    $processMarker = [string]$Service.jar
+    $processMarkerProperty = $Service.PSObject.Properties["processMarker"]
+    if ($null -ne $processMarkerProperty -and
+        -not [string]::IsNullOrWhiteSpace([string]$processMarkerProperty.Value)) {
+        $processMarker = [string]$processMarkerProperty.Value
+    }
+
     if ([string]::IsNullOrWhiteSpace($commandLine) -or
-        $commandLine.IndexOf([string]$Service.jar, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) {
+        [string]::IsNullOrWhiteSpace($processMarker) -or
+        $commandLine.IndexOf($processMarker, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) {
         return $null
     }
 
     return $process
+}
+
+function Find-DiscoverableMeshingressService {
+    param(
+        [Parameter(Mandatory = $true)][string]$ProjectRoot,
+        [Parameter(Mandatory = $true)][string]$ServerAddress,
+        [Parameter(Mandatory = $true)][int]$ServerPort
+    )
+
+    $processId = Get-ListeningProcess -Port $ServerPort
+    if ($null -eq $processId) {
+        return $null
+    }
+
+    $processInfo = Get-CimInstance `
+        Win32_Process `
+        -Filter "ProcessId = $processId" `
+        -ErrorAction SilentlyContinue
+    if ($null -eq $processInfo -or
+        $processInfo.Name -notin @("java.exe", "javaw.exe") -or
+        [string]::IsNullOrWhiteSpace($processInfo.CommandLine)) {
+        return $null
+    }
+
+    $serverJar = Join-Path $ProjectRoot "app/meshingress-server/target/meshingress.jar"
+    $mainClass = "dev.mrk.meshingress.MeshingressApplication"
+    $processMarker = $null
+
+    if ($processInfo.CommandLine.IndexOf($serverJar, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+        $processMarker = $serverJar
+    }
+    elseif ($processInfo.CommandLine.IndexOf($mainClass, [System.StringComparison]::Ordinal) -ge 0) {
+        $processMarker = $mainClass
+    }
+
+    if ($null -eq $processMarker) {
+        return $null
+    }
+
+    $healthUrl = "http://$(Get-ProbeAddress -Address $ServerAddress):$ServerPort/actuator/health"
+    if (-not (Test-HealthEndpoint -Url $healthUrl)) {
+        return $null
+    }
+
+    try {
+        $process = Get-Process -Id $processId -ErrorAction Stop
+    }
+    catch {
+        return $null
+    }
+
+    return [ordered]@{
+        name = "server"
+        pid = $process.Id
+        jar = $serverJar
+        processMarker = $processMarker
+        stdout = $null
+        stderr = $null
+        startedAt = $process.StartTime.ToUniversalTime().ToString("o")
+        discovered = $true
+    }
+}
+
+function Get-OrDiscoverMeshingressState {
+    param(
+        [Parameter(Mandatory = $true)][string]$StatePath,
+        [Parameter(Mandatory = $true)][string]$ProjectRoot,
+        [Parameter(Mandatory = $true)][string]$ServerAddress,
+        [Parameter(Mandatory = $true)][int]$ServerPort
+    )
+
+    $state = Get-State -StatePath $StatePath
+    $recordedServer = if ($null -eq $state) {
+        $null
+    }
+    else {
+        Get-StateService -State $state -Name "server"
+    }
+
+    if ($null -ne $recordedServer -and
+        $null -ne (Get-ManagedProcess -Service $recordedServer)) {
+        return $state
+    }
+
+    $discoveredServer = Find-DiscoverableMeshingressService `
+        -ProjectRoot $ProjectRoot `
+        -ServerAddress $ServerAddress `
+        -ServerPort $ServerPort
+    if ($null -eq $discoveredServer) {
+        return $state
+    }
+
+    $services = [ordered]@{
+        server = $discoveredServer
+    }
+    if ($null -ne $state) {
+        $legacyRepository = Get-StateService -State $state -Name "repository"
+        if ($null -ne $legacyRepository) {
+            $services.repository = $legacyRepository
+        }
+    }
+
+    $adoptedState = [ordered]@{
+        version = 2
+        startedAt = $discoveredServer.startedAt
+        services = $services
+    }
+
+    New-Item -ItemType Directory -Path (Split-Path -Parent $StatePath) -Force | Out-Null
+    $adoptedState | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+    Write-Host-Logged "Adopted running Meshingress server (PID $($discoveredServer.pid)) into launcher state."
+    return Get-State -StatePath $StatePath
 }
 
 function Stop-ManagedServices {
@@ -877,6 +1017,7 @@ if ($ServerPort -eq 0) {
 if ($Action -eq "Menu") {
     $Action = Show-MeshingressControlCenter `
         -StatePath $statePath `
+        -ProjectRoot $projectRoot `
         -ServerAddress $ServerAddress `
         -ServerPort $ServerPort `
         -LogDirectory $logDirectory
@@ -887,7 +1028,11 @@ if ($Action -eq "Menu") {
 }
 
 if ($Action -eq "Restart") {
-    $state = Get-State -StatePath $statePath
+    $state = Get-OrDiscoverMeshingressState `
+        -StatePath $statePath `
+        -ProjectRoot $projectRoot `
+        -ServerAddress $ServerAddress `
+        -ServerPort $ServerPort
 
     if ($null -ne $state) {
         Stop-ManagedServices -State $state -StatePath $statePath
@@ -897,7 +1042,11 @@ if ($Action -eq "Restart") {
 }
 
 if ($Action -eq "Stop") {
-    $state = Get-State -StatePath $statePath
+    $state = Get-OrDiscoverMeshingressState `
+        -StatePath $statePath `
+        -ProjectRoot $projectRoot `
+        -ServerAddress $ServerAddress `
+        -ServerPort $ServerPort
     if ($null -eq $state) {
         Write-Host-Logged "No managed Meshingress services are recorded."
         return
@@ -907,7 +1056,11 @@ if ($Action -eq "Stop") {
 }
 
 if ($Action -eq "Status") {
-    $state = Get-State -StatePath $statePath
+    $state = Get-OrDiscoverMeshingressState `
+        -StatePath $statePath `
+        -ProjectRoot $projectRoot `
+        -ServerAddress $ServerAddress `
+        -ServerPort $ServerPort
     if ($null -eq $state) {
         Write-Host-Logged "No managed Meshingress services are recorded."
         return
@@ -932,7 +1085,11 @@ if ($Action -eq "Status") {
 }
 
 if ($Action -eq "Logs") {
-    $state = Get-State -StatePath $statePath
+    $state = Get-OrDiscoverMeshingressState `
+        -StatePath $statePath `
+        -ProjectRoot $projectRoot `
+        -ServerAddress $ServerAddress `
+        -ServerPort $ServerPort
     if ($null -eq $state) {
         Write-Host-Exception -Exception ([System.InvalidOperationException]::new(
             "No managed Meshingress services are recorded. Start them first."
@@ -1033,7 +1190,11 @@ if ($null -eq $java) {
 New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
 New-Item -ItemType Directory -Path $runDirectory -Force | Out-Null
 
-$existingState = Get-State -StatePath $statePath
+$existingState = Get-OrDiscoverMeshingressState `
+    -StatePath $statePath `
+    -ProjectRoot $projectRoot `
+    -ServerAddress $effectiveServerAddress `
+    -ServerPort $effectiveServerPort
 if ($null -ne $existingState) {
     $recordedServices = @(Get-StateService -State $existingState -Name "server")
     $oldRepositoryService = Get-StateService -State $existingState -Name "repository"

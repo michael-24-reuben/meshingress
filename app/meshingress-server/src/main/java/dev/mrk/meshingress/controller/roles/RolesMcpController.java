@@ -15,6 +15,8 @@ import dev.mrk.meshingress.controller.roles.params.RolesToolCheckParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolDeleteParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolInstallPublicationParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolListParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolContributionListParams;
+import dev.mrk.meshingress.controller.roles.params.RolesToolContributionUpdateParams;
 import dev.mrk.meshingress.controller.roles.params.RolesToolUpdateParams;
 import dev.mrk.meshingress.controller.roles.registration.ToolRegistrationParams;
 
@@ -159,6 +161,18 @@ public class RolesMcpController {
     public JsonNode list(@McpDispatchParam("params") JsonNode params, McpCallContext context) {
         LOGGER.info("MCP roles/tools/list: requestId={} sessionId={}", context.requestId(), context.sessionId());
         return roleToolService.list(context, toParams(params, RolesToolListParams.class));
+    }
+
+    @McpDispatchMethod("contributions/list")
+    public JsonNode listContributions(@McpDispatchParam("params") JsonNode params, McpCallContext context) {
+        LOGGER.info("MCP roles/tools/contributions/list: requestId={} sessionId={}", context.requestId(), context.sessionId());
+        return roleToolService.listContributions(context, toParams(params, RolesToolContributionListParams.class));
+    }
+
+    @McpDispatchMethod("contributions/update")
+    public JsonNode updateContribution(@McpDispatchParam("params") JsonNode params, McpCallContext context) {
+        LOGGER.info("MCP roles/tools/contributions/update: requestId={} sessionId={}", context.requestId(), context.sessionId());
+        return roleToolService.updateContribution(context, toParams(params, RolesToolContributionUpdateParams.class));
     }
 
     /**

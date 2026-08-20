@@ -64,6 +64,11 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     }
 
     @Override
+    public Class<?> sourceType() {
+        return org.springframework.util.ClassUtils.getUserClass(bean);
+    }
+
+    @Override
     public DispatchExecutionResult call(ObjectNode arguments, McpCallContext context) {
         McpCacheResult cachePolicy = function.method().getAnnotation(McpCacheResult.class);
 
@@ -209,7 +214,7 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
             return null;
         }
         try {
-            return argumentBinder.bind(function.path(), param.name(), value, param.bindType(), objectMapper);
+            return argumentBinder.bind(function.descriptor().name(), param.name(), value, param.bindType(), objectMapper);
         } catch (McpDispatchException exception) {
             throw newJsonRpcException(exception.code(), exception.getMessage());
         }

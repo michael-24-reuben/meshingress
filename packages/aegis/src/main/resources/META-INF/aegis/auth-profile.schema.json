@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mrk.dev/aegis/auth-profile/v1",
+  "title": "AegisAuthProfile",
+  "description": "Credential-safe durable authentication profile. Raw token and secret values are never valid profile fields.",
+  "type": "object",
+  "required": ["schemaVersion", "profileId", "status", "metadata", "identities", "credentialBindings", "limitPolicy"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "profileId": { "type": "string", "format": "uuid" },
+    "status": { "enum": ["PENDING_REVIEW", "ACTIVE", "DISABLED", "REVOKED"] },
+    "metadata": {
+      "type": "object",
+      "required": ["createdAt", "updatedAt", "labels"],
+      "properties": {
+        "displayName": { "type": "string", "minLength": 1 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "labels": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "identities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "issuer", "subject", "authenticationMethod", "audiences", "scopes", "roles"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "issuer": { "type": "string", "format": "uri" },
+          "subject": { "type": "string", "minLength": 1 },
+          "authenticationMethod": { "enum": ["OIDC", "SERVICE_ACCOUNT", "LOCAL_DEVELOPMENT"] },
+          "audiences": { "$ref": "#/$defs/textSet" },
+          "scopes": { "$ref": "#/$defs/textSet" },
+          "roles": { "$ref": "#/$defs/textSet" },
+          "lastAuthenticatedAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "credentialBindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "identityId", "target", "strategy", "grantedScopes", "state"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "identityId": { "type": "string", "minLength": 1 },
+          "target": { "type": "string", "minLength": 1 },
+          "strategy": { "enum": ["NONE", "SECRET_REFERENCE", "DELEGATED_OAUTH", "TOKEN_EXCHANGE", "HEADER_PASSTHROUGH", "WORKLOAD_IDENTITY"] },
+          "secretReference": { "$ref": "#/$defs/secretReference" },
+          "grantedScopes": { "$ref": "#/$defs/textSet" },
+          "state": { "enum": ["ACTIVE", "EXPIRED", "REVOKED", "REAUTHORIZATION_REQUIRED"] },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "strategy": { "enum": ["SECRET_REFERENCE", "DELEGATED_OAUTH"] } }, "required": ["strategy"] },
+            "then": { "required": ["secretReference"] },
+            "else": { "not": { "required": ["secretReference"] } }
+          }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "limitPolicy": {
+      "type": "object",
+      "required": ["schemaVersion", "enforcement", "requests", "toolExecutions", "concurrentCalls", "storageBytes"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "enforcement": { "enum": ["INHERIT", "ENABLED", "DISABLED"] },
+        "requests": { "$ref": "#/$defs/limitValue" },
+        "toolExecutions": { "$ref": "#/$defs/limitValue" },
+        "concurrentCalls": { "$ref": "#/$defs/limitValue" },
+        "storageBytes": { "$ref": "#/$defs/limitValue" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "textSet": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "limitValue": {
+      "type": "object",
+      "required": ["mode", "limit", "windowSeconds"],
+      "properties": {
+        "mode": { "enum": ["INHERIT", "UNLIMITED", "LIMITED"] },
+        "limit": { "type": "integer", "minimum": 0 },
+        "windowSeconds": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "secretReference": {
+      "type": "object",
+      "required": ["provider", "key"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "key": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

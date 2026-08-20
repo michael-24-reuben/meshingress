@@ -8,7 +8,6 @@ import java.util.Optional;
 public record AnnotatedMcpTool(
         String name,
         Class<?> toolClass,
-        String mapping,
         String defaultFunctionName,
         McpToolDescriptor descriptor,
         List<AnnotatedMcpFunction> functions
@@ -23,7 +22,6 @@ public record AnnotatedMcpTool(
         }
         return functions.stream()
                 .filter(function -> defaultFunctionName.equals(function.name())
-                        || defaultFunctionName.equals(function.path())
                         || defaultFunctionName.equals(descriptor.name()))
                 .findFirst()
                 .or(() -> functions.stream().findFirst());

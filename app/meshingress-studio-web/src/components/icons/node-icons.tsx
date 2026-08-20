@@ -1,17 +1,13 @@
-import type { ReactElement, ReactNode, SVGProps } from 'react'
+import { useId, useState, type ReactElement, type ReactNode, type SVGProps } from 'react'
 
-export type WorkflowNodeKind = 'trigger' | 'tool' | (string & {})
+export type BuiltInNodeIconName = 'manual-trigger' | 'meshingress-api' | 'tool' | 'folder' | 'hollow-hexagon'
 
-export type NodeIconName =
-  | 'manual-trigger'
-  | 'powershell'
-  | 'hello-world'
-  | 'toonverse-search'
-  | 'tool'
+export type NodeIconDescriptor =
+  | { source: 'built-in'; name: BuiltInNodeIconName }
+  | { source: 'image'; href: string; alt?: string; fallback: BuiltInNodeIconName }
 
-export interface NodeIconProps extends Omit<SVGProps<SVGSVGElement>, 'children' | 'height' | 'width'> {
-  nodeKind: WorkflowNodeKind
-  toolId?: string
+export interface WorkflowNodeIconProps extends Omit<SVGProps<SVGSVGElement>, 'children' | 'height' | 'width'> {
+  descriptor: NodeIconDescriptor
   size?: number
   title?: string
 }
@@ -22,31 +18,17 @@ export interface CodeSquareFilledIconProps
   title?: string
 }
 
-interface IconFrameProps extends CodeSquareFilledIconProps {
+export interface ColoredIconProps extends CodeSquareFilledIconProps {
+  fill?: string
+  iconColor?: string
+}
+
+export interface IconFrameProps extends CodeSquareFilledIconProps {
   children: ReactNode
   viewBox?: string
 }
 
-function resolveNodeIcon(nodeKind: WorkflowNodeKind, toolId?: string): NodeIconName {
-  const kind = nodeKind.toLowerCase()
-  const tool = toolId?.toLowerCase() ?? ''
-
-  if (kind === 'trigger' || tool === 'trigger.manual' || tool.includes('manual-trigger')) {
-    return 'manual-trigger'
-  }
-  if (tool.includes('powershell') || tool === 'cli.ps') {
-    return 'powershell'
-  }
-  if (tool.includes('helloworld') || tool.includes('hello-world')) {
-    return 'hello-world'
-  }
-  if (tool.includes('toonverse')) {
-    return 'toonverse-search'
-  }
-  return 'tool'
-}
-
-function IconFrame({
+export function IconFrame({
   size = 20,
   title,
   'aria-label': ariaLabel,
@@ -348,7 +330,7 @@ export function EmailObjectTypeIcon(props: CodeSquareFilledIconProps): ReactElem
 
 export function DecimalObjectTypeIcon(props: CodeSquareFilledIconProps): ReactElement {
   return (
-    <IconFrame viewBox="0 0 24 24" {...props}>
+    <IconFrame viewBox="4 4 16 16" {...props}>
       <path d="M0 0h24v24H0z" fill="none" />
       <path
         d="M17 8a2 2 0 0 1 2 2v4a2 2 0 1 1-4 0v-4a2 2 0 0 1 2-2m-7 0a2 2 0 0 1 2 2v4a2 2 0 1 1-4 0v-4a2 2 0 0 1 2-2m-5 8h.01"
@@ -443,6 +425,46 @@ export function LocationObjectTypeIcon(props: CodeSquareFilledIconProps): ReactE
   )
 }
 
+export function CopyIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 48 48" {...props}>
+      <path d="M0 0h48v48H0z" fill="none" />
+      <defs>
+        <mask id="SVGUpRmCb0d">
+          <g fill="none" stroke="#fff" strokeLinejoin="round" strokeWidth="4">
+            <path
+              d="M13 12.432v-4.62A2.813 2.813 0 0 1 15.813 5h24.374A2.813 2.813 0 0 1 43 7.813v24.375A2.813 2.813 0 0 1 40.188 35h-4.672"
+              strokeLinecap="round"
+            />
+            <path
+              d="M32.188 13H7.811A2.813 2.813 0 0 0 5 15.813v24.374A2.813 2.813 0 0 0 7.813 43h24.375A2.813 2.813 0 0 0 35 40.188V15.811A2.813 2.813 0 0 0 32.188 13Z"
+              fill="#555"
+            />
+          </g>
+        </mask>
+      </defs>
+      <path d="M0 0h48v48H0z" fill="currentColor" mask="url(#SVGUpRmCb0d)" />
+    </IconFrame>
+  )
+}
+
+export function GetAsIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M17 16v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h2m3-4H9a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1m-1 4l-3 3m0 0l-3-3m3 3V3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </IconFrame>
+  )
+}
+
+// Data object types icons
 export const TextObjectType = TextObjectTypeIcon
 export const NumberObjectType = NumberObjectTypeIcon
 export const JsonObjectType = JsonObjectTypeIcon
@@ -468,51 +490,1168 @@ export const ColorObjectType = ColorObjectTypeIcon
 export const LocationObjectType = LocationObjectTypeIcon
 export const GeoObjectType = LocationObjectTypeIcon
 
+// Common tools icons
+export const Copy = CopyIcon
+export const GetAs = GetAsIcon
+
+export function RemoveIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path
+        d="M18 6L6 18M6 6l12 12"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </IconFrame>
+  )
+}
+export const Remove = RemoveIcon
+
+export function MinusIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path fill="currentColor" d="M5 13v-2h14v2z" />
+    </IconFrame>
+  )
+}
+export const Minus = MinusIcon
+
+export function AddValueIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <g fill="currentColor" fillRule="evenodd" clipRule="evenodd">
+        <path d="M3 14a1 1 0 0 1 1-1h12a3 3 0 0 0 3-3V6a1 1 0 1 1 2 0v4a5 5 0 0 1-5 5H4a1 1 0 0 1-1-1" />
+        <path d="M3.293 14.707a1 1 0 0 1 0-1.414l4-4a1 1 0 0 1 1.414 1.414L5.414 14l3.293 3.293a1 1 0 1 1-1.414 1.414z" />
+      </g>
+    </IconFrame>
+  )
+}
+export const AddValue = AddValueIcon
+
+// Panel layout icons
+export function LeftPanelIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M2 7.25A3.25 3.25 0 0 1 5.25 4h13.5A3.25 3.25 0 0 1 22 7.25v9.5A3.25 3.25 0 0 1 18.75 20H5.25A3.25 3.25 0 0 1 2 16.75zM9.5 5.5v13h9.25a1.75 1.75 0 0 0 1.75-1.75v-9.5a1.75 1.75 0 0 0-1.75-1.75zM8 5.5H5.25A1.75 1.75 0 0 0 3.5 7.25v9.5c0 .966.784 1.75 1.75 1.75H8z"
+      />
+    </IconFrame>
+  )
+}
+export const LeftPanel = LeftPanelIcon
+
+export function LeftPanelFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M5.25 4A3.25 3.25 0 0 0 2 7.25v9.5A3.25 3.25 0 0 0 5.25 20h13.5A3.25 3.25 0 0 0 22 16.75v-9.5A3.25 3.25 0 0 0 18.75 4zm13.5 1.5c.966 0 1.75.784 1.75 1.75v9.5a1.75 1.75 0 0 1-1.75 1.75H9.5v-13z"
+      />
+    </IconFrame>
+  )
+}
+export const LeftPanelFilled = LeftPanelFilledIcon
+
+export function RightPanelIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M22 7.25A3.25 3.25 0 0 0 18.75 4H5.25A3.25 3.25 0 0 0 2 7.25v9.5A3.25 3.25 0 0 0 5.25 20h13.5A3.25 3.25 0 0 0 22 16.75zM14.5 5.5v13H5.25a1.75 1.75 0 0 1-1.75-1.75v-9.5c0-.966.784-1.75 1.75-1.75zm1.5 0h2.75c.966 0 1.75.784 1.75 1.75v9.5a1.75 1.75 0 0 1-1.75 1.75H16z"
+      />
+    </IconFrame>
+  )
+}
+export const RightPanel = RightPanelIcon
+
+export function RightPanelFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M18.75 4A3.25 3.25 0 0 1 22 7.25v9.5A3.25 3.25 0 0 1 18.75 20H5.25A3.25 3.25 0 0 1 2 16.75v-9.5A3.25 3.25 0 0 1 5.25 4zM5.25 5.5A1.75 1.75 0 0 0 3.5 7.25v9.5c0 .966.784 1.75 1.75 1.75h9.25v-13z"
+      />
+    </IconFrame>
+  )
+}
+export const RightPanelFilled = RightPanelFilledIcon
+
+export function BottomPanelIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M2 18a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3zm3-2a2 2 0 0 0-2 2v3h14v-3a2 2 0 0 0-2-2zM9 15.5v3"
+      />
+    </IconFrame>
+  )
+}
+export const BottomPanel = BottomPanelIcon
+
+export function BottomPanelFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M2 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3zm3-2a2 2 0 0 0-2 2v5h14V6a2 2 0 0 0-2-2zM9 5.5v5"
+      />
+    </IconFrame>
+  )
+}
+export const BottomPanelFilled = BottomPanelFilledIcon
+
+export function UiPanelsAllIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4zM12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7zM2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsAll = UiPanelsAllIcon
+export const PanelsAllIcon = UiPanelsAllIcon
+export const PanelsAll = UiPanelsAllIcon
+
+export function UiPanelsBottomIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4zM12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7z"
+          fill="currentColor"
+          opacity=".3"
+        />
+        <path
+          d="M2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsBottom = UiPanelsBottomIcon
+export const PanelsBottomIcon = UiPanelsBottomIcon
+export const PanelsBottom = UiPanelsBottomIcon
+
+export function UiPanelsLeftIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4z"
+          fill="currentColor"
+        />
+        <path
+          d="M12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7zM2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+          opacity=".3"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsLeft = UiPanelsLeftIcon
+export const PanelsLeftIcon = UiPanelsLeftIcon
+export const PanelsLeft = UiPanelsLeftIcon
+
+export function UiPanelsLeftBottomIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4z"
+          fill="currentColor"
+        />
+        <path
+          d="M12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7z"
+          fill="currentColor"
+          opacity=".3"
+        />
+        <path
+          d="M2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsLeftBottom = UiPanelsLeftBottomIcon
+export const PanelsLeftBottomIcon = UiPanelsLeftBottomIcon
+export const PanelsLeftBottom = UiPanelsLeftBottomIcon
+
+export function UiPanelsLeftRightIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4zM12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7z"
+          fill="currentColor"
+        />
+        <path
+          d="M2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+          opacity=".3"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsLeftRight = UiPanelsLeftRightIcon
+export const PanelsLeftRightIcon = UiPanelsLeftRightIcon
+export const PanelsLeftRight = UiPanelsLeftRightIcon
+
+export function UiPanelsNoneIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4zM12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7zM2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+          opacity=".3"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsNone = UiPanelsNoneIcon
+export const PanelsNoneIcon = UiPanelsNoneIcon
+export const PanelsNone = UiPanelsNoneIcon
+
+export function UiPanelsRightIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4z"
+          fill="currentColor"
+          opacity=".3"
+        />
+        <path
+          d="M12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7z"
+          fill="currentColor"
+        />
+        <path
+          d="M2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+          opacity=".3"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsRight = UiPanelsRightIcon
+export const PanelsRightIcon = UiPanelsRightIcon
+export const PanelsRight = UiPanelsRightIcon
+
+export function UiPanelsRightBottomIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 16 16" {...props}>
+      <path d="M0 0h16v16H0z" fill="none" />
+      <g fill="none">
+        <rect height="13" rx="2.5" stroke="currentColor" width="15" x=".5" y="1.5" />
+        <path
+          d="M2 4.6c0-.56 0-.84.109-1.05c.096-.188.249-.341.437-.437c.214-.109.494-.109 1.05-.109h.4v7h-2v-5.4z"
+          fill="currentColor"
+          opacity=".3"
+        />
+        <path
+          d="M12 3h.4c.56 0 .84 0 1.05.109c.188.096.341.249.437.437c.109.214.109.494.109 1.05v5.4h-2v-7zM2 11h12v.4c0 .56 0 .84-.109 1.05a1 1 0 0 1-.437.437c-.214.109-.494.109-1.05.109h-8.8c-.56 0-.84 0-1.05-.109a1 1 0 0 1-.437-.437c-.109-.214-.109-.494-.109-1.05V11z"
+          fill="currentColor"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const UiPanelsRightBottom = UiPanelsRightBottomIcon
+export const PanelsRightBottomIcon = UiPanelsRightBottomIcon
+export const PanelsRightBottom = UiPanelsRightBottomIcon
+
+export function SettingsIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M12.012 2.25c.734.008 1.465.093 2.182.253a.75.75 0 0 1 .582.649l.17 1.527a1.384 1.384 0 0 0 1.927 1.116l1.4-.615a.75.75 0 0 1 .85.174a9.8 9.8 0 0 1 2.205 3.792a.75.75 0 0 1-.272.825l-1.241.916a1.38 1.38 0 0 0 0 2.226l1.243.915a.75.75 0 0 1 .272.826a9.8 9.8 0 0 1-2.204 3.792a.75.75 0 0 1-.849.175l-1.406-.617a1.38 1.38 0 0 0-1.926 1.114l-.17 1.526a.75.75 0 0 1-.571.647a9.5 9.5 0 0 1-4.406 0a.75.75 0 0 1-.572-.647l-.169-1.524a1.382 1.382 0 0 0-1.925-1.11l-1.406.616a.75.75 0 0 1-.85-.175a9.8 9.8 0 0 1-2.203-3.796a.75.75 0 0 1 .272-.826l1.243-.916a1.38 1.38 0 0 0 0-2.226l-1.243-.914a.75.75 0 0 1-.272-.826a9.8 9.8 0 0 1 2.205-3.792a.75.75 0 0 1 .85-.174l1.4.615a1.387 1.387 0 0 0 1.93-1.118l.17-1.526a.75.75 0 0 1 .583-.65q1.074-.238 2.201-.252m0 1.5a9 9 0 0 0-1.354.117l-.11.977A2.886 2.886 0 0 1 6.526 7.17l-.899-.394A8.3 8.3 0 0 0 4.28 9.092l.797.587a2.88 2.88 0 0 1 .001 4.643l-.799.588c.32.842.776 1.626 1.348 2.322l.905-.397a2.882 2.882 0 0 1 4.017 2.318l.109.984c.89.15 1.799.15 2.688 0l.11-.984a2.88 2.88 0 0 1 4.018-2.322l.904.396a8.3 8.3 0 0 0 1.348-2.318l-.798-.588a2.88 2.88 0 0 1-.001-4.643l.797-.587a8.3 8.3 0 0 0-1.348-2.317l-.897.393a2.884 2.884 0 0 1-4.023-2.324l-.109-.976a9 9 0 0 0-1.334-.117M12 8.25a3.75 3.75 0 1 1 0 7.5a3.75 3.75 0 0 1 0-7.5m0 1.5a2.25 2.25 0 1 0 0 4.5a2.25 2.25 0 0 0 0-4.5"
+      />
+    </IconFrame>
+  )
+}
+export const Settings = SettingsIcon
+
+// Additional UI / Toolbar icons
+export function ContextInfoIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const InfoIcon = ContextInfoIcon
+
+export function AboutVariantIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M13.5 4A1.5 1.5 0 0 0 12 5.5A1.5 1.5 0 0 0 13.5 7A1.5 1.5 0 0 0 15 5.5A1.5 1.5 0 0 0 13.5 4m-.36 4.77c-1.19.1-4.44 2.69-4.44 2.69c-.2.15-.14.14.02.42c.16.27.14.29.33.16c.2-.13.53-.34 1.08-.68c2.12-1.36.34 1.78-.57 7.07c-.36 2.62 2 1.27 2.61.87c.6-.39 2.21-1.5 2.37-1.61c.22-.15.06-.27-.11-.52c-.12-.17-.24-.05-.24-.05c-.65.43-1.84 1.33-2 .76c-.19-.57 1.03-4.48 1.7-7.17c.11-.64.41-2.04-.75-1.94"
+      />
+    </IconFrame>
+  )
+}
+export const AboutVariant = AboutVariantIcon
+
+export function UndoIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Undo = UndoIcon
+
+export function RedoIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.97 7.22l2.37.78c1.05-3.19 4.06-5.5 7.6-5.5 1.96 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Redo = RedoIcon
+
+export function TrashIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M4 5h3V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1h3a1 1 0 0 1 0 2h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4a1 1 0 1 1 0-2m3 2v13h10V7zm2-2h6V4H9zm0 4h2v9H9zm4 0h2v9h-2z"
+      />
+    </IconFrame>
+  )
+}
+export const Trash = TrashIcon
+
+export function TrashFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-4.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const TrashFilled = TrashFilledIcon
+
+export function FilterIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Filter = FilterIcon
+
+export function TickIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Tick = TickIcon
+export const Check = TickIcon
+
+export function CrossIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Cross = CrossIcon
+export const Close = CrossIcon
+
+export function FluentWarningIcon({
+  fill = '#FFB02E',
+  iconColor = '#000',
+  ...props
+}: ColoredIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 32 32" {...props}>
+      <path d="M0 0h32v32H0z" fill="none" />
+      <g fill="none">
+        <path
+          d="m14.839 5.668l-12.66 21.93c-.51.89.13 2.01 1.16 2.01h25.32c1.03 0 1.67-1.11 1.16-2.01l-12.66-21.93c-.52-.89-1.8-.89-2.32 0"
+          fill={fill}
+        />
+        <path
+          d="M14.599 21.498a1.4 1.4 0 1 0 2.8-.01v-9.16c0-.77-.62-1.4-1.4-1.4c-.77 0-1.4.62-1.4 1.4zm2.8 3.98a1.4 1.4 0 1 1-2.8 0a1.4 1.4 0 0 1 2.8 0"
+          fill={iconColor}
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const FluentWarning = FluentWarningIcon
+export const WarningColoredIcon = FluentWarningIcon
+export const WarningIcon = FluentWarningIcon
+export const Warning = FluentWarningIcon
+
+export function FluentCriticalIcon({
+  fill = '#ff2e2e',
+  iconColor = '#000',
+  ...props
+}: ColoredIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 32 32" {...props}>
+      <path d="M0 0h32v32H0z" fill="none" />
+      <g fill="none">
+        <circle cx="16" cy="16" fill={fill} r="14" />
+        <path
+          d="M14.599 18.59a1.4 1.4 0 1 0 2.8-.01v-9.16c0-.77-.62-1.4-1.4-1.4c-.77 0-1.4.62-1.4 1.4zm2.8 3.98a1.4 1.4 0 1 1-2.8 0a1.4 1.4 0 0 1 2.8 0"
+          fill={iconColor}
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const FluentCritical = FluentCriticalIcon
+export const CriticalColoredIcon = FluentCriticalIcon
+export const CriticalIcon = FluentCriticalIcon
+export const Critical = FluentCriticalIcon
+
+export function QuestionMarkIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const QuestionMark = QuestionMarkIcon
+export const Help = QuestionMarkIcon
+
+export function ReloadIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Reload = ReloadIcon
+export const Refresh = ReloadIcon
+
+export function EllipsisHorizontalIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <circle cx="5" cy="12" r="2" fill="currentColor" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" />
+      <circle cx="19" cy="12" r="2" fill="currentColor" />
+    </IconFrame>
+  )
+}
+export const EllipsisHorizontal = EllipsisHorizontalIcon
+export const DotsHorizontal = EllipsisHorizontalIcon
+
+export function EllipsisVerticalIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <circle cx="12" cy="5" r="2" fill="currentColor" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" />
+      <circle cx="12" cy="19" r="2" fill="currentColor" />
+    </IconFrame>
+  )
+}
+export const EllipsisVertical = EllipsisVerticalIcon
+export const DotsVerticalIcon = EllipsisVerticalIcon
+export const DotsVertical = EllipsisVerticalIcon
+export const MoreVertical = EllipsisVerticalIcon
+
+export function PlayIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="2 2 20 20" {...props}>
+      <path d="M2 2h20v20H2z" fill="none" />
+      <path fill="currentColor" d="M7.608 4.615a.75.75 0 0 0-1.108.659v13.452a.75.75 0 0 0 1.108.659l12.362-6.726a.75.75 0 0 0 0-1.318zM5 5.274c0-1.707 1.826-2.792 3.325-1.977l12.362 6.727c1.566.852 1.566 3.1 0 3.952L8.325 20.702C6.826 21.518 5 20.432 5 18.726z" />
+    </IconFrame>
+  )
+}
+export const Play = PlayIcon
+
+export function PlayFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="2 2 20 20" {...props}>
+      <path d="M2 2h20v20H2z" fill="none" />
+      <path fill="currentColor" d="M5 5.274c0-1.707 1.826-2.792 3.325-1.977l12.362 6.727c1.566.852 1.566 3.1 0 3.952L8.325 20.702C6.826 21.518 5 20.432 5 18.726z" />
+    </IconFrame>
+  )
+}
+export const PlayFilled = PlayFilledIcon
+
+export function StopIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="2 2 20 20" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path fill="currentColor" d="M20 3H4a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1m-1 16H5V5h14z" />
+    </IconFrame>
+  )
+}
+export const Stop = StopIcon
+
+export function StopFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="2 2 20 20" {...props}>
+      <path d="M2 2h20v20H2z" fill="none" />
+      <path fill="currentColor" d="M4.75 3A1.75 1.75 0 0 0 3 4.75v14.5c0 .966.784 1.75 1.75 1.75h14.5A1.75 1.75 0 0 0 21 19.25V4.75A1.75 1.75 0 0 0 19.25 3z" />
+    </IconFrame>
+  )
+}
+export const StopFilled = StopFilledIcon
+
+export function CoffeeLoopIcon(props: CodeSquareFilledIconProps): ReactElement {
+  const maskId = useId()
+  const gradId = useId()
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <defs>
+        <linearGradient id={gradId} x1="0" x2="0" y1="1" y2="8.5" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0" />
+          <stop offset="30%" stopColor="#fff" stopOpacity="1" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="1" />
+        </linearGradient>
+        <mask id={maskId}>
+          <rect fill={`url(#${gradId})`} height="9" width="24" x="0" y="0" />
+        </mask>
+      </defs>
+      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+        <path d="M17 9v9c0 1.66 -1.34 3 -3 3h-6c-1.66 0 -3 -1.34 -3 -3v-9Z" />
+        <path d="M17 9h3c0.55 0 1 0.45 1 1v3c0 0.55 -0.45 1 -1 1h-3" />
+      </g>
+      <g mask={`url(#${maskId})`}>
+        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6">
+          <path d="M7.5 18c0 -2 1 -2 1 -4s-1 -2 -1 -4s1 -2 1 -4s-1 -2 -1 -4s1 -2 1 -4s-1 -2 -1 -4 M10.5 18c0 -2 1 -2 1 -4s-1 -2 -1 -4s1 -2 1 -4s-1 -2 -1 -4s1 -2 1 -4s-1 -2 -1 -4 M13.5 18c0 -2 1 -2 1 -4s-1 -2 -1 -4s1 -2 1 -4s-1 -2 -1 -4s1 -2 1 -4s-1 -2 -1 -4">
+            <animateTransform attributeName="transform" dur="2.4s" repeatCount="indefinite" type="translate" values="0 0; 0 -8" />
+          </path>
+        </g>
+      </g>
+    </IconFrame>
+  )
+}
+export const CoffeeLoop = CoffeeLoopIcon
+export const CoffeeLoopAnimated = CoffeeLoopIcon
+export const PendingCoffeeLoop = CoffeeLoopIcon
+
+export function BouncingBallsIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <circle cx="4" cy="12" r="3" fill="currentColor">
+        <animate id="SVGKiXXedfO" attributeName="cy" begin="0;SVGgLulOGrw.end+0.25s" calcMode="spline" dur="0.6s" keySplines=".33,.66,.66,1;.33,0,.66,.33" values="12;6;12" />
+      </circle>
+      <circle cx="12" cy="12" r="3" fill="currentColor">
+        <animate attributeName="cy" begin="SVGKiXXedfO.begin+0.1s" calcMode="spline" dur="0.6s" keySplines=".33,.66,.66,1;.33,0,.66,.33" values="12;6;12" />
+      </circle>
+      <circle cx="20" cy="12" r="3" fill="currentColor">
+        <animate id="SVGgLulOGrw" attributeName="cy" begin="SVGKiXXedfO.begin+0.2s" calcMode="spline" dur="0.6s" keySplines=".33,.66,.66,1;.33,0,.66,.33" values="12;6;12" />
+      </circle>
+    </IconFrame>
+  )
+}
+export const BouncingBalls = BouncingBallsIcon
+export const BouncingBallsAnimated = BouncingBallsIcon
+export const PendingBouncing = BouncingBallsIcon
+
+export function GooeyBallsIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <defs>
+        <filter id="SVGg4wYRcsm">
+          <feGaussianBlur in="SourceGraphic" result="y" stdDeviation="1.5" />
+          <feColorMatrix in="y" result="z" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 18 -7" />
+          <feBlend in="SourceGraphic" in2="z" />
+        </filter>
+      </defs>
+      <g fill="currentColor" filter="url(#SVGg4wYRcsm)">
+        <circle cx="4" cy="12" r="3">
+          <animate attributeName="cx" calcMode="spline" dur="1.5s" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite" values="4;9;4" />
+          <animate attributeName="r" calcMode="spline" dur="1.5s" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite" values="3;8;3" />
+        </circle>
+        <circle cx="15" cy="12" r="8">
+          <animate attributeName="cx" calcMode="spline" dur="1.5s" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite" values="15;20;15" />
+          <animate attributeName="r" calcMode="spline" dur="1.5s" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite" values="8;3;8" />
+        </circle>
+      </g>
+    </IconFrame>
+  )
+}
+export const GooeyBalls = GooeyBallsIcon
+export const GooeyBallsAnimated = GooeyBallsIcon
+export const PendingExpanding = GooeyBallsIcon
+
+export function DebugRunIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="m19.854 13.96l-6.643 3.737a2.25 2.25 0 0 0-1.172-1.056l.015-.015l7.063-3.974a.75.75 0 0 0 0-1.307l-12-6.749A.75.75 0 0 0 6 5.25v5.25c-.531 0-1.026.121-1.5.291V5.25c0-1.72 1.853-2.805 3.353-1.96l12 6.75c1.528.859 1.528 3.061 0 3.922zm-9.354 2.1V18h.75a.75.75 0 0 1 0 1.5h-.75c0 .576-.11 1.125-.307 1.632l1.588 1.588a.75.75 0 0 1-1.062 1.061l-1.327-1.328a4.492 4.492 0 0 1-6.783 0L1.28 23.781a.753.753 0 0 1-1.062 0a.75.75 0 0 1 0-1.06l1.589-1.589A4.5 4.5 0 0 1 1.5 19.5H.75a.75.75 0 0 1 0-1.5h.75v-1.94L.219 14.78a.75.75 0 0 1 1.06-1.061L2.562 15H3c0-1.655 1.346-3 3-3c1.655 0 3 1.345 3 3h.44l1.28-1.281a.75.75 0 0 1 1.061 1.06zM4.5 15h3a1.5 1.5 0 0 0-3 0M9 16.5H3v3c0 1.654 1.346 3 3 3c1.655 0 3-1.346 3-3z"
+      />
+    </IconFrame>
+  )
+}
+export const DebugRun = DebugRunIcon
+
+export function DebugConsoleIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        fill="currentColor"
+        d="M5.25 21h6.569l-.659.659a2.2 2.2 0 0 0-.513.841H5.25a3.753 3.753 0 0 1-3.75-3.75V5.25A3.754 3.754 0 0 1 5.25 1.5h13.5a3.754 3.754 0 0 1 3.75 3.75v6.885c-.264.093-.512.23-.726.417a4.5 4.5 0 0 0-.774-.891V5.25C21 4.01 19.99 3 18.75 3H5.25C4.01 3 3 4.01 3 5.25v13.5C3 19.99 4.01 21 5.25 21m-.531-3.219a.753.753 0 0 0 1.062 0l4.499-4.498a.75.75 0 0 0 0-1.061l-4.5-4.5a.75.75 0 0 0-1.061 1.06l3.969 3.97l-3.969 3.969a.75.75 0 0 0 0 1.06M22.5 19.5c0 .576-.11 1.125-.308 1.632l1.589 1.588a.75.75 0 0 1-1.062 1.061l-1.328-1.328a4.492 4.492 0 0 1-6.782 0l-1.328 1.328a.753.753 0 0 1-1.062 0a.75.75 0 0 1 0-1.06l1.588-1.589A4.5 4.5 0 0 1 13.5 19.5h-.75a.75.75 0 0 1 0-1.5h.75v-1.94l-1.281-1.28a.75.75 0 0 1 1.06-1.061L14.56 15H15c0-1.655 1.346-3 3-3s3 1.345 3 3h.44l1.28-1.281a.75.75 0 0 1 1.061 1.06L22.5 16.062V18h.75a.75.75 0 0 1 0 1.5zm-6-4.5h3a1.5 1.5 0 0 0-3 0m4.5 1.5h-6v3c0 1.654 1.346 3 3 3s3-1.346 3-3z"
+      />
+    </IconFrame>
+  )
+}
+export const DebugConsole = DebugConsoleIcon
+
+export function FolderIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M2.75 8.623v7.379a4 4 0 0 0 4 4h10.5a4 4 0 0 0 4-4v-5.69a4 4 0 0 0-4-4H12M2.75 8.624V6.998a3 3 0 0 1 3-3h2.9a2.5 2.5 0 0 1 1.768.732L12 6.313m-9.25 2.31h5.904a2.5 2.5 0 0 0 1.768-.732L12 6.313"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    </IconFrame>
+  )
+}
+export const Folder = FolderIcon
+
+export function FolderOpenIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="m3.882 18.043l4.041-5.623a4 4 0 0 1 3.249-1.665h8.752M3.882 18.043a3.65 3.65 0 0 0 2.777 1.277h8.343a4 4 0 0 0 3.405-1.9l2.918-4.734a1.287 1.287 0 0 0-1.115-1.931h-.286M3.882 18.043A3.65 3.65 0 0 1 3 15.661V7.424A2.744 2.744 0 0 1 5.744 4.68h2.653c.607 0 1.189.24 1.618.67l.911.91a1.83 1.83 0 0 0 1.294.537l4.044-.001a3.66 3.66 0 0 1 3.66 3.66v.299"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    </IconFrame>
+  )
+}
+export const FolderOpen = FolderOpenIcon
+
+export function FolderAddIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <g fill="none">
+        <path
+          clipRule="evenodd"
+          d="M17.5 23a5.5 5.5 0 1 0 0-11a5.5 5.5 0 0 0 0 11m0-8.993a.5.5 0 0 1 .5.5V17h2.493a.5.5 0 1 1 0 1H18v2.494a.5.5 0 0 1-1 0V18h-2.493a.5.5 0 1 1 0-1H17v-2.493a.5.5 0 0 1 .5-.5"
+          fill="currentColor"
+          fillRule="evenodd"
+        />
+        <path
+          d="M2.75 8.623v7.379a4 4 0 0 0 4 4h3.35M2.75 8.623V6.998a3 3 0 0 1 3-3h2.9a2.5 2.5 0 0 1 1.768.732L12 6.313m-9.25 2.31h5.904a2.5 2.5 0 0 0 1.768-.732L12 6.313m0 0l5.25-.002a4 4 0 0 1 4 4v.669"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const FolderAdd = FolderAddIcon
+
+export function CubeIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M6.049 7.983a.75.75 0 0 1 .967-.435L12 9.438l4.984-1.89a.75.75 0 1 1 .532 1.402l-4.766 1.81v5.49a.75.75 0 1 1-1.5 0v-5.49L6.484 8.95a.75.75 0 0 1-.435-.967m4.542-5.472a3.75 3.75 0 0 1 2.818 0l7.498 3.04A1.75 1.75 0 0 1 22 7.173v9.653a1.75 1.75 0 0 1-1.093 1.621l-7.498 3.04a3.75 3.75 0 0 1-2.818 0l-7.498-3.04A1.75 1.75 0 0 1 2 16.826V7.173A1.75 1.75 0 0 1 3.093 5.55zm2.254 1.39a2.25 2.25 0 0 0-1.69 0l-7.499 3.04a.25.25 0 0 0-.156.232v9.653a.25.25 0 0 0 .156.231l7.499 3.04a2.25 2.25 0 0 0 1.69 0l7.499-3.04a.25.25 0 0 0 .156-.231V7.173a.25.25 0 0 0-.156-.232z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Cube = CubeIcon
+export const ToolCubeIcon = CubeIcon
+export const ToolCube = CubeIcon
+
+export function CubeFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M13.409 2.511a3.75 3.75 0 0 0-2.818 0l-7.498 3.04A1.75 1.75 0 0 0 2 7.173v9.653a1.75 1.75 0 0 0 1.093 1.621l7.498 3.04a3.75 3.75 0 0 0 2.818 0l7.498-3.04A1.75 1.75 0 0 0 22 16.826V7.173a1.75 1.75 0 0 0-1.093-1.622zm-7.36 5.472a.75.75 0 0 1 .967-.435L12 9.438l4.984-1.89a.75.75 0 1 1 .532 1.402l-4.766 1.81v5.49a.75.75 0 1 1-1.5 0v-5.49L6.484 8.95a.75.75 0 0 1-.435-.967"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const CubeFilled = CubeFilledIcon
+export const ToolCubeFilledIcon = CubeFilledIcon
+export const ToolCubeFilled = CubeFilledIcon
+
+export function DocumentCubeFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M12 2v6a2 2 0 0 0 2 2h6v10a2 2 0 0 1-2 2h-7.404l.022-.011A2.5 2.5 0 0 0 12 19.753V19h4.25a.75.75 0 0 0 0-1.5H12V16h4.25a.75.75 0 0 0 0-1.5h-4.365a2.5 2.5 0 0 0-1.267-1.486l-.103-.051a.8.8 0 0 0 .235.037h5.5a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0-.428 1.366l-3.204-1.602a2.5 2.5 0 0 0-2.236 0l-.882.44V4a2 2 0 0 1 2-2zm1.5.5V8a.5.5 0 0 0 .5.5h5.5zm-3.33 11.408l-3.5-1.75a1.5 1.5 0 0 0-1.34 0l-3.5 1.75A1.5 1.5 0 0 0 1 15.25v4.503a1.5 1.5 0 0 0 .83 1.342l3.5 1.75a1.5 1.5 0 0 0 1.34 0l3.5-1.75a1.5 1.5 0 0 0 .83-1.342V15.25a1.5 1.5 0 0 0-.83-1.342m-7.617 1.368a.5.5 0 0 1 .67-.223L6 16.44l2.776-1.388a.5.5 0 1 1 .448.894L6.5 17.31v3.19a.5.5 0 1 1-1 0v-3.19l-2.724-1.363a.5.5 0 0 1-.223-.67"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const DocumentCubeFilled = DocumentCubeFilledIcon
+export const ToolDocumentationFilledIcon = DocumentCubeFilledIcon
+export const ToolDocumentationFilled = DocumentCubeFilledIcon
+
+export function DocumentCubeIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M10 12.25a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 0 1.5h-5.5a.763.763 0 0 1-.75-.75M12 16v-.75c0-.258-.04-.511-.115-.75h4.365a.75.75 0 0 1 0 1.5zm0 3v-1.5h4.25a.75.75 0 0 1 0 1.5zm-6.5-7.95q-.32.066-.618.214l-.882.44V4a2 2 0 0 1 2-2h6.172c.515 0 1.047.22 1.413.586l5.829 5.828A2 2 0 0 1 20 9.828V20a2 2 0 0 1-2 2h-7.404l.022-.011a2.5 2.5 0 0 0 1.268-1.489H18a.5.5 0 0 0 .5-.5V10H14a2 2 0 0 1-2-2V3.5H6a.5.5 0 0 0-.5.5zM17.378 8.5L13.5 4.621V8a.5.5 0 0 0 .5.5zm-7.207 5.408l-3.5-1.75a1.5 1.5 0 0 0-1.342 0l-3.5 1.75A1.5 1.5 0 0 0 1 15.25v4.503a1.5 1.5 0 0 0 .83 1.342l3.5 1.75a1.5 1.5 0 0 0 1.34 0l3.5-1.75a1.5 1.5 0 0 0 .83-1.342V15.25a1.5 1.5 0 0 0-.83-1.342m-7.618 1.368a.5.5 0 0 1 .67-.223L6 16.44l2.776-1.388a.5.5 0 1 1 .448.894L6.5 17.31v3.19a.5.5 0 1 1-1 0v-3.19l-2.724-1.363a.5.5 0 0 1-.223-.67"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const DocumentCube = DocumentCubeIcon
+export const ToolDocumentationIcon = DocumentCubeIcon
+export const ToolDocumentation = DocumentCubeIcon
+
+export function ReceiptCubeFilledIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M4 5.25A2.25 2.25 0 0 1 6.25 3h9.5A2.25 2.25 0 0 1 18 5.25V14h4v3.75A3.25 3.25 0 0 1 18.75 21h-7.083c.214-.372.333-.8.333-1.247V15.25a2.5 2.5 0 0 0-1.382-2.236L9.59 12.5h4.16a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0-.7.48l-.432-.216a2.5 2.5 0 0 0-2.236 0l-.882.44zM18 19.5h.75a1.75 1.75 0 0 0 1.75-1.75V15.5H18zM7.5 7.75c0 .414.336.75.75.75h5.5a.75.75 0 0 0 0-1.5h-5.5a.75.75 0 0 0-.75.75m2.67 6.158l-3.5-1.75a1.5 1.5 0 0 0-1.34 0l-3.5 1.75A1.5 1.5 0 0 0 1 15.25v4.503a1.5 1.5 0 0 0 .83 1.342l3.5 1.75a1.5 1.5 0 0 0 1.34 0l3.5-1.75a1.5 1.5 0 0 0 .83-1.342V15.25a1.5 1.5 0 0 0-.83-1.342m-7.617 1.368a.5.5 0 0 1 .67-.223L6 16.44l2.776-1.388a.5.5 0 1 1 .448.894L6.5 17.31v3.19a.5.5 0 1 1-1 0v-3.19l-2.724-1.363a.5.5 0 0 1-.223-.67"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const ReceiptCubeFilled = ReceiptCubeFilledIcon
+export const ToolReceiptFilledIcon = ReceiptCubeFilledIcon
+export const ToolReceiptFilled = ReceiptCubeFilledIcon
+
+export function ReceiptCubeIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M4 5.25A2.25 2.25 0 0 1 6.25 3h9.5A2.25 2.25 0 0 1 18 5.25V14h4v3.75A3.25 3.25 0 0 1 18.75 21h-7.083c.214-.372.333-.8.333-1.247V19.5h4.5V5.25a.75.75 0 0 0-.75-.75h-9.5a.75.75 0 0 0-.75.75v5.8q-.32.066-.618.214l-.882.44zm9.75 7.25H9.59l-2.04-1.02a.75.75 0 0 1 .7-.48h5.5a.75.75 0 0 1 0 1.5m4.25 7h.75a1.75 1.75 0 0 1 1.75-1.75V15.5H18zM8.25 7a.75.75 0 0 1 0 1.5h5.5a.75.75 0 0 0 0-1.5zm1.92 6.908l-3.5-1.75a1.5 1.5 0 0 0-1.34 0l-3.5 1.75A1.5 1.5 0 0 0 1 15.25v4.503a1.5 1.5 0 0 0 .83 1.342l3.5 1.75a1.5 1.5 0 0 0 1.34 0l3.5-1.75a1.5 1.5 0 0 0 .83-1.342V15.25a1.5 1.5 0 0 0-.83-1.342m-7.617 1.368a.5.5 0 0 1 .67-.223L6 16.44l2.776-1.388a.5.5 0 1 1 .448.894L6.5 17.31v3.19a.5.5 0 1 1-1 0v-3.19l-2.724-1.363a.5.5 0 0 1-.223-.67"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const ReceiptCube = ReceiptCubeIcon
+export const ToolReceiptIcon = ReceiptCubeIcon
+export const ToolReceipt = ReceiptCubeIcon
+
+export function PanelSearchIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+        <rect width="7" height="18" x="3" y="3" rx="1" />
+        <rect width="7" height="7" x="14" y="3" rx="1" />
+        <circle cx="16.75" cy="16.75" r="2.25" />
+        <path d="m18.4 18.4 2.1 2.1" />
+      </g>
+    </IconFrame>
+  )
+}
+
+export const PanelSearch = PanelSearchIcon
+
+export function ZoomIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 512 512" {...props}>
+      <path d="M0 0h512v512H0z" fill="none" />
+      <path
+        d="m479.6 399.716l-81.084-81.084l-62.368-25.767A175 175 0 0 0 368 192c0-97.047-78.953-176-176-176S16 94.953 16 192s78.953 176 176 176a175.03 175.03 0 0 0 101.619-32.377l25.7 62.2l81.081 81.088a56 56 0 1 0 79.2-79.195M48 192c0-79.4 64.6-144 144-144s144 64.6 144 144s-64.6 144-144 144S48 271.4 48 192m408.971 264.284a24.03 24.03 0 0 1-33.942 0l-76.572-76.572l-23.894-57.835l57.837 23.894l76.573 76.572a24.03 24.03 0 0 1-.002 33.941"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Zoom = ZoomIcon
+export const SearchZoomIcon = ZoomIcon
+export const SearchZoom = ZoomIcon
+
+export function WorkflowIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M9 10c.55 0 1-.45 1-1V7h4.14c.45 1.72 2 3 3.86 3c2.21 0 4-1.79 4-4s-1.79-4-4-4c-1.86 0-3.41 1.28-3.86 3H10V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h2v4.09L1.79 17.3a.996.996 0 0 0 0 1.41l3.5 3.5c.2.2.45.29.71.29s.51-.1.71-.29L9.92 19h4.09v2c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v2H9.92l-2.91-2.91V10h2Zm9-6c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2m-2 12h4v4h-4zM6 20.09L3.91 18L6 15.91L8.09 18zM4 4h4v4H4z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Workflow = WorkflowIcon
+
+export function WorkflowFolderIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <g fill="none">
+        <path
+          d="M2.75 8.623v7.379a4 4 0 0 0 4 4h3.35M2.75 8.623V6.998a3 3 0 0 1 3-3h2.9a2.5 2.5 0 0 1 1.768.732L12 6.313m-9.25 2.31h5.904a2.5 2.5 0 0 0 1.768-.732L12 6.313m0 0l5.25-.002a4 4 0 0 1 4 4v.669"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+        />
+        <g fill="currentColor" transform="translate(11.5 11.5) scale(0.5)">
+          <path d="M9 10c.55 0 1-.45 1-1V7h4.14c.45 1.72 2 3 3.86 3c2.21 0 4-1.79 4-4s-1.79-4-4-4c-1.86 0-3.41 1.28-3.86 3H10V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h2v4.09L1.79 17.3a.996.996 0 0 0 0 1.41l3.5 3.5c.2.2.45.29.71.29s.51-.1.71-.29L9.92 19h4.09v2c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v2H9.92l-2.91-2.91V10h2Zm9-6c1.1 0 2 .9 2 2s-.9 2-2 2s-2-.9-2-2s.9-2 2-2m-2 12h4v4h-4zM6 20.09L3.91 18L6 15.91L8.09 18zM4 4h4v4H4z" />
+        </g>
+      </g>
+    </IconFrame>
+  )
+}
+export const WorkflowFolder = WorkflowFolderIcon
+
+export function FolderToolsIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <g fill="none">
+        <path
+          d="M2.75 8.623v7.379a4 4 0 0 0 4 4h3.35M2.75 8.623V6.998a3 3 0 0 1 3-3h2.9a2.5 2.5 0 0 1 1.768.732L12 6.313m-9.25 2.31h5.904a2.5 2.5 0 0 0 1.768-.732L12 6.313m0 0l5.25-.002a4 4 0 0 1 4 4v.669"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+        />
+        <g fill="currentColor" transform="translate(11.5 11.5) scale(0.5)">
+          <path d="M6.049 7.983a.75.75 0 0 1 .967-.435L12 9.438l4.984-1.89a.75.75 0 1 1 .532 1.402l-4.766 1.81v5.49a.75.75 0 1 1-1.5 0v-5.49L6.484 8.95a.75.75 0 0 1-.435-.967m4.542-5.472a3.75 3.75 0 0 1 2.818 0l7.498 3.04A1.75 1.75 0 0 1 22 7.173v9.653a1.75 1.75 0 0 1-1.093 1.621l-7.498 3.04a3.75 3.75 0 0 1-2.818 0l-7.498-3.04A1.75 1.75 0 0 1 2 16.826V7.173A1.75 1.75 0 0 1 3.093 5.55zm2.254 1.39a2.25 2.25 0 0 0-1.69 0l-7.499 3.04a.25.25 0 0 0-.156.232v9.653a.25.25 0 0 0 .156.231l7.499 3.04a2.25 2.25 0 0 0 1.69 0l7.499-3.04a.25.25 0 0 0 .156-.231V7.173a.25.25 0 0 0-.156-.232z" />
+        </g>
+      </g>
+    </IconFrame>
+  )
+}
+export const FolderTools = FolderToolsIcon
+export const ToolFolderIcon = FolderToolsIcon
+export const ToolFolder = FolderToolsIcon
+export const FolderToolIcon = FolderToolsIcon
+export const FolderTool = FolderToolsIcon
+
+
+export function CollapseAllIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M7.4 22L6 20.6l6-6l6 6l-1.4 1.4l-4.6-4.6zM12 9.4l-6-6L7.4 2L12 6.6L16.6 2L18 3.4z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const CollapseAll = CollapseAllIcon
+
+export function ExpandAllIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="m12 22l-6-6l1.425-1.425L12 19.15l4.575-4.575L18 16zM7.45 9.4L6 8l6-6l6 6l-1.45 1.4L12 4.85z"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export function ChevronRightIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M9.5 6L8.1 7.4L12.7 12L8.1 16.6L9.5 18L15.5 12L9.5 6Z" fill="currentColor" />
+    </IconFrame>
+  )
+}
+export const ChevronRight = ChevronRightIcon
+
+export function SortIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="currentColor" />
+    </IconFrame>
+  )
+}
+export const Sort = SortIcon
+
+export function NodeEditIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <g fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.5">
+        <path d="m20.689 3.934l-.623-.623a1.063 1.063 0 0 0-1.503 0l-3.349 3.35a3.2 3.2 0 0 0-.872 1.628L14 10l1.71-.342a3.2 3.2 0 0 0 1.63-.872l3.349-3.349a1.063 1.063 0 0 0 0-1.503Z" />
+        <path
+          strokeLinecap="square"
+          d="M13.69 19.457c-.19-.46-.19-1.042-.19-2.207s0-1.747.19-2.207a2.5 2.5 0 0 1 1.353-1.353c.46-.19 1.042-.19 2.207-.19s1.747 0 2.207.19a2.5 2.5 0 0 1 1.353 1.353c.19.46.19 1.042.19 2.207s0 1.747-.19 2.207a2.5 2.5 0 0 1-1.353 1.353c-.46.19-1.042.19-2.207.19s-1.747 0-2.207-.19a2.5 2.5 0 0 1-1.353-1.353Zm-10.5 0C3 18.997 3 18.415 3 17.25s0-1.747.19-2.207a2.5 2.5 0 0 1 1.353-1.353c.46-.19 1.042-.19 2.207-.19s1.747 0 2.207.19a2.5 2.5 0 0 1 1.353 1.353c.19.46.19 1.042.19 2.207s0 1.747-.19 2.207a2.5 2.5 0 0 1-1.353 1.353c-.46.19-1.042.19-2.207.19s-1.747 0-2.207-.19a2.5 2.5 0 0 1-1.353-1.353Zm0-10.5C3 8.497 3 7.915 3 6.75s0-1.747.19-2.207A2.5 2.5 0 0 1 4.543 3.19C5.003 3 5.585 3 6.75 3s1.747 0 2.207.19a2.5 2.5 0 0 1 1.353 1.353c.19.46.19 1.042.19 2.207s0 1.747-.19 2.207a2.5 2.5 0 0 1-1.353 1.353c-.46.19-1.042.19-2.207.19s-1.747 0-2.207-.19A2.5 2.5 0 0 1 3.19 8.957Z"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const NodeEdit = NodeEditIcon
+
+export function ArrowRightIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 12 24" {...props}>
+      <path d="M0 0h12v24H0z" fill="none" />
+      <path
+        d="M10.157 12.711L4.5 18.368l-1.414-1.414l4.95-4.95l-4.95-4.95L4.5 5.64l5.657 5.657a1 1 0 0 1 0 1.414"
+        fill="currentColor"
+        fillRule="evenodd"
+      />
+    </IconFrame>
+  )
+}
+export const ArrowRight = ArrowRightIcon
+
+export function PathIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="m19.85 8.14l-.46-2.32c-.33-1.63-1.77-2.81-3.43-2.81s-3 1.09-3.39 2.65L9.52 17.87c-.17.67-.76 1.14-1.45 1.14S6.74 18.5 6.6 17.8l-.41-2.03a3.01 3.01 0 0 0 1.83-2.76c0-1.65-1.35-3-3-3s-3 1.35-3 3c0 1.36.91 2.5 2.15 2.86l.46 2.32C4.96 19.82 6.4 21 8.06 21s3-1.09 3.39-2.65L14.5 6.14c.17-.67.76-1.14 1.45-1.14s1.33.51 1.47 1.21l.41 2.03A3.01 3.01 0 0 0 16 11c0 1.65 1.35 3 3 3s3-1.35 3-3c0-1.36-.91-2.5-2.15-2.86M5 12c.55 0 1 .45 1 1s-.45 1-1 1s-1-.45-1-1s.45-1 1-1m14 0c-.55 0-1-.45-1-1s.45-1 1-1s1 .45 1 1s-.45 1-1 1"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const Path = PathIcon
+
+export function MapConnectionIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <g fill="none">
+        <path d="M9 6a3 3 0 1 1-6 0a3 3 0 0 1 6 0" />
+        <path
+          d="M9 6h9a3 3 0 1 1 0 6H6a3 3 0 1 0 0 6h12M9 6a3 3 0 1 1-6 0a3 3 0 0 1 6 0Zm11 12l-2 1.5v-3z"
+          stroke="currentColor"
+          strokeLinecap="square"
+          strokeWidth="2"
+        />
+      </g>
+    </IconFrame>
+  )
+}
+export const MapConnection = MapConnectionIcon
+
+export function BookmarkStarIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path fill="currentColor" d="M18 2H6c-1.1 0-2 .9-2 2v17c0 .36.19.69.5.87s.69.18 1 0l6.5-3.72l6.5 3.72c.15.09.32.13.5.13s.35-.04.5-.13c.31-.18.5-.51.5-.87V4c0-1.1-.9-2-2-2m0 8v9.28l-5.5-3.14a.98.98 0 0 0-.99 0l-5.5 3.14V4h12v6Z" />
+      <path fill="currentColor" d="M13.08 8.4L12 6l-1.08 2.4l-2.52.2l2 1.8l-.8 2.8l2.4-1.6l2.4 1.6l-.8-2.8l2-1.8z" />
+    </IconFrame>
+  )
+}
+export const BookmarkStar = BookmarkStarIcon
+
+export function StarIcon({ isFavorite, ...props }: CodeSquareFilledIconProps & { isFavorite?: boolean }): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+        fill={isFavorite ? '#eab308' : 'currentColor'}
+      />
+    </IconFrame>
+  )
+}
+export const FavoriteIcon = StarIcon
+export const Favorite = StarIcon
+export const Star = StarIcon
+
+export const DeleteIcon = TrashIcon
+export const Delete = TrashIcon
+
+export function FoldedScriptIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path fill="currentColor" d="M9.197 10a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5zm-2.382 4a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5zm-1.581 4a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5z" />
+      <path fill="currentColor" d="M4.125 0h15.75a4.1 4.1 0 0 1 2.92 1.205A4.1 4.1 0 0 1 24 4.125c0 1.384-.476 2.794-1.128 4.16c-.652 1.365-1.515 2.757-2.352 4.104l-.008.013c-.849 1.368-1.669 2.691-2.28 3.97c-.614 1.283-.982 2.45-.982 3.503a2.625 2.625 0 1 0 4.083-2.183a.75.75 0 1 1 .834-1.247A4.126 4.126 0 0 1 19.875 24H4.5a4.125 4.125 0 0 1-4.125-4.125c0-2.234 1.258-4.656 2.59-6.902c.348-.586.702-1.162 1.05-1.728c.8-1.304 1.567-2.553 2.144-3.738H3.39c-.823 0-1.886-.193-2.567-1.035A3.65 3.65 0 0 1 0 4.125A4.125 4.125 0 0 1 4.125 0M15.75 19.875c0-1.38.476-2.786 1.128-4.15c.649-1.358 1.509-2.743 2.343-4.086l.017-.028c.849-1.367 1.669-2.692 2.28-3.972c.614-1.285.982-2.457.982-3.514A2.615 2.615 0 0 0 19.875 1.5a2.625 2.625 0 0 0-2.625 2.625c0 .865.421 1.509 1.167 2.009A.75.75 0 0 1 18 7.507H7.812c-.65 1.483-1.624 3.069-2.577 4.619c-.334.544-.666 1.083-.98 1.612c-1.355 2.287-2.38 4.371-2.38 6.137A2.625 2.625 0 0 0 4.5 22.5h12.193a4.1 4.1 0 0 1-.943-2.625M1.5 4.125c-.01.511.163 1.008.487 1.403c.254.313.74.479 1.402.479h12.86a3.65 3.65 0 0 1-.499-1.882a4.1 4.1 0 0 1 .943-2.625H4.125A2.625 2.625 0 0 0 1.5 4.125" />
+    </IconFrame>
+  )
+}
+export const FoldedScript = FoldedScriptIcon
+export const Log = FoldedScriptIcon
+export const LogIcon = FoldedScriptIcon
+
+export function SteeringWheelIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M23 12.75v-1.5h-3.29a7.7 7.7 0 0 0-1.73-4.17l2.325-2.325l-1.06-1.06L16.92 6.02a7.7 7.7 0 0 0-4.17-1.73V1h-1.5v3.29a7.7 7.7 0 0 0-4.17 1.73L4.755 3.695l-1.06 1.06L6.02 7.08a7.7 7.7 0 0 0-1.73 4.17H1v1.5h3.29a7.7 7.7 0 0 0 1.73 4.17l-2.325 2.325l1.06 1.06L7.08 17.98a7.7 7.7 0 0 0 4.17 1.73V23h1.5v-3.29a7.7 7.7 0 0 0 4.17-1.73l2.325 2.325l1.06-1.06l-2.325-2.325a7.7 7.7 0 0 0 1.73-4.17zm-4.8-1.5h-2.525a3.6 3.6 0 0 0-.55-1.315L16.91 8.15c.69.875 1.15 1.94 1.29 3.1m-6.2 3c-1.24 0-2.25-1.01-2.25-2.25S10.76 9.75 12 9.75s2.25 1.01 2.25 2.25s-1.01 2.25-2.25 2.25m3.85-7.16l-1.785 1.785c-.395-.26-.84-.45-1.315-.55V5.8c1.16.14 2.225.6 3.1 1.29m-4.6-1.29v2.525c-.48.095-.92.285-1.315.55L8.15 7.09a6.2 6.2 0 0 1 3.1-1.29M7.09 8.15l1.785 1.785c-.26.395-.45.84-.55 1.315H5.8c.14-1.16.6-2.225 1.29-3.1m-1.29 4.6h2.525c.095.48.285.925.55 1.315L7.09 15.85a6.2 6.2 0 0 1-1.29-3.1m2.35 4.16l1.785-1.785c.395.26.84.45 1.315.55V18.2a6.2 6.2 0 0 1-3.1-1.29m4.6 1.29v-2.525c.48-.095.92-.285 1.315-.55l1.785 1.785a6.2 6.2 0 0 1-3.1 1.29m4.16-2.35l-1.785-1.785c.26-.395.45-.84.55-1.315H18.2a6.2 6.2 0 0 1-1.29 3.1"
+        fill="currentColor"
+      />
+    </IconFrame>
+  )
+}
+export const SteeringWheel = SteeringWheelIcon
+export const RuntimeIcon = SteeringWheelIcon
+export const Runtime = SteeringWheelIcon
+
+export function SquareOutlineIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path fill="currentColor" d="M3 21V3h18v18zm2-2h14V5H5zm0 0V5z" />
+    </IconFrame>
+  )
+}
+
+
+export function DragGridVerticalIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path fill="currentColor" d="M9 3h2v2H9zm4 0h2v2h-2zM9 7h2v2H9zm4 0h2v2h-2zm-4 4h2v2H9zm4 0h2v2h-2zm-4 4h2v2H9zm4 0h2v2h-2zm-4 4h2v2H9zm4 0h2v2h-2z" />
+    </IconFrame>
+  )
+}
+
+export function DragGridHorizontalIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path fill="currentColor" d="M3 9h2v2H3zm4 0h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm4 0h2v2h-2zM3 13h2v2H3zm4 0h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm4 0h2v2h-2z" />
+    </IconFrame>
+  )
+}
+
+export function HollowHexagonIcon(props: CodeSquareFilledIconProps): ReactElement {
+  return (
+    <IconFrame viewBox="0 0 24 24" {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <g fill="none">
+        <path clipRule="evenodd" d="M20.66 7L12 2L3.34 7v10L12 22l8.66-5zM12 16a4 4 0 1 0 0-8a4 4 0 0 0 0 8" />
+        <path d="M16 12a4 4 0 1 1-8 0a4 4 0 0 1 8 0" />
+        <path d="m12 2l8.66 5v10L12 22l-8.66-5V7z" stroke="currentColor" strokeLinecap="square" strokeWidth="2" />
+        <path d="M16 12a4 4 0 1 1-8 0a4 4 0 0 1 8 0Z" stroke="currentColor" strokeLinecap="square" strokeWidth="2" />
+      </g>
+    </IconFrame>
+  )
+}
+
+export const HexagonHollowIcon = HollowHexagonIcon
+export const HollowHexagon = HollowHexagonIcon
+
 
 /**
- * Selects a recognizable SVG glyph from a workflow node's generic kind and tool id.
- * Icons are decorative by default; supply `title` or `aria-label` when it conveys
- * information not already available in adjacent node text.
+ * Renders a pre-resolved node presentation. Identity lookup belongs to the shared
+ * Studio presentation index, not this visual component.
  */
-export function NodeIcon({ nodeKind, toolId, ...svgProps }: NodeIconProps): ReactElement {
-  const icon = resolveNodeIcon(nodeKind, toolId)
-
+export function WorkflowNodeIcon({ descriptor, size = 20, title, className, ...svgProps }: WorkflowNodeIconProps): ReactElement {
+  const [failedHref, setFailedHref] = useState<string>()
+  if (descriptor.source === 'image' && failedHref !== descriptor.href) {
+    return <img alt={descriptor.alt ?? ''} className={className} height={size} onError={() => setFailedHref(descriptor.href)} src={descriptor.href} title={title} width={size} />
+  }
+  const icon = descriptor.source === 'image' ? descriptor.fallback : descriptor.name
   switch (icon) {
     case 'manual-trigger':
       return (
-        <IconFrame {...svgProps}>
+        <IconFrame {...svgProps} className={className} size={size} title={title}>
           <path d="M7 4.5 18.5 12 7 19.5V4.5Z" fill="currentColor" />
           <path d="M4.5 7.25v9.5" stroke="currentColor" strokeLinecap="square" strokeWidth="1.5" />
         </IconFrame>
       )
-    case 'powershell':
+    case 'meshingress-api':
       return (
-        <IconFrame {...svgProps}>
-          <path d="M3.5 5.25h17v13.5h-17z" stroke="currentColor" strokeWidth="1.5" />
-          <path d="m7 9 3 3-3 3m5 0h5" stroke="currentColor" strokeLinecap="square" strokeWidth="1.7" />
+        <IconFrame {...svgProps} className={className} size={size} title={title}>
+          <path d="M18.437 11H5.565a2.5 2.5 0 0 1-2.5-2.5V5.564a2.5 2.5 0 0 1 2.5-2.5h12.872a2.5 2.5 0 0 1 2.5 2.5V8.5a2.5 2.5 0 0 1-2.5 2.5M5.565 4.064a1.5 1.5 0 0 0-1.5 1.5V8.5a1.5 1.5 0 0 0 1.5 1.5h12.872a1.5 1.5 0 0 0 1.5-1.5V5.564a1.5 1.5 0 0 0-1.5-1.5Zm12.872 16.872H5.565a2.5 2.5 0 0 1-2.5-2.5V15.5a2.5 2.5 0 0 1 2.5-2.5h12.872a2.5 2.5 0 0 1 2.5 2.5v2.934a2.5 2.5 0 0 1-2.5 2.502M5.565 14a1.5 1.5 0 0 0-1.5 1.5v2.934a1.5 1.5 0 0 0 1.5 1.5h12.872a1.5 1.5 0 0 0 1.5-1.5V15.5a1.5 1.5 0 0 0-1.5-1.5Z" fill="currentColor" />
         </IconFrame>
       )
-    case 'hello-world':
-      return (
-        <IconFrame {...svgProps}>
-          <path d="M4 5.25h16v10.5H8.25L4 19V5.25Z" stroke="currentColor" strokeLinejoin="miter" strokeWidth="1.5" />
-          <path d="M8 10.25v-2m3.5 2v-2m3.5 2v-2M8 13.5h8" stroke="currentColor" strokeLinecap="square" strokeWidth="1.5" />
-        </IconFrame>
-      )
-    case 'toonverse-search':
-      return (
-        <IconFrame {...svgProps}>
-          <circle cx="10.5" cy="10.5" r="5.75" stroke="currentColor" strokeWidth="1.5" />
-          <path d="m15 15 4.5 4.5M8.25 10.5h4.5M10.5 8.25v4.5" stroke="currentColor" strokeLinecap="square" strokeWidth="1.5" />
-        </IconFrame>
-      )
+    case 'folder':
+      return <FolderIcon {...svgProps} className={className} size={size} title={title} />
+    case 'hollow-hexagon':
+      return <HollowHexagonIcon {...svgProps} className={className} size={size} title={title} />
     default:
       return (
-        <IconFrame {...svgProps}>
-          <path d="M5 5h14v14H5z" stroke="currentColor" strokeWidth="1.5" />
-          <path d="m8.25 9 3 3-3 3m5 0h2.5" stroke="currentColor" strokeLinecap="square" strokeWidth="1.7" />
-        </IconFrame>
+        <CubeIcon {...svgProps} className={className} size={size} title={title} />
       )
   }
 }
-

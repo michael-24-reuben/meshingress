@@ -21,7 +21,7 @@ class FasterWhisperManifestTests {
                 .findFirst()
                 .orElseThrow();
 
-        assertThat(manifest.toolId()).isEqualTo("fasterwhisper");
+        assertThat(manifest.metadata().namespace()).isEqualTo("faster-whisper");
         assertThat(source.canonicalIdentity()).isEqualTo("github.com/SYSTRAN/faster-whisper");
         assertThat(source.cloneUrl()).isEqualTo("https://github.com/SYSTRAN/faster-whisper.git");
         assertThat(source.checkoutRef()).isEqualTo(FasterWhisperManifest.FASTER_WHISPER_COMMIT);
@@ -45,7 +45,7 @@ class FasterWhisperManifestTests {
                 .filter(requirement -> "sourceRepository".equals(requirement.kind()))
                 .findFirst()
                 .orElseThrow();
-        assertThat(metadata.toolId()).isEqualTo("fasterwhisper");
+        assertThat(metadata.metadata().namespace()).isEqualTo("faster-whisper");
         assertThat(source.canonicalIdentity()).isEqualTo("github.com/SYSTRAN/faster-whisper");
         assertThat(source.checkoutRef()).isEqualTo(FasterWhisperManifest.FASTER_WHISPER_COMMIT);
     }

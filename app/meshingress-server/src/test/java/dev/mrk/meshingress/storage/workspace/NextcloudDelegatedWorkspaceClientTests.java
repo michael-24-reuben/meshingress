@@ -45,13 +45,13 @@ class NextcloudDelegatedWorkspaceClientTests {
             NextcloudDelegatedWorkspaceClient client = new NextcloudDelegatedWorkspaceClient(target, Duration.ofSeconds(5), "", new ObjectMapper());
             byte[] source = "{\"book\":1}".getBytes(StandardCharsets.UTF_8);
 
-            client.upload("req-1", "toonverse.download-book", "book.json", new ByteArrayInputStream(source), "application/json");
+            client.upload("req-1", "open-ink-library.toonverse.download-book", "book.json", new ByteArrayInputStream(source), "application/json");
 
             JsonNode payload = new ObjectMapper().readTree(requestBody.get());
             assertEquals("PUT", method.get());
             assertEquals("/ocs/v2.php/apps/meshingress/api/v1/delegated-workspaces/req-1/files", path.get());
             assertEquals("application/json", contentType.get());
-            assertEquals("toonverse.download-book", toolId.get());
+            assertEquals("open-ink-library.toonverse.download-book", toolId.get());
             assertEquals("book.json", payload.path("path").asText());
             assertEquals("application/json", payload.path("contentType").asText());
             assertEquals(new String(source, StandardCharsets.UTF_8), new String(Base64.getDecoder().decode(payload.path("contentBase64").asText()), StandardCharsets.UTF_8));
@@ -64,7 +64,7 @@ class NextcloudDelegatedWorkspaceClientTests {
     void downloadReadsOnlyTheConfiguredWorkspacePathWithServerCredentials() throws Exception {
         AtomicReference<String> authorization = new AtomicReference<>();
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-        server.createContext("/remote.php/dav/files/alice/Workspace/Meshingress/storage/toonverse.download-book/req-1/book.json", exchange -> {
+        server.createContext("/remote.php/dav/files/alice/Workspace/Meshingress/storage/open-ink-library.toonverse.download-book/req-1/book.json", exchange -> {
             authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
             byte[] response = "{\"type\":\"open-ink.book/v1\"}".getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
@@ -80,7 +80,7 @@ class NextcloudDelegatedWorkspaceClientTests {
                     MeshingressProperties.Storage.StagingMode.PROVIDER_SESSION);
             NextcloudDelegatedWorkspaceClient client = new NextcloudDelegatedWorkspaceClient(target, Duration.ofSeconds(5), "Basic server-only", new ObjectMapper());
 
-            NextcloudDelegatedWorkspaceClient.RemoteFile file = client.download("req-1", "toonverse.download-book", "book.json");
+            NextcloudDelegatedWorkspaceClient.RemoteFile file = client.download("req-1", "open-ink-library.toonverse.download-book", "book.json");
 
             assertEquals("Basic server-only", authorization.get());
             assertEquals("text/plain", file.mimeType());

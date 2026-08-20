@@ -14,6 +14,8 @@ import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.annotation.AnnotatedMcpToolHandlerProvider;
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.toolcatalog.ToolModuleCatalog;
+import dev.mrk.meshingress.toolmetadata.McpToolMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,14 +39,21 @@ import java.util.regex.Pattern;
 public class InMemoryToolRegistry implements ToolRegistry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryToolRegistry.class);
-    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile("^" + McpTool.QUALIFIED_TOOL_NAME_REGEX + "$");
-    private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile("^" + McpFunction.QUALIFIED_TOOL_FUNCTION_NAME_REGEX + "$");
+    private static final Pattern TOOL_NAME_PATTERN = Pattern.compile(
+            "^" + McpTool.SEGMENT_NAME_REGEX + "\\." + McpTool.SEGMENT_NAME_REGEX + "$"
+    );
+    private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile(
+            "^" + McpTool.SEGMENT_NAME_REGEX + "\\." + McpTool.SEGMENT_NAME_REGEX + "\\." + McpFunction.SEGMENT_NAME_REGEX + "$"
+    );
 
     private final ObjectMapper objectMapper;
     private final MeshingressProperties properties;
+    private final McpToolMetadata toolMetadata;
+    private final ToolModuleCatalog moduleCatalog;
     private final Map<String, McpToolDescriptor> descriptors = new LinkedHashMap<>();
     private final Map<String, McpFunctionDescriptor> functions = new LinkedHashMap<>();
     private final Map<String, String> functionOwners = new LinkedHashMap<>();
+    private final Map<String, String> functionModuleToolIds = new LinkedHashMap<>();
     private final Map<String, McpToolHandler> handlers = new LinkedHashMap<>();
     private final Map<String, List<String>> runtimeOwnerFunctions = new LinkedHashMap<>();
     private final Map<String, List<String>> runtimeOwnerTools = new LinkedHashMap<>();
@@ -54,11 +63,15 @@ public class InMemoryToolRegistry implements ToolRegistry {
     public InMemoryToolRegistry(
             ObjectMapper objectMapper,
             MeshingressProperties properties,
+            McpToolMetadata toolMetadata,
+            ToolModuleCatalog moduleCatalog,
             List<McpToolHandler> toolHandlers,
             AnnotatedMcpToolHandlerProvider annotatedToolHandlerProvider
     ) {
         this.objectMapper = objectMapper;
         this.properties = properties;
+        this.toolMetadata = toolMetadata;
+        this.moduleCatalog = moduleCatalog;
         if (properties.tools().registry().scanOnStartup()) {
             for (McpToolHandler handler : toolHandlers) {
                 registerHandler(handler, null);
@@ -93,6 +106,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
             descriptors.put(descriptor.name(), existing.withFunctions(mergedFunctions));
         }
         List<String> registeredFunctionNames = new ArrayList<>();
+        String moduleToolId = moduleToolIdFor(handler, runtimeOwner);
         for (McpFunctionDescriptor function : descriptor.functions()) {
             if (functions.containsKey(function.name())) {
                 handleDuplicate("Duplicate MCP function descriptor name: " + function.name());
@@ -104,6 +118,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
             }
             functions.put(function.name(), function);
             functionOwners.put(function.name(), descriptor.name());
+            if (moduleToolId != null) functionModuleToolIds.put(function.name(), moduleToolId);
             handlers.put(function.handlerKey(), handler);
             registeredFunctionNames.add(function.name());
         }
@@ -192,6 +207,11 @@ public class InMemoryToolRegistry implements ToolRegistry {
         return owningTool(functionName);
     }
 
+    @Override
+    public synchronized Optional<String> findOwningModuleToolId(String functionName) {
+        return Optional.ofNullable(functionModuleToolIds.get(functionName));
+    }
+
     /**
      * Find a tool regardless of enablement or visibility.
      */
@@ -223,7 +243,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
         List<String> errors = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         if (descriptor.name() == null || !TOOL_NAME_PATTERN.matcher(descriptor.name()).matches()) {
-            errors.add("Tool name must use lower-case dotted segments.");
+            errors.add("Tool name must use `<namespace>.<tool>` lower-case segments.");
         }
         if (!updateMode && descriptors.containsKey(descriptor.name())) {
             errors.add("Tool name is already registered.");
@@ -296,6 +316,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
         for (String functionName : ownedFunctions) {
             McpFunctionDescriptor function = functions.remove(functionName);
             functionOwners.remove(functionName);
+            functionModuleToolIds.remove(functionName);
             if (function != null) {
                 handlers.remove(function.handlerKey());
             }
@@ -393,8 +414,10 @@ public class InMemoryToolRegistry implements ToolRegistry {
      * Validate a single function descriptor and add findings.
      */
     private void checkFunction(String toolName, McpFunctionDescriptor function, List<String> errors, List<String> warnings, boolean validateHandlerKey) {
-        if (function.name() == null || !FUNCTION_NAME_PATTERN.matcher(function.name().substring(toolName.length() + 1)).matches()) {
-            errors.add("Function name must join tool and function names with a period: '%s'.".formatted(function.name()));
+        if (function.name() == null
+                || !function.name().startsWith(toolName + ".")
+                || !FUNCTION_NAME_PATTERN.matcher(function.name()).matches()) {
+            errors.add("Function name must use `<namespace>.<tool>.<function>` segments: '%s'.".formatted(function.name()));
         }
         if (function.inputSchema() == null || !function.inputSchema().isObject()) {
             errors.add("function inputSchema must be an object.");
@@ -497,6 +520,15 @@ public class InMemoryToolRegistry implements ToolRegistry {
                 .map(descriptors::get);
     }
 
+    private String moduleToolIdFor(McpToolHandler handler, String runtimeOwner) {
+        if (runtimeOwner != null && !runtimeOwner.isBlank()) {
+            return moduleCatalog.runtimeToolId(runtimeOwner);
+        }
+        return toolMetadata.registeredManifestDefinition(handler.sourceType())
+                .map(moduleCatalog::classpathToolId)
+                .orElse(null);
+    }
+
     /**
      * Apply patch fields to the first function descriptor when requested.
      */
@@ -521,7 +553,7 @@ public class InMemoryToolRegistry implements ToolRegistry {
     private void audit(String action, String toolName, int previousVersion, int newVersion, McpCallContext context) {
         auditEvents.add(new ToolAuditEvent(
                 OffsetDateTime.now(),
-                context.authorizationHeader() == null ? "role-header" : "bearer-role-admin",
+                context == null ? "unknown" : context.principal().subject(),
                 action,
                 toolName,
                 previousVersion,

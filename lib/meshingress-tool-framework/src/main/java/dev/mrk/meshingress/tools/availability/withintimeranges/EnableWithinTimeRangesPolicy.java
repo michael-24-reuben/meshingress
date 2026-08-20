@@ -26,9 +26,8 @@ public class EnableWithinTimeRangesPolicy implements McpAvailabilityPolicy<Enabl
     public AvailabilityDecision evaluate(EnableWithinTimeRanges annotation, ToolAvailabilityContext context, PolicyEvaluationState state) {
         ZoneId zone = ZoneId.of(annotation.zone());
         LocalTime now = ZonedDateTime.now(clock).withZoneSameInstant(zone).toLocalTime();
-        for (String range : annotation.ranges()) {
-            TimeRange parsedRange = TimeRange.parse(range);
-            if (parsedRange.contains(now)) {
+        for (EnableWithinTimeRanges.TimeRange range : annotation.ranges()) {
+            if (new TimeRange(LocalTime.parse(range.start()), LocalTime.parse(range.end())).contains(now)) {
                 return AvailabilityDecision.allow("time range allowed");
             }
         }
@@ -36,15 +35,6 @@ public class EnableWithinTimeRangesPolicy implements McpAvailabilityPolicy<Enabl
     }
 
     record TimeRange(LocalTime start, LocalTime end) {
-
-        static TimeRange parse(String value) {
-            String[] parts = value.split("-", 2);
-            if (parts.length != 2) {
-                throw new IllegalArgumentException("Time range must use HH:mm-HH:mm format: " + value);
-            }
-            return new TimeRange(LocalTime.parse(parts[0]), LocalTime.parse(parts[1]));
-        }
-
         boolean contains(LocalTime time) {
             if (start.equals(end)) {
                 return true;

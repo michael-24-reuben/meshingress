@@ -3,6 +3,7 @@ package org.toolspace.fasterwhisper;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import dev.mrk.meshingress.toolmetadata.McpToolManifestDefinition;
 import dev.mrk.meshingress.toolmetadata.ToolLink;
+import dev.mrk.meshingress.toolmetadata.ToolModuleMetadata;
 import dev.mrk.meshingress.toolmetadata.ToolProperty;
 import dev.mrk.meshingress.toolmetadata.ToolReadme;
 import dev.mrk.meshingress.toolmetadata.ToolRequirement;
@@ -15,8 +16,17 @@ public final class FasterWhisperManifest implements McpToolManifestDefinition {
     static final String FASTER_WHISPER_COMMIT = "ed9a06cd89a93e47838f564998a6c09b655d7f43";
 
     @Override
-    public String toolId() {
-        return "fasterwhisper";
+    public ToolModuleMetadata metadata() {
+        return new ToolModuleMetadata(
+                "faster-whisper",
+                "Faster Whisper",
+                "Local audio transcription",
+                "Transcribes local audio through an isolated Faster Whisper Python environment.",
+                List.of(), "", List.of("audio", "local", "transcription"), List.of(
+                        ToolLink.documentation("https://github.com/SYSTRAN/faster-whisper").label("Faster Whisper documentation"),
+                        ToolLink.source("https://github.com/SYSTRAN/faster-whisper").label("Faster Whisper source")
+                ), null
+        );
     }
 
     @Override
@@ -33,16 +43,6 @@ public final class FasterWhisperManifest implements McpToolManifestDefinition {
                         .description("Pinned Faster Whisper source used to provision the isolated Python environment."),
                 ToolRequirement.scope(McpToolScope.FILES_READ),
                 ToolRequirement.scope(McpToolScope.PROCESS_EXECUTE)
-        );
-    }
-
-    @Override
-    public List<ToolLink> links() {
-        return List.of(
-                ToolLink.documentation("https://github.com/SYSTRAN/faster-whisper")
-                        .label("Faster Whisper documentation"),
-                ToolLink.source("https://github.com/SYSTRAN/faster-whisper")
-                        .label("Faster Whisper source")
         );
     }
 

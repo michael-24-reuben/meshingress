@@ -10,7 +10,6 @@ import java.util.List;
 
 public record AnnotatedMcpFunction(
         String name,
-        String path,
         String title,
         String description,
         McpFunctionDescriptor descriptor,

@@ -83,8 +83,8 @@ class McpToolMetadataTests {
     private static final class SampleManifest implements McpToolManifestDefinition {
 
         @Override
-        public String toolId() {
-            return "sample.tool";
+        public ToolModuleMetadata metadata() {
+            return new ToolModuleMetadata("sample", "Sample", "", "", java.util.List.of(), "", java.util.List.of(), java.util.List.of(), null);
         }
 
         @Override

@@ -11,9 +11,13 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface McpFunction {
-    String QUALIFIED_TOOL_FUNCTION_NAME_REGEX = "[a-z][a-z0-9-_]*";
+    String SEGMENT_NAME_REGEX = "[a-z][a-z0-9_-]*";
 
-    @Pattern(QUALIFIED_TOOL_FUNCTION_NAME_REGEX)
+    /** @deprecated Use {@link #SEGMENT_NAME_REGEX}; function values are single segments. */
+    @Deprecated
+    String QUALIFIED_TOOL_FUNCTION_NAME_REGEX = SEGMENT_NAME_REGEX;
+
+    @Pattern(SEGMENT_NAME_REGEX)
     String value() default "";
 
     String title() default "";

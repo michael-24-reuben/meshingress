@@ -11,7 +11,16 @@ public @interface McpInputField {
 
     String value() default "";
 
+    /** Optional human-readable JSON Schema title for this input. */
+    String title() default "";
+
     String description() default "";
 
     boolean required() default true;
+
+    /** Optional JSON Schema type override for values such as an explicit JSON null marker. */
+    String schemaType() default "";
+
+    /** Optional JSON Schema format used by clients to select a suitable value presentation. */
+    String format() default "";
 }

@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "meshingress.identity.name=test-meshingress",
         "meshingress.identity.instance-id=test-node",
         "meshingress.dispatch.include-generated-at=false",
-        "meshingress.tools.deny-list=helloworld.greet"
+        "meshingress.tools.deny-list=helloworld.greeting.greet"
 })
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -61,7 +61,7 @@ class McpPropertyPolicyTests {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.tools[*].name", not(hasItem("helloworld.greet"))));
+                .andExpect(jsonPath("$.result.tools[*].name", not(hasItem("helloworld.greeting.greet"))));
 
         mockMvc.perform(post("/mcp")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +71,7 @@ class McpPropertyPolicyTests {
                                   "id": 3,
                                   "method": "tools/call",
                                   "params": {
-                                    "name": "helloworld.greet",
+                                    "name": "helloworld.greeting.greet",
                                     "arguments": {
                                       "name": "Meshingress"
                                     }

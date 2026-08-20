@@ -102,7 +102,7 @@ public final class NextcloudDelegatedWorkspaceClient {
             JsonNode data = envelope.path("ocs").has("data") ? envelope.path("ocs").path("data") : envelope;
             int ocsCode = envelope.path("ocs").path("meta").path("statuscode").asInt(response.statusCode());
             if (response.statusCode() < 200 || response.statusCode() >= 300 || ocsCode >= 400) {
-                String message = data.path("message").asText(envelope.path("ocs").path("meta").path("message").asText("Nextcloud request failed."));
+                String message = data.path("message").asString(envelope.path("ocs").path("meta").path("message").asString("Nextcloud request failed."));
                 throw new ToolStorageException("Nextcloud delegated workspace request was rejected: " + message);
             }
             return data;

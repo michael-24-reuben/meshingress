@@ -7,7 +7,7 @@ import java.util.List;
 
 @Schema(description = "Dynamic MCP tool descriptor accepted by role-gated registry methods.")
 public record ToolDescriptorParams(
-        @Schema(description = "Public MCP tool name.", example = "architect.entries.copy", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "Public MCP tool-family name: <namespace>.<tool>.", example = "architect.entries", requiredMode = Schema.RequiredMode.REQUIRED)
         String name,
         @Schema(description = "Human-readable tool title.", example = "List architect entries")
         String title,
@@ -19,7 +19,7 @@ public record ToolDescriptorParams(
         Boolean enabled,
         @Schema(description = "Registry visibility for the tool.", allowableValues = {"public", "private", "admin"}, example = "public")
         String visibility,
-        @Schema(description = "Handler key used by the runtime registry to route calls.", example = "architect.entries.list", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(description = "Handler key for a single-function shorthand descriptor. Multi-function descriptors declare handler keys on their functions.", example = "architect.entries.list")
         String handlerKey,
         @Schema(description = "JSON Schema object describing accepted input arguments.", type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE, example = "{\"type\":\"object\",\"properties\":{\"status\":{\"type\":\"string\"}}}")
         JsonNode inputSchema,
@@ -27,7 +27,7 @@ public record ToolDescriptorParams(
         JsonNode outputSchema,
         @Schema(description = "Optional MCP annotations object such as readOnlyHint or destructiveHint.", type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE)
         JsonNode annotations,
-        @Schema(description = "Optional function-level descriptors. If omitted, the tool descriptor is used as a single function.")
+        @Schema(description = "Function-level descriptors. Each function name must be <namespace>.<tool>.<function>.")
         List<ToolFunctionParams> functions
 ) {
 }

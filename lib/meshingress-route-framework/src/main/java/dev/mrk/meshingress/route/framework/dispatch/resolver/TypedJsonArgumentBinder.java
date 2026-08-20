@@ -14,7 +14,7 @@ public class TypedJsonArgumentBinder {
             return bindJsonNode(method, source, value, targetType);
         }
         if (targetType.equals(String.class)) {
-            if (!value.isTextual()) {
+            if (!value.isString()) {
                 throw invalid(method, source, "must be a string");
             }
             return value.asString();

@@ -1,0 +1,10 @@
+# This file is loaded when the Studio starts, after deployment.
+# Change it to point a deployed Studio at its Meshingress server without
+# rebuilding the Vite bundle.
+meshingress:
+  apiBaseUrl: http://100.121.15.11:4737
+  # Public Google OAuth client ID for this Studio deployment. Do not commit a
+  # deployment-specific value; configure it in the deployed runtime file.
+  googleClientId: ''
+  # The Studio opens this live channel before falling back to the HTTP sample route.
+  workflowWebSocketPath: /api/v1/workflows/ws

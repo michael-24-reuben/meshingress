@@ -1,9 +1,31 @@
 import { apiRequest } from './client'
 
+export interface McpAvailabilityCondition {
+  type: string
+  parameters: Record<string, unknown>
+}
+
+export interface McpAvailability {
+  version: 1
+  mode: 'all' | 'any'
+  conditions: McpAvailabilityCondition[]
+}
+
 export interface McpToolFunction {
   name: string
+  moduleToolId?: string
+  title?: string
   description?: string
   inputSchema?: Record<string, unknown>
+  annotations?: {
+    scopes?: string[]
+    timeoutMs?: number
+    availability?: McpAvailability
+    returnType?: unknown
+    [key: string]: unknown
+  }
+  outputSchema?: Record<string, unknown>
+  returnType?: unknown
 }
 
 interface McpToolsListResponse {

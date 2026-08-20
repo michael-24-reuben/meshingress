@@ -113,21 +113,6 @@
     ]
   },
   {
-    "annotation": "dev.mrk.meshingress.api.tools.annotation.McpToolMapping",
-    "simpleName": "McpToolMapping",
-    "elements": [
-      {
-        "name": "value",
-        "type": "java.lang.String",
-        "required": true,
-        "annotations": [ ],
-        "defaultValue": null,
-        "array": false,
-        "kind": "string"
-      }
-    ]
-  },
-  {
     "annotation": "dev.mrk.meshingress.api.tools.annotation.McpToolScopes",
     "simpleName": "McpToolScopes",
     "elements": [

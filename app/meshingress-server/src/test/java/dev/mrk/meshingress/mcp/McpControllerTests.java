@@ -48,6 +48,16 @@ class McpControllerTests {
     }
 
     @Test
+    void workflowWebSocketCorsPreflightAllowsTheUpgradeGet() throws Exception {
+        mockMvc.perform(options("/api/v1/workflows/ws")
+                        .header("Origin", "http://127.0.0.1:4738")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:4738"))
+                .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,OPTIONS"));
+    }
+
+    @Test
     void initializeReturnsToolCapabilities() throws Exception {
         MvcResult result = mockMvc.perform(post("/mcp")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -113,9 +123,9 @@ class McpControllerTests {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.tools[*].name", hasItem("toonverse.fetch")))
-                .andExpect(jsonPath("$.result.tools[*].name", hasItem("toonverse.search")))
-                .andExpect(jsonPath("$.result.tools[*].name", hasItem("toonverse.download-book")))
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("open-ink-library.toonverse.fetch")))
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("open-ink-library.toonverse.search")))
+                .andExpect(jsonPath("$.result.tools[*].name", hasItem("open-ink-library.toonverse.download-book")))
                 .andExpect(jsonPath("$.result.tools[*].name", not(hasItem("book.image.extract"))));
     }
 
@@ -234,7 +244,7 @@ class McpControllerTests {
                                   "id": 8,
                                   "method": "roles/tools/update",
                                   "params": {
-                                    "name": "architect.entries.copy",
+                                    "name": "architect.alias",
                                     "patch": {
                                       "description": "List architect entries through a dynamic alias.",
                                       "enabled": true
@@ -256,7 +266,7 @@ class McpControllerTests {
                                   "id": 9,
                                   "method": "roles/tools/delete",
                                   "params": {
-                                    "name": "architect.entries.copy",
+                                    "name": "architect.alias",
                                     "mode": "disable"
                                   }
                                 }
@@ -289,7 +299,7 @@ class McpControllerTests {
                                   "method": "roles/tools/register",
                                   "params": {
                                     "phase": "bundle",
-                                    "toolId": "helloworld.greet",
+                                    "toolId": "helloworld.greeting.greet",
                                     "bundle": {
                                       "bundleId": "meshingress-tool-bundle"
                                     }
@@ -301,7 +311,7 @@ class McpControllerTests {
                 .andExpect(jsonPath("$.result.phase", is("bundle")))
                 .andExpect(jsonPath("$.result.sourceKind", is("CLASSPATH_BUNDLE")))
                 .andExpect(jsonPath("$.result.status", is("reconciled")))
-                .andExpect(jsonPath("$.result.registeredFunctions[0]", is("helloworld.greet")));
+                .andExpect(jsonPath("$.result.registeredFunctions[0]", is("helloworld.greeting.greet")));
     }
 
     @Test
@@ -316,7 +326,7 @@ class McpControllerTests {
                                   "method": "roles/tools/register",
                                   "params": {
                                     "phase": "bundle",
-                                    "toolId": "helloworld.greet"
+                                    "toolId": "helloworld.greeting.greet"
                                   }
                                 }
                                 """))
@@ -338,7 +348,7 @@ class McpControllerTests {
                                 }
                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.registrations[?(@.toolId == 'helloworld.greet')].phase", hasItem("bundle")));
+                .andExpect(jsonPath("$.result.registrations[?(@.toolId == 'helloworld.greeting.greet')].phase", hasItem("bundle")));
     }
 
     @Test
@@ -353,7 +363,7 @@ class McpControllerTests {
                                   "method": "roles/tools/register",
                                   "params": {
                                     "phase": "bundle",
-                                    "toolId": "helloworld.greet"
+                                    "toolId": "helloworld.greeting.greet"
                                   }
                                 }
                                 """))
@@ -369,7 +379,7 @@ class McpControllerTests {
                                   "id": 37,
                                   "method": "roles/tools/delete",
                                   "params": {
-                                    "name": "helloworld.greet",
+                                    "name": "helloworld.greeting.greet",
                                     "mode": "disable"
                                   }
                                 }
@@ -456,21 +466,28 @@ class McpControllerTests {
                   "method": "%s",
                   "params": {
                     "tool": {
-                      "name": "architect.entries.copy",
+                      "name": "architect.alias",
                       "title": "List Architect Entries Alias",
                       "description": "List architect entries through a dynamic alias.",
                       "enabled": true,
                       "visibility": "public",
-                      "handlerKey": "architect.entries.list",
-                      "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                          "status": {
-                            "type": "string"
-                          }
-                        },
-                        "additionalProperties": false
-                      }
+                      "functions": [{
+                        "name": "architect.alias.copy",
+                        "title": "List Architect Entries Alias",
+                        "description": "List architect entries through a dynamic alias.",
+                        "enabled": true,
+                        "visibility": "public",
+                        "handlerKey": "architect.entries.list",
+                        "inputSchema": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }]
                     }
                   }
                 }

@@ -9,7 +9,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 public record McpFunctionDescriptor(
-        String name, // join tool name and function name. Like `toolName + "." + functionName`
+        String name,
         String title,
         String description,
         int version,

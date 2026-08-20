@@ -5,6 +5,7 @@ import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
 import dev.mrk.meshingress.mcp.tools.cache.McpCacheManager;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
+import dev.mrk.meshingress.toolmetadata.McpToolMetadata;
 import dev.mrk.meshingress.tools.framework.scanning.McpToolAnnotationScanner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -21,15 +22,21 @@ public class AnnotatedMcpToolHandlerProvider {
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
     private final McpCacheManager cacheManager;
+    private final McpToolMetadata toolMetadata;
 
-    public AnnotatedMcpToolHandlerProvider(ApplicationContext applicationContext, ObjectMapper objectMapper, McpCacheManager cacheManager) {
+    public AnnotatedMcpToolHandlerProvider(
+            ApplicationContext applicationContext,
+            ObjectMapper objectMapper,
+            McpCacheManager cacheManager,
+            McpToolMetadata toolMetadata
+    ) {
         this.applicationContext = applicationContext;
         this.objectMapper = objectMapper;
         this.cacheManager = cacheManager;
+        this.toolMetadata = toolMetadata;
     }
 
     public List<McpToolHandler> handlers() {
-        McpToolAnnotationScanner scanner = new McpToolAnnotationScanner(objectMapper);
         TypedJsonArgumentBinder argumentBinder = new TypedJsonArgumentBinder();
         List<McpToolHandler> handlers = new ArrayList<>();
         for (Map.Entry<String, Object> entry : applicationContext.getBeansWithAnnotation(McpTool.class).entrySet()) {
@@ -37,7 +44,8 @@ public class AnnotatedMcpToolHandlerProvider {
             if (bean instanceof McpToolHandler) {
                 continue;
             }
-            AnnotatedMcpTool tool = scanner.scan(ClassUtils.getUserClass(bean));
+            Class<?> toolClass = ClassUtils.getUserClass(bean);
+            AnnotatedMcpTool tool = new McpToolAnnotationScanner(objectMapper, toolMetadata.moduleMetadata(toolClass).namespace()).scan(toolClass);
             for (var function : tool.functions()) {
                 handlers.add(new AnnotatedMcpToolHandler(bean, tool, function, objectMapper, argumentBinder, cacheManager));
             }

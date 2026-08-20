@@ -36,6 +36,7 @@ class McpOpenApiDocumentationTests {
                 .andExpect(jsonPath("$.components.schemas.ToolRegistrationParams.description", is("Phase-aware parameters for roles/tools/register.")))
                 .andExpect(jsonPath("$.components.schemas.ToolRegistrationParams.properties.localJar.description", is("Local JAR source details.")))
                 .andExpect(jsonPath("$.components.schemas.ToolRegistrationLocalJarParams.properties.checksumSha256.description", is("Expected SHA-256 checksum for the JAR.")))
-                .andExpect(jsonPath("$.components.schemas.McpToolsCallParams.properties.arguments.description", is("Tool-specific arguments object. Its schema is supplied by tools/list for each tool.")));
+                .andExpect(jsonPath("$.components.schemas.McpToolsCallParams.properties.arguments.description", is("Tool-specific arguments object. Its schema is supplied by tools/list for each tool.")))
+                .andExpect(jsonPath("$.paths['/mcp'].post.responses.200.content['application/json'].schema.$ref", is("#/components/schemas/McpJsonRpcResponse")));
     }
 }

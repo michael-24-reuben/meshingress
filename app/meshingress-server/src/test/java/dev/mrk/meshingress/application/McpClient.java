@@ -65,10 +65,10 @@ public class McpClient {
                 c.post("/mcp", toolRequest(7, "roles/tools/alias"), Map.of("Authorization", "Bearer dev-admin")));
 
         c.printResponse("roles/tools/update",
-                c.post("/mcp", "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 8,\n  \"method\": \"roles/tools/update\",\n  \"params\": {\n    \"name\": \"architect.entries.copy\",\n    \"patch\": {\n      \"description\": \"List architect entries through a dynamic alias.\",\n      \"enabled\": true\n    }\n  }\n}\n", Map.of("Authorization", "Bearer dev-admin")));
+                c.post("/mcp", "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 8,\n  \"method\": \"roles/tools/update\",\n  \"params\": {\n    \"name\": \"architect.entries\",\n    \"patch\": {\n      \"description\": \"List architect entries through a dynamic alias.\",\n      \"enabled\": true\n    }\n  }\n}\n", Map.of("Authorization", "Bearer dev-admin")));
 
         c.printResponse("roles/tools/delete",
-                c.post("/mcp", "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 9,\n  \"method\": \"roles/tools/delete\",\n  \"params\": {\n    \"name\": \"architect.entries.copy\",\n    \"mode\": \"disable\"\n  }\n}\n", Map.of("Authorization", "Bearer dev-admin")));
+                c.post("/mcp", "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 9,\n  \"method\": \"roles/tools/delete\",\n  \"params\": {\n    \"name\": \"architect.entries\",\n    \"mode\": \"disable\"\n  }\n}\n", Map.of("Authorization", "Bearer dev-admin")));
 
         c.printResponse("GET /mcp",
                 c.get("/mcp"));
@@ -155,7 +155,7 @@ public class McpClient {
                   "id": 21,
                   "method": "tools/call",
                   "params": {
-                    "name": "helloworld.greet",
+                    "name": "helloworld.greeting.greet",
                     "arguments": {
                       "name": "Meshingress"
                     }
@@ -223,21 +223,28 @@ public class McpClient {
                   "method": "%s",
                   "params": {
                     "tool": {
-                      "name": "architect.entries.copy",
+                      "name": "architect.alias",
                       "title": "List Architect Entries Alias",
                       "description": "List architect entries through a dynamic alias.",
                       "enabled": true,
                       "visibility": "public",
-                      "handlerKey": "architect.entries.list",
-                      "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                          "status": {
-                            "type": "string"
-                          }
-                        },
-                        "additionalProperties": false
-                      }
+                      "functions": [{
+                        "name": "architect.alias.copy",
+                        "title": "List Architect Entries Alias",
+                        "description": "List architect entries through a dynamic alias.",
+                        "enabled": true,
+                        "visibility": "public",
+                        "handlerKey": "architect.entries.list",
+                        "inputSchema": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }]
                     }
                   }
                 }""".formatted(id, method);

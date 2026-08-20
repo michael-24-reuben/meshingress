@@ -15,6 +15,11 @@
     <description>Meshingress Spring Boot MCP server</description>
 
     <dependencies>
+        <dependency>
+            <groupId>dev.mrk.aegis</groupId>
+            <artifactId>aegis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Route Framework -->
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
@@ -95,6 +100,11 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-documentation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
 
         <!-- Spring Boot Starters -->
@@ -121,6 +131,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
         <dependency>

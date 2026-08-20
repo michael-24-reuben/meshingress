@@ -6,7 +6,6 @@ import dev.mrk.meshingress.api.result.ResultContent;
 import dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.dispatch.process.ProcessExecutionContent;
 import dev.mrk.meshingress.scopes.McpToolScope;
@@ -32,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 @McpTool(
-        value = "cli.powershell",
+        value = "cli",
         title = "PowerShell CLI",
         description = "Execute a received PowerShell script and append every execution track to the result.",
         defaultFunction = "execute"
@@ -41,7 +40,6 @@ import java.util.concurrent.atomic.AtomicLong;
         McpToolScope.SHELL_EXECUTE,
         McpToolScope.FILES_WRITE
 })
-@McpToolMapping("tools")
 public class PowerShellCliTool {
 
     private final ObjectMapper objectMapper;

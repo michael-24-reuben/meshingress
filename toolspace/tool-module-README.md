@@ -101,7 +101,6 @@ import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.McpSecret;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import tools.jackson.databind.ObjectMapper;
@@ -113,7 +112,6 @@ import tools.jackson.databind.node.ObjectNode;
         description = "Demonstrates a full annotation-based tool definition.",
         defaultFunction = "echo"
 )
-@McpToolMapping("tools")
 @McpToolScopes({
         McpToolScope.USER_READ,
         McpToolScope.CONFIG_READ
@@ -235,19 +233,13 @@ dev.mrk.toolspace.example.AnnotatedExampleToolAutoConfiguration
 
 Valid tool IDs:
 
-- `helloworld.greet`
+- `helloworld.greeting.greet`
 - `cli.powershell`
 
 Invalid tool IDs:
 
 - `HelloWorld`
 - `tool-name`
-
-### `@McpToolMapping`
-
-- Target: type
-- Required: `value`
-- Used by the tool framework to map a tool class into a tool registry family. Toolspace examples use `"tools"`.
 
 ### `@McpToolScopes`
 
@@ -481,7 +473,7 @@ Do not hard-code secrets in tool source or README examples.
 - [ ] Create `toolspace/<name>/pom.xml` with the required dependencies.
 - [ ] Add module entry to root `pom.xml`.
 - [ ] Add tool module dependency to `app/meshingress-server/pom.xml`.
-- [ ] Add a tool class annotated with `@McpTool`, `@McpFunction`, and `@McpToolMapping`.
+- [ ] Add a tool class annotated with `@McpTool` and `@McpFunction`.
 - [ ] Add input DTO/record with `@McpInputField` or parameters with `@McpFunctionParam`.
 - [ ] Add `@McpToolScopes` with least privilege.
 - [ ] Add `@McpConfigureMapping` for timeouts, secrets, audit/debug as needed.
@@ -500,7 +492,7 @@ This is the code block that represents the suggested code change:
 - Tool ID pattern: `[a-z][a-z0-9]*(\.[a-z0-9]+)*`
 
 Valid tool IDs:
-- `helloworld.greet`
+- `helloworld.greeting.greet`
 - `cli.powershell`
 
 Invalid tool IDs:

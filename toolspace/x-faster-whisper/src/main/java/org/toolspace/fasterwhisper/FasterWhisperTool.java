@@ -5,7 +5,6 @@ import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.dispatch.tool.ToolResultContent;
 import dev.mrk.meshingress.scopes.McpToolScope;
@@ -23,9 +22,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-@McpTool(value = "fasterwhisper", title = "Faster Whisper", description = "Transcribe a local audio file with a provisioned faster-whisper environment.")
+@McpTool(value = "transcription", title = "Faster Whisper", description = "Transcribe a local audio file with a provisioned faster-whisper environment.")
 @McpToolScopes({McpToolScope.FILES_READ, McpToolScope.PROCESS_EXECUTE})
-@McpToolMapping("tools")
 public final class FasterWhisperTool {
     private final ObjectMapper objectMapper;
     private final FasterWhisperManifestProperties properties;

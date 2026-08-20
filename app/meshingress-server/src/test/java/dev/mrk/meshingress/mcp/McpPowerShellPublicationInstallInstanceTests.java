@@ -93,7 +93,7 @@ class McpPowerShellPublicationInstallInstanceTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.installed", is(true)))
                 .andExpect(jsonPath("$.result.sourceKind", is("PUBLICATION_RECORD")))
-                .andExpect(jsonPath("$.result.registeredFunctions[*]", hasItem("cli.powershell.execute")));
+                .andExpect(jsonPath("$.result.registeredFunctions[*]", hasItem("powershell.cli.execute")));
     }
 
     private String installRequest(int id, ArtifactPublicationRecord publication, String toolId) throws Exception {

@@ -102,7 +102,7 @@ class RuntimeToolCacheTests {
             assertThat(cached.getParent().resolve("resources/tool-manifest.json"))
                     .isRegularFile()
                     .content()
-                    .contains("\"toolId\":\"sample.module\"");
+                    .contains("\"toolId\":\"sample.module\""); // schema-one cache payload remains a compatibility fixture
             assertThat(requestedRole.get()).isEqualTo("publisher");
         } finally {
             server.stop(0);

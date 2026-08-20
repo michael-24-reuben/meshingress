@@ -19,6 +19,8 @@
     <description>Meshingress MCP server and attachable tool modules</description>
 
     <modules>
+        <module>packages/aegis</module>
+
         <module>app/meshingress-tool-bundle</module>
         <module>app/meshingress-server</module>
 
@@ -38,13 +40,14 @@
         <module>lib/meshingress-artifact-security</module>
         <module>lib/meshingress-artifact-publication</module>
         <module>lib/meshingress-artifact-scope-scanner</module>
+        <module>lib/meshingress-documentation</module>
 
         <module>toolspace/helloworld</module>
         <module>toolspace/powershell-cli</module>
         <module>toolspace/x-faster-whisper</module>
         <module>toolspace/x-transform</module>
         <module>toolspace/x-yt-dlp</module>
-        <module>packages/aegis</module>
+        <module>toolspace/youtube</module>
         <module>toolspace/x-open-ink-library</module>
     </modules>
 

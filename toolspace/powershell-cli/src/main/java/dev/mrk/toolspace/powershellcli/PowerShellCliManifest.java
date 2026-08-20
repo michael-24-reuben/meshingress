@@ -8,8 +8,21 @@ import java.util.List;
 public final class PowerShellCliManifest implements McpToolManifestDefinition {
 
     @Override
-    public String toolId() {
-        return "cli.powershell";
+    public ToolModuleMetadata metadata() {
+        return new ToolModuleMetadata(
+                "powershell",
+                "PowerShell CLI",
+                "PowerShell command execution",
+                "Executes PowerShell scripts through the PowerShell tool functions.",
+                List.of(new ToolAuthor("Markus Ressel", new String[] { "mailto:markus@ressel.dev" })),
+                "",
+                List.of("powershell", "cli"),
+                List.of(
+                        ToolLink.documentation("https://learn.microsoft.com/powershell/").label("PowerShell Documentation"),
+                        ToolLink.source("https://github.com/PowerShell/PowerShell").label("PowerShell GitHub Repository")
+                ),
+                new ToolIcon("powershell.svg", ToolIcon.MimeType.SVG_IMAGE, "PowerShell")
+        );
     }
 
     @Override
@@ -39,22 +52,11 @@ public final class PowerShellCliManifest implements McpToolManifestDefinition {
     }
 
     @Override
-    public List<ToolLink> links() {
-        return List.of(
-                ToolLink.documentation("https://learn.microsoft.com/powershell/")
-                        .label("PowerShell Documentation"),
-
-                ToolLink.source("https://github.com/PowerShell/PowerShell")
-                        .label("PowerShell GitHub Repository")
-        );
-    }
-
-    @Override
     public ToolReadme readme() {
         return ToolReadme.inline("""
                 # PowerShell CLI
                 
-                Executes PowerShell scripts through the `cli.powershell.execute` MCP function.
+                Executes PowerShell scripts through the `powershell.cli.execute` MCP function.
                 
                 Native deployments require a PowerShell executable. By default, Meshingress uses `pwsh`.
                 Override this through `meshingress.powershell.executable` when needed.

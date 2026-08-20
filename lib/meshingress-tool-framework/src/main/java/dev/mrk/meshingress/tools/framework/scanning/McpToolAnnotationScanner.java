@@ -15,7 +15,12 @@ import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunctionParam;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.schema.McpJsonSchemaProvider;
+import dev.mrk.meshingress.schema.constraint.McpInputConstraintCompiler;
 import dev.mrk.meshingress.scopes.McpToolScope;
+import dev.mrk.meshingress.toolmetadata.McpToolManifestDefinition;
+import dev.mrk.meshingress.tools.availability.enableondays.EnableOnDays;
+import dev.mrk.meshingress.tools.availability.featureflag.EnableWhenFeatureFlagOn;
+import dev.mrk.meshingress.tools.availability.withintimeranges.EnableWithinTimeRanges;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -37,9 +42,15 @@ public class McpToolAnnotationScanner {
     private static final McpConfigureMapping DEFAULT_FUNCTION_MAPPING = resolveDefaultFunctionMapping();
 
     private final ObjectMapper objectMapper;
+    private final String namespace;
 
-    public McpToolAnnotationScanner(ObjectMapper objectMapper) {
+    public McpToolAnnotationScanner(ObjectMapper objectMapper, String namespace) {
         this.objectMapper = objectMapper;
+        this.namespace = requireSegment(namespace, "namespace");
+    }
+
+    public McpToolAnnotationScanner(ObjectMapper objectMapper, McpToolManifestDefinition manifest) {
+        this(objectMapper, manifest == null ? null : manifest.metadata().namespace());
     }
 
     public List<AnnotatedMcpTool> scan(Collection<Class<?>> toolClasses) {
@@ -54,28 +65,28 @@ public class McpToolAnnotationScanner {
         if (tool == null) {
             throw new IllegalStateException("Annotated MCP tool requires @McpTool: " + toolClass.getName());
 
-        } else if (!tool.value().isBlank() && !tool.value().matches(McpTool.QUALIFIED_TOOL_NAME_REGEX)) {
+        } else if (!tool.value().isBlank() && !tool.value().matches(McpTool.SEGMENT_NAME_REGEX)) {
             throw new IllegalStateException("Mcp tool '%s' requires valid @McpTool annotation: '%s'".formatted(toolClass.getName(), tool.value()));
         }
 
-        String mapping = mapping(toolClass);
         ObjectNode annotations = scopesJson(toolClass.getAnnotation(McpToolScopes.class));
 
-        List<AnnotatedMcpFunction> functions = scanFunctions(toolClass, tool, mapping);
+        List<AnnotatedMcpFunction> functions = scanFunctions(toolClass, tool);
 
-        McpToolDescriptor descriptor = newMcpToolDescriptor(tool, functions, annotations);
+        McpToolDescriptor descriptor = newMcpToolDescriptor(namespace, tool, functions, annotations);
 
-        return new AnnotatedMcpTool(tool.value(), toolClass, mapping, tool.defaultFunction(), descriptor, functions);
+        return new AnnotatedMcpTool(tool.value(), toolClass, tool.defaultFunction(), descriptor, functions);
     }
 
     @Contract("_, _, _ -> new")
     private @NonNull McpToolDescriptor newMcpToolDescriptor(
+            String namespace,
             @NonNull McpTool tool,
             List<AnnotatedMcpFunction> functions,
             ObjectNode annotations
     ) {
         return new McpToolDescriptor(
-                tool.value(),
+                namespace + "." + tool.value(),
                 blankToNull(tool.title()),
                 tool.description(),
                 tool.version(),
@@ -97,7 +108,7 @@ public class McpToolAnnotationScanner {
             ObjectNode annotations,
             McpFunctionAvailability availability
     ) {
-        String functionDescriptorName = qualifiedFunctionName(tool.value(), functionName);
+        String functionDescriptorName = qualifiedFunctionName(namespace, tool.value(), functionName);
         String handlerKey = !tool.handlerKey().isBlank()
                 ? tool.handlerKey()
                 : functionDescriptorName;
@@ -117,7 +128,7 @@ public class McpToolAnnotationScanner {
         );
     }
 
-    private List<AnnotatedMcpFunction> scanFunctions(@NonNull Class<?> toolClass, McpTool tool, String mapping) {
+    private List<AnnotatedMcpFunction> scanFunctions(@NonNull Class<?> toolClass, McpTool tool) {
         Map<String, AnnotatedMcpFunction> functions = new LinkedHashMap<>();
         for (Method method : toolClass.getDeclaredMethods()) {
             McpFunction function = method.getAnnotation(McpFunction.class);
@@ -136,7 +147,7 @@ public class McpToolAnnotationScanner {
             }
 
             String name = function.value().isBlank() ? method.getName() : normalize(function.value(), false);
-            String path = compose(mapping, name);
+            requireSegment(name, "function");
 
             List<String> availabilityMessages = new ArrayList<>();
             McpFunctionAvailabilityState availabilityState = evalFunctionAvailability(tool, toolClass, method, name, functionMapping, availabilityMessages);
@@ -154,7 +165,6 @@ public class McpToolAnnotationScanner {
 
             AnnotatedMcpFunction annotatedFunction = new AnnotatedMcpFunction(
                     name,
-                    path,
                     function.title(),
                     function.description(),
                     descriptor,
@@ -164,10 +174,10 @@ public class McpToolAnnotationScanner {
                     functionAnnotations,
                     parametersFor(method)
             );
-            AnnotatedMcpFunction existing = functions.putIfAbsent(path, annotatedFunction);
+            AnnotatedMcpFunction existing = functions.putIfAbsent(name, annotatedFunction);
             if (existing != null) {
-                throw new IllegalStateException("Duplicate MCP tool function mapping '%s' on %s and %s"
-                        .formatted(path, existing.method().toGenericString(), method.toGenericString()));
+                throw new IllegalStateException("Duplicate MCP tool function name '%s' on %s and %s"
+                        .formatted(name, existing.method().toGenericString(), method.toGenericString()));
             }
         }
         return List.copyOf(functions.values());
@@ -498,7 +508,7 @@ public class McpToolAnnotationScanner {
         ObjectNode properties = objectMapper.createObjectNode();
         ArrayNode required = objectMapper.createArrayNode();
         for (AnnotatedMcpFunctionParam param : params) {
-            ObjectNode property = schemaForType(param.bindType(), param.description());
+            ObjectNode property = schemaForType(param.bindType(), null, param.description());
             properties.set(param.name(), property);
             if (param.required()) {
                 required.add(param.name());
@@ -527,7 +537,7 @@ public class McpToolAnnotationScanner {
             for (RecordComponent component : type.getRecordComponents()) {
                 McpInputField field = component.getAnnotation(McpInputField.class);
                 String name = fieldName(component.getName(), field);
-                properties.set(name, schemaForType(component.getType(), field == null ? "" : field.description()));
+                properties.set(name, schemaForType(component.getGenericType(), component, field == null ? "" : field.description()));
                 if (field == null || field.required()) {
                     required.add(name);
                 }
@@ -539,7 +549,7 @@ public class McpToolAnnotationScanner {
                 }
                 McpInputField field = declaredField.getAnnotation(McpInputField.class);
                 String name = fieldName(declaredField.getName(), field);
-                properties.set(name, schemaForType(declaredField.getType(), field == null ? "" : field.description()));
+                properties.set(name, schemaForType(declaredField.getGenericType(), declaredField, field == null ? "" : field.description()));
                 if (field == null || field.required()) {
                     required.add(name);
                 }
@@ -553,7 +563,8 @@ public class McpToolAnnotationScanner {
         return schema;
     }
 
-    private ObjectNode schemaForType(Class<?> type, String description) {
+    private ObjectNode schemaForType(Type genericType, AnnotatedElement constrainedElement, String description) {
+        Class<?> type = rawType(genericType);
         ObjectNode schema = objectMapper.createObjectNode();
         if (type.equals(String.class) || type.equals(Character.class) || type.equals(Character.TYPE)) {
             schema.put("type", "string");
@@ -577,6 +588,10 @@ public class McpToolAnnotationScanner {
             schema.set("enum", values);
         } else if (type.isArray() || Collection.class.isAssignableFrom(type)) {
             schema.put("type", "array");
+            Type itemType = itemType(genericType, type);
+            if (itemType != null) {
+                schema.set("items", schemaForType(itemType, null, ""));
+            }
         } else if (JsonNode.class.isAssignableFrom(type)) {
             schema.put("type", ObjectNode.class.isAssignableFrom(type) ? "object" : "object");
         } else {
@@ -585,7 +600,50 @@ public class McpToolAnnotationScanner {
         if (description != null && !description.isBlank()) {
             schema.put("description", description);
         }
+        if (constrainedElement != null) {
+            McpInputConstraintCompiler.apply(constrainedElement, type, schema);
+            McpInputField field = constrainedElement.getAnnotation(McpInputField.class);
+            if (field != null) {
+                if (!field.title().isBlank()) {
+                    schema.put("title", field.title());
+                }
+                if (!field.schemaType().isBlank()) {
+                    schema.put("type", field.schemaType());
+                }
+                if (!field.format().isBlank()) {
+                    schema.put("format", field.format());
+                }
+            }
+        }
         return schema;
+    }
+
+    private Class<?> rawType(Type type) {
+        if (type instanceof Class<?> clazz) {
+            return clazz;
+        }
+        if (type instanceof ParameterizedType parameterizedType && parameterizedType.getRawType() instanceof Class<?> clazz) {
+            return clazz;
+        }
+        if (type instanceof GenericArrayType) {
+            return Object[].class;
+        }
+        return Object.class;
+    }
+
+    private Type itemType(Type genericType, Class<?> rawType) {
+        if (rawType.isArray()) {
+            return rawType.getComponentType();
+        }
+        if (genericType instanceof GenericArrayType genericArrayType) {
+            return genericArrayType.getGenericComponentType();
+        }
+        if (genericType instanceof ParameterizedType parameterizedType
+                && Collection.class.isAssignableFrom(rawType)
+                && parameterizedType.getActualTypeArguments().length == 1) {
+            return parameterizedType.getActualTypeArguments()[0];
+        }
+        return null;
     }
 
     private ObjectNode schemaFromProvider(Class<? extends McpJsonSchemaProvider> providerType) {
@@ -609,7 +667,59 @@ public class McpToolAnnotationScanner {
         if (Arrays.stream(method.getParameterTypes()).anyMatch(McpProgressReporter.class::equals)) {
             annotations.put("progressReporter", true);
         }
+        ObjectNode availability = availabilityJson(method, configuration);
+        if (availability != null) {
+            annotations.set("availability", availability);
+        }
         return annotations;
+    }
+
+    private @Nullable ObjectNode availabilityJson(Method method, McpConfigureMapping configuration) {
+        ArrayNode conditions = objectMapper.createArrayNode();
+        for (Annotation annotation : method.getAnnotations()) {
+            ObjectNode condition = availabilityConditionJson(annotation);
+            if (condition != null) {
+                conditions.add(condition);
+            }
+        }
+        if (conditions.isEmpty()) {
+            return null;
+        }
+
+        ObjectNode availability = objectMapper.createObjectNode();
+        availability.put("version", 1);
+        availability.put("mode", configuration.availabilityMode().name().toLowerCase(Locale.ROOT));
+        availability.set("conditions", conditions);
+        return availability;
+    }
+
+    private @Nullable ObjectNode availabilityConditionJson(Annotation annotation) {
+        ObjectNode parameters = objectMapper.createObjectNode();
+        String type;
+
+        if (annotation instanceof EnableOnDays enableOnDays) {
+            type = "dev.mrk.availability.day-of-week";
+            parameters.set("days", objectMapper.valueToTree(enableOnDays.value()));
+        } else if (annotation instanceof EnableWhenFeatureFlagOn enableWhenFeatureFlagOn) {
+            type = "dev.mrk.availability.feature-flag";
+            parameters.put("flag", enableWhenFeatureFlagOn.value());
+        } else if (annotation instanceof EnableWithinTimeRanges enableWithinTimeRanges) {
+            type = "dev.mrk.availability.time-ranges";
+            parameters.put("timeZone", enableWithinTimeRanges.zone());
+            ArrayNode ranges = parameters.putArray("ranges");
+            for (EnableWithinTimeRanges.TimeRange range : enableWithinTimeRanges.ranges()) {
+                ObjectNode rangeJson = ranges.addObject();
+                rangeJson.put("start", range.start());
+                rangeJson.put("end", range.end());
+            }
+        } else {
+            return null;
+        }
+
+        ObjectNode condition = objectMapper.createObjectNode();
+        condition.put("type", type);
+        condition.set("parameters", parameters);
+        return condition;
     }
 
     private ObjectNode scopesJson(McpToolScopes scopes) {
@@ -634,45 +744,20 @@ public class McpToolAnnotationScanner {
         return schema;
     }
 
-    private AnnotatedMcpFunction defaultFunction(McpTool tool, List<AnnotatedMcpFunction> functions) {
-        if (functions.isEmpty()) {
-            return null;
-        }
-        String defaultFunctionName = tool.defaultFunction();
-        if (defaultFunctionName == null || defaultFunctionName.isBlank()) {
-            return functions.getFirst();
-        }
-        return functions.stream()
-                .filter(function -> defaultFunctionName.equals(function.name())
-                        || defaultFunctionName.equals(function.path()))
-                .findFirst()
-                .orElse(functions.getFirst());
+    private String qualifiedFunctionName(String namespace, String toolName, String functionName) {
+        String normalizedNamespace = requireSegment(namespace, "namespace");
+        String tool = requireSegment(toolName, "tool");
+        String function = requireSegment(functionName, "function");
+        return normalizedNamespace + "." + tool + "." + function;
     }
 
-    private String mapping(Class<?> toolClass) {
-        McpToolMapping mapping = toolClass.getAnnotation(McpToolMapping.class);
-        return mapping == null ? "" : normalize(mapping.value(), true);
-    }
-
-    private String compose(String mapping, String function) {
-        String left = normalize(mapping, true);
-        String right = normalize(function, false);
-        return left.isBlank() ? right : left + "/" + right;
-    }
-
-    private String qualifiedFunctionName(String toolName, String functionName) {
-        String tool = normalizeDottedName(toolName, "tool");
-        String function = normalizeDottedName(functionName, "function");
-        return tool + "." + function;
-    }
-
-    private String normalizeDottedName(String value, String label) {
+    private static String requireSegment(String value, String label) {
         String normalized = value == null ? "" : value.trim();
         if (normalized.isBlank()) {
             throw new IllegalStateException("MCP " + label + " name must not be blank");
         }
-        if (normalized.startsWith(".") || normalized.endsWith(".") || normalized.contains("..")) {
-            throw new IllegalStateException("MCP " + label + " name must use non-empty dotted segments: " + value);
+        if (!normalized.matches(McpTool.SEGMENT_NAME_REGEX)) {
+            throw new IllegalStateException("MCP " + label + " name must use one lower-case segment: " + value);
         }
         return normalized;
     }

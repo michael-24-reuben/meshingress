@@ -1,6 +1,6 @@
 # x-faster-whisper
 
-`fasterwhisper.transcribe` is an attached MCP tool that invokes a provisioned Python
+`faster-whisper.transcription.transcribe` is an attached MCP tool that invokes a provisioned Python
 `faster-whisper` environment through a JSON stdin/stdout bridge.
 
 ## Local provisioning
@@ -30,7 +30,7 @@ meshingress.faster-whisper.generation.vad-filter=false
 All upstream `WhisperModel` runtime controls and standard `transcribe` generation controls are
 bound as configuration defaults. The MCP arguments can override generation controls for one call.
 `model.local-files-only` must remain `true`: model acquisition is provisioning work and is never
-performed by `fasterwhisper.transcribe`.
+performed by `faster-whisper.transcription.transcribe`.
 
 ## MCP call
 
@@ -40,7 +40,7 @@ performed by `fasterwhisper.transcribe`.
   "id": 1,
   "method": "tools/call",
   "params": {
-    "name": "fasterwhisper.transcribe",
+    "name": "faster-whisper.transcription.transcribe",
     "arguments": {
       "audioPath": "C:\\audio\\sample.wav",
       "language": "en",

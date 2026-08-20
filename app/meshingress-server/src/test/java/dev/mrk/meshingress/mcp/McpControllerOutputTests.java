@@ -85,7 +85,7 @@ class McpControllerOutputTests {
                                   "id": 21,
                                   "method": "tools/call",
                                   "params": {
-                                    "name": "helloworld.greet",
+                                    "name": "helloworld.greeting.greet",
                                     "arguments": {
                                       "name": "Meshingress"
                                     }
@@ -205,7 +205,7 @@ class McpControllerOutputTests {
                                   "id": 8,
                                   "method": "roles/tools/update",
                                   "params": {
-                                    "name": "architect.entries.copy",
+                                    "name": "architect.alias",
                                     "patch": {
                                       "description": "List architect entries through a dynamic alias.",
                                       "enabled": true
@@ -224,7 +224,7 @@ class McpControllerOutputTests {
                                   "id": 9,
                                   "method": "roles/tools/delete",
                                   "params": {
-                                    "name": "architect.entries.copy",
+                                    "name": "architect.alias",
                                     "mode": "disable"
                                   }
                                 }
@@ -255,21 +255,28 @@ class McpControllerOutputTests {
                   "method": "%s",
                   "params": {
                     "tool": {
-                      "name": "architect.entries.copy",
+                      "name": "architect.alias",
                       "title": "List Architect Entries Alias",
                       "description": "List architect entries through a dynamic alias.",
                       "enabled": true,
                       "visibility": "public",
-                      "handlerKey": "architect.entries.list",
-                      "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                          "status": {
-                            "type": "string"
-                          }
-                        },
-                        "additionalProperties": false
-                      }
+                      "functions": [{
+                        "name": "architect.alias.copy",
+                        "title": "List Architect Entries Alias",
+                        "description": "List architect entries through a dynamic alias.",
+                        "enabled": true,
+                        "visibility": "public",
+                        "handlerKey": "architect.entries.list",
+                        "inputSchema": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }]
                     }
                   }
                 }

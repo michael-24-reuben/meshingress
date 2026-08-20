@@ -4,17 +4,13 @@ import java.util.List;
 
 public interface McpToolManifestDefinition {
 
-    String toolId();
+    ToolModuleMetadata metadata();
 
     default List<ToolProperty> properties() {
         return List.of();
     }
 
     default List<ToolRequirement> requirements() {
-        return List.of();
-    }
-
-    default List<ToolLink> links() {
         return List.of();
     }
 

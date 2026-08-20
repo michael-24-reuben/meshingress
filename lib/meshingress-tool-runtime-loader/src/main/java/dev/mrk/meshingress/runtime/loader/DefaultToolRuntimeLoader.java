@@ -97,7 +97,7 @@ public class DefaultToolRuntimeLoader implements ToolRuntimeLoader {
             Map<String, String> runtimeProperties = provisioningGate.requireReady(artifact);
             classLoader = classLoaderFactory.create(artifact);
             moduleContext = applicationContextFactory.create(artifact, classLoader, parentContext, runtimeProperties);
-            List<McpToolHandler> handlers = handlerFactory.handlers(moduleContext);
+            List<McpToolHandler> handlers = handlerFactory.handlers(moduleContext, artifact.moduleId());
             if (handlers.isEmpty()) {
                 throw new IllegalStateException("Tool module did not expose any MCP tool handlers: " + artifact.moduleId().value());
             }

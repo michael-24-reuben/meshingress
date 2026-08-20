@@ -1,4 +1,4 @@
-import { GRID_SIZE, NODE_HEIGHT, type WorkflowEdge, type WorkflowNode } from '../types'
+import {GRID_SIZE, NODE_HEIGHT, NODE_WIDTH, type WorkflowEdge, type WorkflowNode} from '../types'
 
 type Point = { x: number; y: number }
 type Box = { id: string; left: number; top: number; right: number; bottom: number }
@@ -103,14 +103,14 @@ export function roundedPath(points: Point[], radius = 10): string {
 }
 
 export function routeEdges(nodes: WorkflowNode[], edges: WorkflowEdge[], width: number, height: number): Array<{ edge: WorkflowEdge; path: string }> {
-  const boxes = nodes.map((node) => ({ id: node.id, left: node.x, top: node.y, right: node.x + node.width, bottom: node.y + NODE_HEIGHT }))
+  const boxes = nodes.map((node) => ({ id: node.id, left: node.x, top: node.y, right: node.x + NODE_WIDTH, bottom: node.y + NODE_HEIGHT }))
   const padded = boxes.map((box) => ({ ...box, left: box.left - CLEARANCE, top: box.top - CLEARANCE, right: box.right + CLEARANCE, bottom: box.bottom + CLEARANCE }))
   const reserved: Segment[] = []
   return edges.flatMap((edge) => {
     const source = nodes.find((node) => node.id === edge.source)
     const target = nodes.find((node) => node.id === edge.target)
     if (!source || !target) return []
-    const sourcePort = { x: source.x + source.width, y: source.y + GRID_SIZE }
+    const sourcePort = { x: source.x + NODE_WIDTH, y: source.y + GRID_SIZE }
     const targetPort = { x: target.x, y: target.y + GRID_SIZE }
     const start = { x: sourcePort.x + CLEARANCE, y: sourcePort.y }
     const end = { x: targetPort.x - CLEARANCE, y: targetPort.y }
@@ -120,4 +120,20 @@ export function routeEdges(nodes: WorkflowNode[], edges: WorkflowEdge[], width: 
     for (let index = 1; index < points.length; index += 1) reserved.push({ from: points[index - 1], to: points[index] })
     return [{ edge, path: roundedPath(points) }]
   })
+}
+
+/**
+ * Temporary route shown while a connected input port is being moved. The head
+ * deliberately follows the pointer; the permanent route is recalculated by
+ * routeEdges only after it is released onto an input port.
+ */
+export function reconnectPreviewPath(nodes: WorkflowNode[], edge: WorkflowEdge, head: Point): string {
+  const source = nodes.find((node) => node.id === edge.source)
+  if (!source) return ''
+
+  const sourcePort = { x: source.x + NODE_WIDTH, y: source.y + GRID_SIZE }
+  const direction = head.x >= sourcePort.x ? 1 : -1
+  const sourceLead = { x: sourcePort.x + direction * CLEARANCE, y: sourcePort.y }
+  const headLead = { x: head.x - direction * CLEARANCE, y: head.y }
+  return roundedPath(compact([sourcePort, sourceLead, { x: headLead.x, y: sourceLead.y }, headLead, head]))
 }

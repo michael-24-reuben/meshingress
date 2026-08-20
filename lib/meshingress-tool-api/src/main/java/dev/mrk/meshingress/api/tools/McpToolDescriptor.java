@@ -12,7 +12,7 @@ import java.util.List;
 
 public record McpToolDescriptor(
         String name,
-        String title,
+        String label,
         String description,
         int version,
         boolean enabled,
@@ -28,8 +28,8 @@ public record McpToolDescriptor(
     public @NonNull ObjectNode toMcpJson(@NonNull ObjectMapper objectMapper) {
         ObjectNode tool = objectMapper.createObjectNode();
         tool.put("name", name);
-        if (title != null && !title.isBlank()) {
-            tool.put("title", title);
+        if (label != null && !label.isBlank()) {
+            tool.put("title", label);
         }
         tool.put("description", description == null ? "" : description);
         ArrayNode functionNodes = objectMapper.createArrayNode();
@@ -47,7 +47,7 @@ public record McpToolDescriptor(
     public @NonNull McpToolDescriptor withVersion(int nextVersion) {
         return new McpToolDescriptor(
                 name,
-                title,
+                label,
                 description,
                 nextVersion,
                 enabled,
@@ -62,7 +62,7 @@ public record McpToolDescriptor(
     public @NonNull McpToolDescriptor withPatch(@NonNull McpToolPatch patch, int nextVersion) {
         return new McpToolDescriptor(
                 name,
-                patch.title() == null ? title : patch.title(),
+                patch.title() == null ? label : patch.title(),
                 patch.description() == null ? description : patch.description(),
                 nextVersion,
                 patch.enabled() == null ? enabled : patch.enabled(),
@@ -77,7 +77,7 @@ public record McpToolDescriptor(
     public @NonNull McpToolDescriptor withFunctions(@NonNull List<McpFunctionDescriptor> nextFunctions) {
         return new McpToolDescriptor(
                 name,
-                title,
+                label,
                 description,
                 version,
                 enabled,
@@ -91,7 +91,7 @@ public record McpToolDescriptor(
     public @NonNull String toString() {
         return "ToolDescriptor{" +
                 "name='" + name + '\'' +
-                ", title='" + title + '\'' +
+                ", title='" + label + '\'' +
                 ", description='" + description + '\'' +
                 ", version=" + version +
                 ", enabled=" + enabled +

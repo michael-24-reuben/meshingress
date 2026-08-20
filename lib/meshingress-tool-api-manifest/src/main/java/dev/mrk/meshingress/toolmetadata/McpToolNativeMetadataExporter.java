@@ -12,6 +12,11 @@ public class McpToolNativeMetadataExporter {
     private static final String META_INF_DIRECTORY = "META-INF/meshingress";
 
     public void export(McpToolNativeMetadata metadata, Path artifactDirectory) {
+        export(metadata, artifactDirectory, null);
+    }
+
+    /** Exports metadata and copies a declared, validated artifact-local icon when available. */
+    public void export(McpToolNativeMetadata metadata, Path artifactDirectory, Path extractedArtifactDirectory) {
         if (metadata == null || artifactDirectory == null) {
             return;
         }
@@ -19,7 +24,7 @@ public class McpToolNativeMetadataExporter {
             Files.createDirectories(artifactDirectory);
             Path resourcesDirectory = artifactDirectory.resolve(RESOURCES_DIRECTORY);
             Files.createDirectories(resourcesDirectory);
-            if (metadata.hasProperties() || metadata.hasRequirements() || metadata.hasLinks() || !metadata.toolId().isBlank()) {
+            if (metadata.hasProperties() || metadata.hasRequirements() || metadata.hasLinks() || metadata.hasMetadata()) {
                 McpToolManifestJson.write(metadata, artifactDirectory.resolve(McpToolManifestJson.RESOURCES_MANIFEST_PATH));
                 McpToolManifestJson.write(metadata, artifactDirectory.resolve(META_INF_DIRECTORY).resolve("tool-manifest.json"));
             }
@@ -28,12 +33,23 @@ public class McpToolNativeMetadataExporter {
             }
             if (metadata.hasReadme()) {
                 String resolvedReadme = new ToolReadmeResolver().resolve(metadata.readme());
-                /*Files.writeString(artifactDirectory.resolve("README.md"), resolvedReadme);*/
+                Files.writeString(artifactDirectory.resolve("README.md"), resolvedReadme);
                 Files.writeString(resourcesDirectory.resolve("README.md"), resolvedReadme);
             }
+            copyDeclaredIcon(metadata, resourcesDirectory, extractedArtifactDirectory);
         } catch (Exception exception) {
             throw new IllegalStateException("Unable to export native tool metadata: " + exception.getMessage(), exception);
         }
+    }
+
+    private void copyDeclaredIcon(McpToolNativeMetadata metadata, Path resourcesDirectory, Path extractedArtifactDirectory) throws Exception {
+        ToolIcon icon = metadata.metadata().icon();
+        if (icon == null || extractedArtifactDirectory == null) return;
+        Path source = icon.requireValidResource(extractedArtifactDirectory);
+        Path target = icon.resolveWithin(resourcesDirectory);
+        Files.createDirectories(target.getParent());
+        Files.copy(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        icon.requireValidResource(resourcesDirectory);
     }
 
     private String toApplicationProperties(McpToolNativeMetadata metadata) {

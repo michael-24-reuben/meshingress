@@ -50,7 +50,7 @@ class McpWebSocketHandlerProgressTests {
         ));
 
         handler.handleTextMessage(session, new TextMessage("""
-                {"jsonrpc":"2.0","id":42,"method":"tools/call","params":{"name":"toonverse.download-book","arguments":{}}}
+                {"jsonrpc":"2.0","id":42,"method":"tools/call","params":{"name":"open-ink-library.toonverse.download-book","arguments":{}}}
                 """));
 
         var messages = org.mockito.ArgumentCaptor.forClass(TextMessage.class);
@@ -94,7 +94,7 @@ class McpWebSocketHandlerProgressTests {
         when(session.getAttributes()).thenReturn(Map.of("mcp.sessionId", "session-1"));
 
         handler.handleTextMessage(session, new TextMessage("""
-                {"jsonrpc":"2.0","id":"estimate-call","method":"tools/call","params":{"name":"toonverse.download-book","arguments":{}}}
+                {"jsonrpc":"2.0","id":"estimate-call","method":"tools/call","params":{"name":"open-ink-library.toonverse.download-book","arguments":{}}}
                 """));
 
         var messages = org.mockito.ArgumentCaptor.forClass(TextMessage.class);

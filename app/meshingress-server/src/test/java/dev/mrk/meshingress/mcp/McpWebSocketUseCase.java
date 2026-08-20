@@ -65,7 +65,7 @@ public class McpWebSocketUseCase {
             case "initialize" -> System.out.println(sample.initialize(false));
             case "tools-list" -> System.out.println(sample.listTools(false));
             case "hello" -> System.out.println(sample.callTool(
-                    "helloworld.greet",
+                    "helloworld.greeting.greet",
                     "{\"name\":\"Meshingress\"}",
                     false
             ));

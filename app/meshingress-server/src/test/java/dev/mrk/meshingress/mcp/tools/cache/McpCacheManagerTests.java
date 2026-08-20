@@ -136,7 +136,7 @@ class McpCacheManagerTests {
                 ),
                 new DispatchExecutionResultJsonCodec(objectMapper)
         );
-        AnnotatedMcpTool tool = new McpToolAnnotationScanner(objectMapper).scan(toolBean.getClass());
+        AnnotatedMcpTool tool = new McpToolAnnotationScanner(objectMapper, "cache").scan(toolBean.getClass());
         return new AnnotatedMcpToolHandler(
                 toolBean,
                 tool,

@@ -35,26 +35,28 @@ public final class WithinTimeRangesCondition implements McpAvailabilityCondition
         }
 
         if (annotation.ranges() != null) {
-            for (String range : annotation.ranges()) {
-                if (range == null || range.isBlank()) {
-                    violations.add(location + " has a blank time range");
+            for (EnableWithinTimeRanges.TimeRange range : annotation.ranges()) {
+                if (range == null) {
+                    violations.add(location + " has a null time range");
                     continue;
                 }
 
-                String[] parts = range.split("-", 2);
-                if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
-                    violations.add(location + " has invalid time range: " + range);
+                String startValue = range.start();
+                String endValue = range.end();
+                String formattedRange = startValue + "-" + endValue;
+                if (startValue == null || startValue.isBlank() || endValue == null || endValue.isBlank()) {
+                    violations.add(location + " has a blank time range endpoint: " + formattedRange);
                     continue;
                 }
 
                 try {
-                    LocalTime start = LocalTime.parse(parts[0]);
-                    LocalTime end = LocalTime.parse(parts[1]);
+                    LocalTime start = LocalTime.parse(startValue);
+                    LocalTime end = LocalTime.parse(endValue);
                     if (!start.isBefore(end)) {
-                        violations.add(location + " has invalid time range order: " + range + " (start must be before end)");
+                        violations.add(location + " has invalid time range order: " + formattedRange + " (start must be before end)");
                     }
                 } catch (DateTimeParseException exception) {
-                    violations.add(location + " has invalid time range: " + range);
+                    violations.add(location + " has invalid time range: " + formattedRange);
                 }
             }
         }

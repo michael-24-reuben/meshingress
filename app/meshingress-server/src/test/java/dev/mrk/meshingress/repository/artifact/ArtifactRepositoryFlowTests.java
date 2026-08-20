@@ -250,7 +250,7 @@ class ArtifactRepositoryFlowTests {
                 .contains("# Generated Sample Tool")
                 .contains("README content exported from native tool metadata.");
         org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/tool-manifest.json")))
-                .contains("\"toolId\":\"generated.sample\"")
+                .contains("\"namespace\":\"generated\"")
                 .contains("\"meshingress.sample.file-read.root\"");
         JsonNode rawSbom = objectMapper.readTree(Files.readString(artifactDirectory.resolve("cyclonedx-sbom.json")));
         org.assertj.core.api.Assertions.assertThat(rawSbom.path("metadata").path("component").path("purl").asString())

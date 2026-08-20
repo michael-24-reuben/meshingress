@@ -8,8 +8,8 @@ servers:
 tags:
 - name: Artifact repository
   description: "Upload, assess, review, publish, and retrieve Meshingress tool artifacts."
-- name: Workflow samples
-  description: Run explicitly named in-process workflow beta samples.
+- name: Workflow execution
+  description: Execute the current Studio graph without persisting it.
 - name: Workspace storage
   description: Retrieve files published by a Meshingress tool workspace.
 paths:
@@ -31,25 +31,11 @@ paths:
       parameters:
       - name: Authorization
         in: header
-        description: Bearer admin token for role-gated MCP methods.
+        description: Authentication evidence accepted by the configured server-side
+          identity adapter.
         required: false
         schema:
           type: string
-        example: Bearer dev-admin
-      - name: X-Mcp-Role
-        in: header
-        description: MCP role hint. Use admin for role-gated registry methods.
-        required: false
-        schema:
-          type: string
-        example: admin
-      - name: X-Mcp-Admin
-        in: header
-        description: Legacy admin flag accepted for compatibility.
-        required: false
-        schema:
-          type: string
-        example: true
       - name: Mcp-Session-Id
         in: header
         description: Client MCP session identifier.
@@ -103,7 +89,7 @@ paths:
                   id: 2
                   method: tools/call
                   params:
-                    name: helloworld.greet
+                    name: helloworld.greeting.greet
                     arguments:
                       name: Meshingress
               roles/tools/register:
@@ -139,7 +125,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JsonNode"
+                $ref: "#/components/schemas/McpJsonRpcResponse"
         "204":
           description: Notification-only request or batch produced no JSON-RPC response.
           content:
@@ -159,27 +145,14 @@ paths:
       responses:
         "200":
           description: OK
-  /api/v1/workflows/samples/desktop-volume-greeting-solo-leveling/run:
+  /api/v1/workflows/run:
     post:
       tags:
-      - Workflow samples
-      summary: "Run the desktop volume, greeting, and Toonverse-search sample"
-      description: "Sets the default Windows render volume to 100 percent, greets\
-        \ Alphasunny, and searches Toonverse for Solo Leveling. This beta route executes\
-        \ immediately and does not persist a workflow instance."
-      operationId: runDesktopVolumeGreetingAndSoloLeveling
+      - Workflow execution
+      summary: Run the current Studio workflow graph
+      operationId: run
       parameters:
       - name: Authorization
-        in: header
-        required: false
-        schema:
-          type: string
-      - name: X-Mcp-Role
-        in: header
-        required: false
-        schema:
-          type: string
-      - name: X-Mcp-Admin
         in: header
         required: false
         schema:
@@ -194,6 +167,12 @@ paths:
         required: false
         schema:
           type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudioWorkflowDefinition"
+        required: true
       responses:
         "200":
           description: OK
@@ -201,6 +180,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowRun"
+  /api/v1/auth/profile/admit:
+    post:
+      tags:
+      - profile-admission-controller
+      operationId: admit
+      responses:
+        "200":
+          description: OK
+          content: {}
+  /api/v1/auth/native/validate:
+    post:
+      tags:
+      - native-login-validation-controller
+      operationId: validate
+      parameters:
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NativeLoginValidationRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NativeLoginValidationResponse"
   /api/v1/artifact/{groupId}/{artifactId}/{version}:
     post:
       tags:
@@ -937,6 +949,120 @@ paths:
             \ attachment filename."
         "404":
           description: The workspace or requested file is unavailable.
+  /v3/openapi-docs:
+    get:
+      tags:
+      - open-api-alias-controller
+      operationId: openApiJson
+      responses:
+        "200":
+          description: OK
+  /v3/openapi-docs.yaml:
+    get:
+      tags:
+      - open-api-alias-controller
+      operationId: openApiYaml
+      responses:
+        "200":
+          description: OK
+  /v3/dispatch-docs:
+    get:
+      tags:
+      - dispatch-documentation-controller
+      operationId: dispatchJson
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties: {}
+  /v3/dispatch-docs.yaml:
+    get:
+      tags:
+      - dispatch-documentation-controller
+      operationId: dispatchYaml
+      responses:
+        "200":
+          description: OK
+          content:
+            application/yaml:
+              schema:
+                type: string
+            text/yaml:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+  /api/v1/tool-modules:
+    get:
+      tags:
+      - tool-module-catalog-controller
+      operationId: list
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ModuleListResponse"
+  /api/v1/tool-modules/{toolId}:
+    get:
+      tags:
+      - tool-module-catalog-controller
+      operationId: detail
+      parameters:
+      - name: toolId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ModuleDetailResponse"
+  /api/v1/tool-modules/{toolId}/readme:
+    get:
+      tags:
+      - tool-module-catalog-controller
+      operationId: readme
+      parameters:
+      - name: toolId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/markdown:
+              schema:
+                type: string
+  /api/v1/tool-modules/{toolId}/icon:
+    get:
+      tags:
+      - tool-module-catalog-controller
+      operationId: icon
+      parameters:
+      - name: toolId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
   /api/v1/storage/delegated/{token}/files/{relativePath}:
     get:
       tags:
@@ -965,6 +1091,29 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/StreamingResponseBody"
+  /api/v1/auth/profile/me:
+    get:
+      tags:
+      - profile-admission-controller
+      operationId: me
+      responses:
+        "200":
+          description: OK
+          content: {}
+  /api/v1/auth/config:
+    get:
+      tags:
+      - authentication-runtime-controller
+      operationId: configuration
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
   /api/v1/artifact/{groupId}/{artifactId}/{version}/resources/{resourceName}:
     get:
       tags:
@@ -1200,6 +1349,68 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ArtifactRecord"
+  /api/v1/artifact/{groupId}/{artifactId}/{version}/icon:
+    get:
+      tags:
+      - Artifact repository
+      summary: Get a declared tool icon
+      description: Returns only the artifact-local icon declared by the reviewed tool
+        manifest.
+      operationId: icon_1
+      parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: artifactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Optional bearer credential propagated with the repository request.
+        required: false
+        schema:
+          type: string
+        example: Bearer <token>
+      - name: X-Repository-Role
+        in: header
+        description: "Repository role or roles, separated by commas or whitespace.\
+          \ Required by the access policy; use uploader, reviewer, publisher, or admin\
+          \ as appropriate."
+        required: false
+        schema:
+          type: string
+        example: reviewer
+      - name: X-Repository-Actor
+        in: header
+        description: Optional caller identity recorded with the repository action.
+        required: false
+        schema:
+          type: string
+        example: release-bot
+      - name: X-Request-Id
+        in: header
+        description: Optional caller correlation identifier.
+        required: false
+        schema:
+          type: string
+        example: req-123
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
   /api/v1/artifact/{groupId}/{artifactId}/{version}/file:
     get:
       tags:
@@ -1465,6 +1676,19 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ArtifactRecord"
+  /.well-known/oauth-protected-resource/mcp:
+    get:
+      tags:
+      - mcp-o-auth-metadata-controller
+      operationId: metadata_1
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
 components:
   schemas:
     McpClientInfo:
@@ -1599,7 +1823,7 @@ components:
         name:
           type: string
           description: Name of the MCP tool function to invoke.
-          example: helloworld.greet
+          example: helloworld.greeting.greet
         arguments:
           type: object
           additionalProperties: {}
@@ -1684,8 +1908,8 @@ components:
       properties:
         name:
           type: string
-          description: Public MCP tool name.
-          example: architect.entries.copy
+          description: "Public MCP tool-family name: <namespace>.<tool>."
+          example: architect.entries
         title:
           type: string
           description: Human-readable tool title.
@@ -1713,7 +1937,8 @@ components:
           example: public
         handlerKey:
           type: string
-          description: Handler key used by the runtime registry to route calls.
+          description: Handler key for a single-function shorthand descriptor. Multi-function
+            descriptors declare handler keys on their functions.
           example: architect.entries.list
         inputSchema:
           type: string
@@ -1734,13 +1959,11 @@ components:
           description: Optional MCP annotations object such as readOnlyHint or destructiveHint.
         functions:
           type: array
-          description: "Optional function-level descriptors. If omitted, the tool\
-            \ descriptor is used as a single function."
+          description: Function-level descriptors. Each function name must be <namespace>.<tool>.<function>.
           items:
             $ref: "#/components/schemas/ToolFunctionParams"
       required:
       - description
-      - handlerKey
       - name
     ToolFunctionParams:
       type: object
@@ -2194,8 +2417,8 @@ components:
       properties:
         name:
           type: string
-          description: Name of the existing tool to update.
-          example: architect.entries.copy
+          description: Name of the existing tool family to update.
+          example: architect.entries
         patch:
           $ref: "#/components/schemas/ToolPatchParams"
           description: Patch to apply to the registry tool entry.
@@ -2274,8 +2497,8 @@ components:
       properties:
         name:
           type: string
-          description: Name of the tool to disable.
-          example: architect.entries.copy
+          description: Name of the tool family to disable.
+          example: architect.entries
         mode:
           type: string
           description: Deletion mode. The current server supports disable only.
@@ -2397,6 +2620,24 @@ components:
           $ref: "#/components/schemas/McpJsonRpcRequest"
         last:
           $ref: "#/components/schemas/McpJsonRpcRequest"
+    McpJsonRpcResponse:
+      type: object
+      description: Generic JSON-RPC 2.0 response returned by the MCP transport.
+      properties:
+        jsonrpc:
+          type: string
+          description: JSON-RPC protocol version.
+          enum:
+          - "2.0"
+          example: "2.0"
+        id:
+          description: "The request identifier, or null when JSON-RPC requires it."
+          example: 1
+        result:
+          description: Successful method result. The concrete shape depends on the
+            invoked MCP method.
+        error:
+          description: JSON-RPC error object when the method cannot be completed.
     JsonNode:
       type: object
       properties:
@@ -2412,11 +2653,17 @@ components:
           type: boolean
         number:
           type: boolean
-        bigDecimal:
+        missingNode:
           type: boolean
         container:
           type: boolean
-        missingNode:
+        valueNode:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        integralNumber:
+          type: boolean
+        bigInteger:
           type: boolean
         nodeType:
           type: string
@@ -2430,35 +2677,67 @@ components:
           - OBJECT
           - POJO
           - STRING
-        floatingPointNumber:
+        bigDecimal:
           type: boolean
-        valueNode:
+        string:
           type: boolean
-        bigInteger:
-          type: boolean
-        integralNumber:
-          type: boolean
-        boolean:
+        pojo:
           type: boolean
         short:
           type: boolean
-        binary:
+        int:
           type: boolean
-        pojo:
+        long:
           type: boolean
         textual:
           type: boolean
           deprecated: true
-        long:
-          type: boolean
-        string:
-          type: boolean
-        int:
-          type: boolean
         double:
+          type: boolean
+        binary:
+          type: boolean
+        boolean:
           type: boolean
         embeddedValue:
           type: boolean
+    StudioWorkflowDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+          format: int32
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudioWorkflowNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudioWorkflowEdge"
+    StudioWorkflowEdge:
+      type: object
+      properties:
+        source:
+          type: string
+        target:
+          type: string
+    StudioWorkflowNode:
+      type: object
+      properties:
+        requestId:
+          type: string
+        kind:
+          type: string
+        functionName:
+          type: string
+        arguments:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/JsonNode"
+        output:
+          type: string
     NodeOutcome:
       type: object
       properties:
@@ -2492,6 +2771,24 @@ components:
           items:
             $ref: "#/components/schemas/NodeOutcome"
         failureMessage:
+          type: string
+    NativeLoginValidationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    NativeLoginValidationResponse:
+      type: object
+      properties:
+        accepted:
+          type: boolean
+        message:
+          type: string
+        identifierFingerprint:
+          type: string
+        requestId:
           type: string
     ArtifactFileEntry:
       type: object
@@ -2582,6 +2879,154 @@ components:
         reviewer:
           type: string
         notes:
+          type: string
+    IconLink:
+      type: object
+      properties:
+        href:
+          type: string
+        mediaType:
+          type: string
+        alt:
+          type: string
+    ModuleListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleSummary"
+    ModuleSummary:
+      type: object
+      properties:
+        toolId:
+          type: string
+        source:
+          type: string
+        namespace:
+          type: string
+        title:
+          type: string
+        icon:
+          $ref: "#/components/schemas/IconLink"
+        href:
+          type: string
+    Author:
+      type: object
+      properties:
+        name:
+          type: string
+        urls:
+          type: array
+          items:
+            type: string
+    Link:
+      type: object
+      properties:
+        kind:
+          type: string
+        url:
+          type: string
+        label:
+          type: string
+    ModuleDetailResponse:
+      type: object
+      properties:
+        toolId:
+          type: string
+        source:
+          type: string
+        namespace:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/ModuleMetadata"
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/Property"
+        requirements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Requirement"
+        readme:
+          $ref: "#/components/schemas/ReadmeLink"
+    ModuleMetadata:
+      type: object
+      properties:
+        title:
+          type: string
+        summary:
+          type: string
+        description:
+          type: string
+        authors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Author"
+        license:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/Link"
+        icon:
+          $ref: "#/components/schemas/IconLink"
+    Property:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        defaultValue:
+          type: string
+        type:
+          type: string
+        required:
+          type: boolean
+        secret:
+          type: boolean
+    ReadmeLink:
+      type: object
+      properties:
+        href:
+          type: string
+        mediaType:
+          type: string
+        available:
+          type: boolean
+    Requirement:
+      type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        required:
+          type: boolean
+        label:
+          type: string
+        license:
+          type: string
+        vcs:
+          type: string
+        cloneUrl:
+          type: string
+        checkoutRef:
+          type: string
+        baseUrlProperty:
+          type: string
+        credentialProperty:
+          type: string
+        scope:
+          type: string
+        canonicalIdentity:
           type: string
     StreamingResponseBody: {}
     Finding:

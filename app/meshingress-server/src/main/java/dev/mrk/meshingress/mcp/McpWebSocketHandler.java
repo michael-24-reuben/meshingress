@@ -11,9 +11,13 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import dev.mrk.meshingress.security.McpTransportContextFactory;
+import dev.mrk.meshingress.security.McpTransportEvidence;
+import dev.mrk.meshingress.api.McpPrincipal;
 
 import java.util.Map;
 import java.util.Optional;
@@ -27,19 +31,30 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
     private final McpTransportDispatcher transportDispatcher;
     private final JsonRpcResponses responses;
+    private final McpTransportContextFactory contextFactory;
 
-    public McpWebSocketHandler(MeshingressProperties properties, ObjectMapper objectMapper, McpTransportDispatcher transportDispatcher, JsonRpcResponses responses) {
+    @Autowired
+    public McpWebSocketHandler(MeshingressProperties properties, ObjectMapper objectMapper, McpTransportDispatcher transportDispatcher, JsonRpcResponses responses, McpTransportContextFactory contextFactory) {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.transportDispatcher = transportDispatcher;
         this.responses = responses;
+        this.contextFactory = contextFactory;
+    }
+
+    /** @deprecated Test-only compatibility constructor; production uses the injected context factory. */
+    @Deprecated
+    public McpWebSocketHandler(MeshingressProperties properties, ObjectMapper objectMapper, McpTransportDispatcher transportDispatcher, JsonRpcResponses responses) {
+        this(properties, objectMapper, transportDispatcher, responses,
+                new McpTransportContextFactory(ignored -> dev.mrk.meshingress.api.McpPrincipal.anonymous()));
     }
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
         MeshingressProperties.Mcp.WebSocket websocket = properties.mcp().websocket();
-        String requestId = stringAttribute(session.getAttributes(), "mcp.requestId");
-        String sessionId = stringAttribute(session.getAttributes(), "mcp.sessionId");
+        McpTransportEvidence evidence = evidenceFrom(session.getAttributes(), session.getId());
+        String requestId = evidence.correlationId();
+        String sessionId = evidence.sessionId();
 
         long maxBytes = websocket.maxMessageSize().toBytes();
         if (message.getPayloadLength() > maxBytes) {
@@ -56,14 +71,18 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
         }
 
         LOGGER.info("=== MCP REQUEST START [ws] requestId={} sessionId={} wsSession={} ===", requestId, sessionId, session.getId());
-        McpCallContext context = contextFrom(session.getAttributes(), session.getId());
         Optional<JsonNode> response = transportDispatcher.dispatch(
                 message.getPayload(),
-                request -> websocketInvocation(session, context, request)
+                request -> websocketInvocation(session, contextFactory.create(evidence, principalFrom(session.getAttributes()), request), request)
         );
         if (response.isPresent()) {
             sendJson(session, response.get());
         }
+    }
+
+    private McpPrincipal principalFrom(Map<String, Object> attributes) {
+        Object value = attributes.get("mcp.principal");
+        return value instanceof McpPrincipal principal ? principal : McpPrincipal.anonymous();
     }
 
     private McpInvocation websocketInvocation(WebSocketSession session, McpCallContext context, JsonNode request) {
@@ -72,7 +91,7 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
                 progress -> sendProgress(session, context, callId, progress),
                 estimate -> sendProgressEstimate(session, context, callId, estimate)
         );
-        return McpInvocation.webSocket(context.withProgressReporter(lifecycle.reporter()), lifecycle);
+        return McpInvocation.webSocket(context.withExecution(new dev.mrk.meshingress.api.McpExecutionControl(null, null, lifecycle.reporter())), lifecycle);
     }
 
     private void sendProgress(WebSocketSession session, McpCallContext context, JsonNode callId, dev.mrk.meshingress.api.result.progress.ProgressUpdate progress) {
@@ -141,12 +160,16 @@ public class McpWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private McpCallContext contextFrom(Map<String, Object> attributes, String websocketSessionId) {
-        return new McpCallContext(
+    private McpTransportEvidence evidenceFrom(Map<String, Object> attributes, String websocketSessionId) {
+        Object value = attributes.get("mcp.transportEvidence");
+        if (value instanceof McpTransportEvidence evidence) {
+            return new McpTransportEvidence(evidence.authorization(), fallbackSessionId(evidence.sessionId(), websocketSessionId), evidence.correlationId(), evidence.transport());
+        }
+        return new McpTransportEvidence(
                 stringAttribute(attributes, "mcp.authorization"),
-                stringAttribute(attributes, "mcp.role"),
                 fallbackSessionId(stringAttribute(attributes, "mcp.sessionId"), websocketSessionId),
-                stringAttribute(attributes, "mcp.requestId")
+                stringAttribute(attributes, "mcp.requestId"),
+                McpTransportEvidence.Transport.WEBSOCKET
         );
     }
 

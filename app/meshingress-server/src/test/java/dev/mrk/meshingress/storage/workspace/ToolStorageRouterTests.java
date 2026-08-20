@@ -29,7 +29,7 @@ class ToolStorageRouterTests {
 
         ToolStorageWorkspace localWorkspace = router.openWorkspace("qbit.collect", context(),
                 new ToolStorageWorkspaceRequest(null, 1, ToolStorageTransferMode.LOCAL_BYTES, ToolStorageLocalPublicationMode.QUEUED));
-        ToolStorageWorkspace delegatedWorkspace = router.openWorkspace("toonverse.download-book", context(),
+        ToolStorageWorkspace delegatedWorkspace = router.openWorkspace("open-ink-library.toonverse.download-book", context(),
                 new ToolStorageWorkspaceRequest(null, 1, ToolStorageTransferMode.DELEGATED_SOURCE_URLS));
 
         assertEquals(1, local.opened);
@@ -45,7 +45,7 @@ class ToolStorageRouterTests {
         ToolStorageRouter router = new ToolStorageRouter(new RecordingStorage(ToolStorageTransferMode.LOCAL_BYTES),
                 new RecordingStorage(ToolStorageTransferMode.DELEGATED_SOURCE_URLS), null);
 
-        assertThrows(ToolStorageException.class, () -> router.openWorkspace("toonverse.download-book", context(),
+        assertThrows(ToolStorageException.class, () -> router.openWorkspace("open-ink-library.toonverse.download-book", context(),
                 new ToolStorageWorkspaceRequest(null, 1, ToolStorageTransferMode.DELEGATED_SOURCE_URLS, ToolStorageLocalPublicationMode.QUEUED)));
     }
 

@@ -6,14 +6,13 @@ import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
-import dev.mrk.meshingress.scopes.McpToolScope;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.security.ProfileLimitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,11 +27,15 @@ public class DefaultToolExecutor implements ToolExecutor {
     private final ToolRegistry toolRegistry;
     private final MeshingressProperties properties;
     private final ObjectMapper objectMapper;
+    private final ToolAccessService toolAccessService;
+    private final ProfileLimitService profileLimits;
 
-    public DefaultToolExecutor(ToolRegistry toolRegistry, MeshingressProperties properties, ObjectMapper objectMapper) {
+    public DefaultToolExecutor(ToolRegistry toolRegistry, MeshingressProperties properties, ObjectMapper objectMapper, ToolAccessService toolAccessService, ProfileLimitService profileLimits) {
         this.toolRegistry = toolRegistry;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.toolAccessService = toolAccessService;
+        this.profileLimits = profileLimits;
     }
 
     @Override
@@ -41,13 +44,16 @@ public class DefaultToolExecutor implements ToolExecutor {
                 .orElseThrow(() -> new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Tool function is not available."));
         McpToolDescriptor tool = toolRegistry.findOwningTool(function.name())
                 .orElseThrow(() -> new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Tool descriptor is not available."));
+        ToolAccessDecision decision = toolAccessService.evaluate(function, context);
+        if (!decision.executable()) {
+            throw new JsonRpcException(JsonRpcErrorCodes.FORBIDDEN, decision.reason());
+        }
         validateArguments(function, arguments);
-        enforceScopePolicy(function);
         McpToolHandler handler = toolRegistry.findHandler(function.handlerKey())
                 .orElseThrow(() -> new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Tool function handler is not available."));
 
         logCall(functionName, arguments, context);
-        try {
+        try (ProfileLimitService.Reservation ignored = profileLimits.reserveToolExecution(context, functionName)) {
             DispatchExecutionResult result = handler.call(arguments, context);
             enrichToolIdentity(result, tool, function);
             logResult(functionName, result, context);
@@ -71,7 +77,7 @@ public class DefaultToolExecutor implements ToolExecutor {
         ObjectNode toolNode = objectMapper.createObjectNode();
         toolNode.put("id", tool.name());
         toolNode.put("name", function.name());
-        toolNode.put("title", tool.title() == null ? "" : tool.title());
+        toolNode.put("title", tool.label() == null ? "" : tool.label());
         toolNode.put("function", localFunctionName(tool, function));
         toolNode.put("functionTitle", function.title() == null ? "" : function.title());
         toolNode.put("version", tool.version());
@@ -105,48 +111,6 @@ public class DefaultToolExecutor implements ToolExecutor {
                 throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "Missing required tool argument: " + required.asString());
             }
         }
-    }
-
-    private void enforceScopePolicy(McpFunctionDescriptor function) {
-        if (!properties.security().enabled()) {
-            return;
-        }
-        for (String scopeName : scopeNames(function)) {
-            McpToolScope scope;
-            try {
-                scope = McpToolScope.valueOf(scopeName);
-            } catch (IllegalArgumentException exception) {
-                if (properties.security().denyUnknownScopes()) {
-                    throw new JsonRpcException(JsonRpcErrorCodes.FORBIDDEN, "Tool function declares an unknown scope: " + scopeName);
-                }
-                continue;
-            }
-
-            if (scope == McpToolScope.SHELL_EXECUTE && !properties.scopes().allowShellExecute()) {
-                throw new JsonRpcException(JsonRpcErrorCodes.FORBIDDEN, "Tool function requires disabled scope: SHELL_EXECUTE");
-            }
-            if (scope == McpToolScope.FILES_DELETE && !properties.scopes().allowFilesDelete()) {
-                throw new JsonRpcException(JsonRpcErrorCodes.FORBIDDEN, "Tool function requires disabled scope: FILES_DELETE");
-            }
-            if (scope == McpToolScope.NETWORK_INBOUND && !properties.scopes().allowNetworkInbound()) {
-                throw new JsonRpcException(JsonRpcErrorCodes.FORBIDDEN, "Tool function requires disabled scope: NETWORK_INBOUND");
-            }
-        }
-    }
-
-    private java.util.List<String> scopeNames(McpFunctionDescriptor function) {
-        JsonNode scopes = function.annotations() == null ? null : function.annotations().path("scopes");
-        if (scopes == null || !scopes.isArray()) {
-            return java.util.List.of();
-        }
-        java.util.List<String> names = new java.util.ArrayList<>();
-        for (JsonNode scope : (ArrayNode) scopes) {
-            String name = scope.asString("");
-            if (!name.isBlank()) {
-                names.add(name);
-            }
-        }
-        return names;
     }
 
     private void logCall(String functionName, ObjectNode arguments, McpCallContext context) {

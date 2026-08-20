@@ -12,17 +12,20 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface McpTool {
     /**
-     * A regular expression that matches a valid MCP tool name.
-     * The format is: {@code [a-z][a-z0-9_-]*(?:\.[a-z][a-z0-9_-]*)*}
-     * <p>
-     * Enforces matching pattern for foreign keys in {@link McpTool#value()}
+     * A regular expression that matches one valid MCP name segment.
+     * Dots belong exclusively to the generated public identifier delimiters.
      */
-    String QUALIFIED_TOOL_NAME_REGEX = "[a-z][a-z0-9_-]*(?:\\.[a-z][a-z0-9_-]*)*";
+    String SEGMENT_NAME_REGEX = "[a-z][a-z0-9_-]*";
+
+    /** @deprecated Use {@link #SEGMENT_NAME_REGEX}; tool values are single segments. */
+    @Deprecated
+    String QUALIFIED_TOOL_NAME_REGEX = SEGMENT_NAME_REGEX;
 
     /**
-     * Defines a unique tool ID, used to identify the tool in the system.
+     * Defines the module-local tool-family segment. The manifest namespace and
+     * {@link McpFunction} value complete the public identifier.
      */
-    @Pattern(QUALIFIED_TOOL_NAME_REGEX)
+    @Pattern(SEGMENT_NAME_REGEX)
     String value();
 
     String title() default "";

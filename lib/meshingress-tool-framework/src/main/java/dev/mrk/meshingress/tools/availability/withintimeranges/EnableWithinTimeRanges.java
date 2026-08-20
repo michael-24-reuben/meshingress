@@ -17,6 +17,14 @@ public @interface EnableWithinTimeRanges {
 
     String zone();
 
-    String[] ranges();
-}
+    TimeRange[] ranges();
 
+    @Target({})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface TimeRange {
+
+        String start();
+
+        String end();
+    }
+}

@@ -13,13 +13,11 @@ import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.scopes.McpToolScope;
 import dev.mrk.toolspace.openinklibrary.SourceException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +33,6 @@ import java.util.Map;
 
 @McpTool(value = "toonverse", title = "Toonverse", description = "Search and fetch public Toonverse series data.")
 @McpToolScopes({McpToolScope.HTTP_CLIENT, McpToolScope.EXTERNAL_API_READ})
-@McpToolMapping("tools")
 public final class ToonverseTool {
     private static final Pattern H2_NULL_COLUMN = Pattern.compile("(?i)\\bnull not allowed for column \\\"([A-Za-z_][A-Za-z0-9_]*)\\\"");
     // 2.5s/chapter is a rough estimate for planning progress reporting; actual download time may vary based on network conditions and source responsiveness.
@@ -159,7 +156,7 @@ public final class ToonverseTool {
             ToolStorageWorkspaceRequest workspaceRequest = new ToolStorageWorkspaceRequest(
                     storageTtl(arguments.ttlSeconds()), arguments.maxRequests(), ToolStorageTransferMode.DELEGATED_SOURCE_URLS
             );
-            ToolStorageWorkspace workspace = storage.openWorkspace("toonverse.download-book", context, workspaceRequest);
+            ToolStorageWorkspace workspace = storage.openWorkspace("open-ink-library.toonverse.download-book", context, workspaceRequest);
             List<Map<String, Object>> chapters = new ArrayList<>();
             JsonNode series = null;
             long pageCount = 0;

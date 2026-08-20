@@ -33,7 +33,7 @@ class StorageServiceTests {
     @Test
     void publishesNamedFilesAndTheGeneratedManifestUnderTheSessionRequestWorkspace() throws Exception {
         Fixture fixture = fixture(DataSize.ofKilobytes(8), 10);
-        ToolStorageWorkspace staging = fixture.service.openWorkspace("toonverse.fetch-chapters", context(), new ToolStorageWorkspaceRequest(Duration.ofMinutes(2), 2));
+        ToolStorageWorkspace staging = fixture.service.openWorkspace("open-ink-library.toonverse.fetch-chapters", context(), new ToolStorageWorkspaceRequest(Duration.ofMinutes(2), 2));
         assertEquals("session-1", staging.sessionId());
         assertEquals("/api/v1/storage/session-1/" + staging.requestId() + "/files/", staging.filesUri());
 

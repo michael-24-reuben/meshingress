@@ -186,6 +186,28 @@ public class ArtifactService {
         return resourcePath;
     }
 
+    /** Returns only the manifest-declared local icon; arbitrary artifact files remain unavailable. */
+    public ArtifactIconResource artifactIcon(String groupId, String artifactId, String version) {
+        ArtifactRecord record = requireEntry(coordinate(groupId, artifactId, version, "jar")).record();
+        Path resourcesDirectory = storage.layout().artifactDirectory(record.coordinate()).resolve("resources").normalize();
+        McpToolNativeMetadata metadata;
+        try {
+            metadata = dev.mrk.meshingress.toolmetadata.McpToolManifestJson.read(
+                    resourcesDirectory.resolve("tool-manifest.json"));
+        } catch (Exception exception) {
+            throw new RepositoryException("artifact tool icon is unavailable", exception);
+        }
+        var icon = metadata.metadata().icon();
+        if (icon == null) {
+            throw new RepositoryException("artifact does not declare a tool icon");
+        }
+        try {
+            return new ArtifactIconResource(icon.requireValidResource(resourcesDirectory), icon.mimeType().value(), icon.accessibleLabel());
+        } catch (IllegalArgumentException exception) {
+            throw new RepositoryException("artifact tool icon is unavailable", exception);
+        }
+    }
+
     public ArtifactRecord assess(String groupId, String artifactId, String version, RepositoryRequestContext context) {
         ArtifactMetadataEntry entry = requireEntry(coordinate(groupId, artifactId, version, "jar"));
         ArtifactRecord current = entry.record();
@@ -243,7 +265,11 @@ public class ArtifactService {
                 "Artifact assessment completed."
         );
         writeJson(storage.layout().assessmentDirectory(current.coordinate()).resolve("assessment.json"), results);
-        nativeMetadataExporter.export(nativeMetadata, storage.layout().artifactDirectory(current.coordinate()));
+        nativeMetadataExporter.export(
+                nativeMetadata,
+                storage.layout().artifactDirectory(current.coordinate()),
+                storage.layout().quarantineDirectory(current.coordinate())
+        );
         storage.cleanQuarantine(current.coordinate());
         return updated;
     }

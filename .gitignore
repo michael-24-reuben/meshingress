@@ -2,13 +2,25 @@ HELP.md
 temp/
 /repository/**
 tools/
+# Keep source documentation and coverage beneath Java packages named "tools" trackable.
+!lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/
+!lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/availability/
+!lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/availability/README.md
+!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/
+!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/availability/
+!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/availability/withintimeranges/
+!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/availability/withintimeranges/EnableWithinTimeRangesPolicyTests.java
 
 
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
 /app/**/target/
+/lib/**/target/
 
+*.class
 
 ### Architect ###
 architect/
@@ -41,8 +53,6 @@ architect/**/captures/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
@@ -61,6 +71,7 @@ toolspace/**/target/
 ### Secure Files ###
 *.pem
 *.env
+/config/application-production.properties
 
 ### Logging and Tracing ###
 *.log
@@ -84,3 +95,8 @@ toolspace/**/target/
 
 ### Temporary Exclusions ###
 /packages/
+!/packages/
+/packages/*/
+!/packages/aegis/
+!/packages/aegis/**
+/packages/aegis/target/

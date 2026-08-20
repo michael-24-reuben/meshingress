@@ -1,6 +1,7 @@
 package dev.mrk.toolspace.openinklibrary;
 
 import dev.mrk.toolspace.openinklibrary.source.toonverse.*;
+import dev.mrk.meshingress.toolmetadata.McpToolMetadata;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.beans.factory.ObjectProvider;
@@ -13,6 +14,11 @@ import java.net.http.HttpClient;
 @AutoConfiguration
 public class OpenInkLibraryAutoConfiguration {
     private static final String TOONVERSE_PROFILE = "/open-ink-library/toonverse.yaml";
+
+    @Bean
+    OpenInkLibraryManifest openInkLibraryManifest() {
+        return new OpenInkLibraryManifest();
+    }
 
     @Bean
     ToonverseSourceConfiguration toonverseSourceConfiguration() {
@@ -50,7 +56,16 @@ public class OpenInkLibraryAutoConfiguration {
     }
 
     @Bean
-    ToonverseTool toonverseTool(ToonverseClient client, ObjectMapper objectMapper, ObjectProvider<ToolStorageService> storage) {
+    ToonverseTool toonverseTool(
+            ToonverseClient client,
+            ObjectMapper objectMapper,
+            ObjectProvider<ToolStorageService> storage,
+            McpToolMetadata metadata,
+            OpenInkLibraryManifest manifest
+    ) {
+        metadata.registerManifest(TextBookTool.class, manifest);
+        metadata.registerManifest(ImageBookTool.class, manifest);
+        metadata.registerManifest(ToonverseTool.class, manifest);
         return new ToonverseTool(client, objectMapper, storage.getIfAvailable());
     }
 }

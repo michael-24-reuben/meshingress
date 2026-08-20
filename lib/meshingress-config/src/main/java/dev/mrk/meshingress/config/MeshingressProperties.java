@@ -247,18 +247,101 @@ public record MeshingressProperties(
             boolean enabled,
             @NotBlank String mode,
             boolean requireAuthentication,
+            boolean legacyDevelopmentTokenEnabled,
+            String developmentAdminToken,
             boolean requireToolApproval,
             boolean requireApprovalForPrivileged,
             boolean requireApprovalForCritical,
             boolean denyUnknownScopes,
-            boolean defaultDeny
+            boolean defaultDeny,
+            @Valid @NotNull Oidc oidc,
+            @Valid @NotNull Admission admission,
+            @Valid @NotNull Limits limits
     ) {
+        @ConstructorBinding
         public Security {
             mode = defaultString(mode, "dev");
+            developmentAdminToken = developmentAdminToken == null ? "" : developmentAdminToken.trim();
+            oidc = oidc == null ? Oidc.defaults() : oidc;
+            admission = admission == null ? Admission.defaults() : admission;
+            limits = limits == null ? Limits.defaults() : limits;
+        }
+
+        /** Compatibility constructor for callers compiled before OIDC settings were added. */
+        public Security(boolean enabled, String mode, boolean requireAuthentication, boolean legacyDevelopmentTokenEnabled,
+                        String developmentAdminToken, boolean requireToolApproval, boolean requireApprovalForPrivileged,
+                        boolean requireApprovalForCritical, boolean denyUnknownScopes, boolean defaultDeny) {
+            this(enabled, mode, requireAuthentication, legacyDevelopmentTokenEnabled, developmentAdminToken,
+                    requireToolApproval, requireApprovalForPrivileged, requireApprovalForCritical, denyUnknownScopes,
+                    defaultDeny, Oidc.defaults(), Admission.defaults(), Limits.defaults());
+        }
+
+        /** Compatibility constructor for callers compiled before admission and limit settings were added. */
+        public Security(boolean enabled, String mode, boolean requireAuthentication, boolean legacyDevelopmentTokenEnabled,
+                        String developmentAdminToken, boolean requireToolApproval, boolean requireApprovalForPrivileged,
+                        boolean requireApprovalForCritical, boolean denyUnknownScopes, boolean defaultDeny, Oidc oidc) {
+            this(enabled, mode, requireAuthentication, legacyDevelopmentTokenEnabled, developmentAdminToken,
+                    requireToolApproval, requireApprovalForPrivileged, requireApprovalForCritical, denyUnknownScopes,
+                    defaultDeny, oidc, Admission.defaults(), Limits.defaults());
         }
 
         static Security defaults() {
-            return new Security(true, "dev", false, false, true, true, true, true);
+            return new Security(true, "dev", false, false, "", false, true, true, true, true, Oidc.defaults(), Admission.defaults(), Limits.defaults());
+        }
+
+        /** Deployment-owned OIDC/JWT claim mapping. No issuer value is committed to source. */
+        public record Oidc(
+                boolean enabled,
+                String issuerUri,
+                String audience,
+                String tenantClaim,
+                String profileIdClaim,
+                String rolesClaim,
+                String grantsClaim
+        ) {
+            public Oidc {
+                issuerUri = issuerUri == null ? "" : issuerUri.trim();
+                audience = audience == null ? "" : audience.trim();
+                tenantClaim = defaultString(tenantClaim, "tenant_id");
+                profileIdClaim = defaultString(profileIdClaim, "profile_id");
+                rolesClaim = defaultString(rolesClaim, "roles");
+                grantsClaim = defaultString(grantsClaim, "scope");
+            }
+
+            static Oidc defaults() { return new Oidc(false, "", "", "tenant_id", "profile_id", "roles", "scope"); }
+        }
+
+        /** Provider-neutral admission policy. CLOSED never creates a profile from a login. */
+        public record Admission(AdmissionMode mode, String defaultTenantId, InitialProfileStatus initialProfileStatus) {
+            public Admission {
+                mode = mode == null ? AdmissionMode.CLOSED : mode;
+                defaultTenantId = defaultTenantId == null ? "" : defaultTenantId.trim();
+                initialProfileStatus = initialProfileStatus == null ? InitialProfileStatus.PENDING_REVIEW : initialProfileStatus;
+            }
+            static Admission defaults() { return new Admission(AdmissionMode.CLOSED, "", InitialProfileStatus.PENDING_REVIEW); }
+        }
+
+        public enum AdmissionMode { CLOSED, INVITE_ONLY, SUBJECT_ALLOWLIST, SELF_SERVICE_UNPRIVILEGED }
+        public enum InitialProfileStatus { PENDING_REVIEW, ACTIVE }
+
+        /** Deployment-wide limits. Zero is an explicit unlimited default, not a missing profile override. */
+        public record Limits(
+                boolean enabled,
+                boolean recordUsage,
+                @Min(0) int requestsPerWindow,
+                @NotNull Duration requestWindow,
+                @Min(0) int toolExecutionsPerWindow,
+                @NotNull Duration toolExecutionWindow,
+                @Min(0) int maxConcurrentCalls
+        ) {
+            public Limits {
+                requestsPerWindow = Math.max(0, requestsPerWindow);
+                requestWindow = Objects.requireNonNullElse(requestWindow, Duration.ofMinutes(1));
+                toolExecutionsPerWindow = Math.max(0, toolExecutionsPerWindow);
+                toolExecutionWindow = Objects.requireNonNullElse(toolExecutionWindow, Duration.ofMinutes(1));
+                maxConcurrentCalls = Math.max(0, maxConcurrentCalls);
+            }
+            static Limits defaults() { return new Limits(false, false, 0, Duration.ofMinutes(1), 0, Duration.ofMinutes(1), 0); }
         }
     }
 

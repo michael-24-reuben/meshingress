@@ -7,6 +7,8 @@ import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcErrorCodes;
 import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.ToolExecutor;
+import dev.mrk.meshingress.mcp.tools.ToolAccessService;
+import dev.mrk.meshingress.security.ProfileLimitService;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
@@ -29,25 +31,34 @@ public class ToolsMcpController {
     private final ToolRegistry toolRegistry;
     private final ToolExecutor toolExecutor;
     private final MeshingressProperties properties;
+    private final ToolAccessService toolAccessService;
+    private final ProfileLimitService profileLimits;
 
-    public ToolsMcpController(ObjectMapper objectMapper, ToolRegistry toolRegistry, ToolExecutor toolExecutor, MeshingressProperties properties) {
+    public ToolsMcpController(ObjectMapper objectMapper, ToolRegistry toolRegistry, ToolExecutor toolExecutor, MeshingressProperties properties, ToolAccessService toolAccessService, ProfileLimitService profileLimits) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
         this.toolExecutor = toolExecutor;
         this.properties = properties;
+        this.toolAccessService = toolAccessService;
+        this.profileLimits = profileLimits;
     }
 
     @McpDispatchMethod("list")
-    public @NonNull ObjectNode toolsList() {
+    public @NonNull ObjectNode toolsList(McpCallContext context) {
         ensureRegistryEnabled();
         log.debug("MCP tools/list requested");
-        ObjectNode result = objectMapper.createObjectNode();
-        ArrayNode tools = objectMapper.createArrayNode();
-        for (McpFunctionDescriptor function : toolRegistry.listPublicEnabledFunctions()) {
-            tools.add(function.toMcpJson(objectMapper));
+        try (ProfileLimitService.Reservation ignored = profileLimits.reserveRequest(context)) {
+            ObjectNode result = objectMapper.createObjectNode();
+            ArrayNode tools = objectMapper.createArrayNode();
+            for (McpFunctionDescriptor function : toolRegistry.listPublicEnabledFunctions()) {
+                if (!toolAccessService.evaluate(function, context).visible()) continue;
+                ObjectNode functionJson = function.toMcpJson(objectMapper);
+                toolRegistry.findOwningModuleToolId(function.name()).ifPresent(moduleToolId -> functionJson.put("moduleToolId", moduleToolId));
+                tools.add(functionJson);
+            }
+            result.set("tools", tools);
+            return result;
         }
-        result.set("tools", tools);
-        return result;
     }
 
     @McpDispatchMethod("call")
@@ -68,6 +79,7 @@ public class ToolsMcpController {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params.arguments must be an object");
         }
 
+        try (ProfileLimitService.Reservation ignored = profileLimits.reserveRequest(context)) {
         DispatchExecutionResult result = toolExecutor.execute(name, (ObjectNode) arguments, context);
         ObjectNode response = result.toJson(objectMapper);
         if (!properties.dispatch().includeGeneratedAt() && response.has("_meta")) {
@@ -78,6 +90,7 @@ public class ToolsMcpController {
             }
         }
         return response;
+        }
     }
 
     private void ensureRegistryEnabled() {

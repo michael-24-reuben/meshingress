@@ -1,0 +1,132 @@
+import { apiRequest } from './client'
+import { RuntimeConfiguration } from '../runtime/RuntimeConfiguration'
+import type { WorkflowRunResult } from '../features/workflow-studio/types'
+import type { WorkflowDefinitionPayload } from '../features/workflow-studio/definition'
+
+const workflowRunPath = '/api/v1/workflows/run'
+
+export interface WorkflowRunCallbacks {
+  onRunStarted: (runId: string) => void
+  onNodeStarted: (requestId: string) => void
+  onNodeCompleted: (outcome: WorkflowNodeOutcome) => void
+}
+
+export interface WorkflowNodeOutcome {
+  requestId: string
+  failed: boolean
+  attempts: number
+  port: string
+  message?: string
+}
+
+export class WorkflowLiveTransportError extends Error {
+  readonly canFallbackToHttp: boolean
+
+  constructor(message: string, canFallbackToHttp: boolean) {
+    super(message)
+    this.name = 'WorkflowLiveTransportError'
+    this.canFallbackToHttp = canFallbackToHttp
+  }
+}
+
+export async function runWorkflowHttp(definition: WorkflowDefinitionPayload): Promise<WorkflowRunResult> {
+  return apiRequest<WorkflowRunResult>(workflowRunPath, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Mcp-Session-Id': crypto.randomUUID(),
+      'X-Request-Id': crypto.randomUUID(),
+    },
+    body: JSON.stringify(definition),
+  })
+}
+
+export function runWorkflowLive(definition: WorkflowDefinitionPayload, callbacks: WorkflowRunCallbacks): Promise<WorkflowRunResult> {
+  const requestId = crypto.randomUUID()
+  return new Promise((resolve, reject) => {
+    let settled = false
+    let started = false
+    let socket: WebSocket
+    try {
+      socket = new WebSocket(workflowWebSocketUrl())
+    } catch (error) {
+      reject(new WorkflowLiveTransportError(messageFor(error), true))
+      return
+    }
+
+    const fail = (message: string, canFallbackToHttp: boolean) => {
+      if (settled) return
+      settled = true
+      socket.close()
+      reject(new WorkflowLiveTransportError(message, canFallbackToHttp))
+    }
+
+    socket.addEventListener('open', () => {
+      socket.send(JSON.stringify({ action: 'run', definition, requestId }))
+    })
+    socket.addEventListener('message', (event) => {
+      const payload = parseEvent(event.data)
+      if (!payload || payload.requestId !== requestId) return
+      if (payload.type === 'workflow.started' && typeof payload.runId === 'string') {
+        started = true
+        callbacks.onRunStarted(payload.runId)
+        return
+      }
+      if (payload.type === 'workflow.node.started' && typeof payload.nodeRequestId === 'string') {
+        callbacks.onNodeStarted(payload.nodeRequestId)
+        return
+      }
+      if (payload.type === 'workflow.node.completed' && isNodeOutcome(payload.outcome)) {
+        callbacks.onNodeCompleted(payload.outcome)
+        return
+      }
+      if (payload.type === 'workflow.completed' && isWorkflowRunResult(payload.run)) {
+        if (settled) return
+        settled = true
+        socket.close()
+        resolve(payload.run)
+        return
+      }
+      if (payload.type === 'workflow.error') {
+        fail(typeof payload.message === 'string' ? payload.message : 'Workflow WebSocket run failed.', !started)
+      }
+    })
+    socket.addEventListener('error', () => fail('Workflow live connection failed.', !started))
+    socket.addEventListener('close', () => fail('Workflow live connection closed before completion.', !started))
+  })
+}
+
+function workflowWebSocketUrl(): string {
+  const url = new URL(RuntimeConfiguration.current.apiBaseUrl)
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  url.pathname = `${url.pathname.replace(/\/$/, '')}${RuntimeConfiguration.current.workflowWebSocketPath}`
+  return url.toString()
+}
+
+function parseEvent(data: unknown): Record<string, unknown> | undefined {
+  if (typeof data !== 'string') return undefined
+  try {
+    const parsed: unknown = JSON.parse(data)
+    return parsed !== null && typeof parsed === 'object' ? parsed as Record<string, unknown> : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function isNodeOutcome(value: unknown): value is WorkflowNodeOutcome {
+  if (value === null || typeof value !== 'object') return false
+  const outcome = value as Record<string, unknown>
+  return typeof outcome.requestId === 'string'
+    && typeof outcome.failed === 'boolean'
+    && typeof outcome.attempts === 'number'
+    && typeof outcome.port === 'string'
+    && (outcome.message === undefined || typeof outcome.message === 'string')
+}
+
+function isWorkflowRunResult(value: unknown): value is WorkflowRunResult {
+  return value !== null && typeof value === 'object'
+}
+
+function messageFor(error: unknown): string {
+  return error instanceof Error ? error.message : 'Workflow live connection could not be opened.'
+}

@@ -1,27 +1,150 @@
-import { useEffect, useRef, useState } from 'react'
-import { CodeSquareFilledIcon } from '../../../components/icons/node-icons'
+import { useEffect, useRef, useState, type ComponentType } from 'react'
+import { CodeSquareFilledIcon, CopyIcon, PanelSearchIcon, RemoveIcon, WorkflowFolderIcon, WorkflowIcon, type CodeSquareFilledIconProps } from '../../../components/icons/node-icons'
+import { ProfileMenu, type StudioProfile } from './ProfileMenu'
 
-type Command = { label: string; separatorBefore?: boolean }
+export type Command = {
+  type?: 'command'
+  label: string
+  shortcut?: string
+  icon?: ComponentType<CodeSquareFilledIconProps>
+  action?: () => void
+}
 
-const menus: Array<{ label: string; commands: Command[] }> = [
-  { label: 'File', commands: [{ label: 'New workflow' }, { label: 'Open published workflow' }, { label: 'Import definition' }, { label: 'Save draft', separatorBefore: true }, { label: 'Publish workflow' }, { label: 'Export JSON' }] },
-  { label: 'Edit', commands: [{ label: 'Undo' }, { label: 'Redo' }, { label: 'Copy selection', separatorBefore: true }, { label: 'Paste' }, { label: 'Duplicate node', separatorBefore: true }, { label: 'Delete selection' }] },
-  { label: 'View', commands: [{ label: 'Zoom in' }, { label: 'Zoom out' }, { label: 'Fit workflow', separatorBefore: true }, { label: 'Reset canvas' }, { label: 'Toggle grid', separatorBefore: true }, { label: 'Snap to grid' }] },
-  { label: 'Run', commands: [{ label: 'Validate workflow' }, { label: 'Run workflow' }, { label: 'Debug run' }, { label: 'Stop run' }, { label: 'Run history', separatorBefore: true }, { label: 'Clear execution logs' }] },
-  { label: 'Help', commands: [{ label: 'Workflow guide' }, { label: 'Tool catalog' }, { label: 'Keyboard shortcuts' }, { label: 'MCP connection status', separatorBefore: true }, { label: 'Report issue' }, { label: 'About Meshingress' }] },
+export type Separator = {
+  type: 'separator'
+}
+
+export type MenuItem = Command | Separator
+
+export type Menu = {
+  label: string
+  items: MenuItem[]
+}
+
+const menus: Menu[] = [
+  {
+    label: 'File',
+    items: [
+      { label: 'New workspace', shortcut: 'Ctrl+W' },
+      { label: 'Open workspace', shortcut: 'Ctrl+O', icon: WorkflowFolderIcon },
+      { label: 'Open recent' },
+      { type: 'separator' },
+      { label: 'New workflow', shortcut: 'Ctrl+N', icon: WorkflowIcon },
+      { label: 'Open published workflow', shortcut: 'Ctrl+Alt+O' },
+      { label: 'Import definition', shortcut: 'Ctrl+Alt+I' },
+      { type: 'separator' },
+      { label: 'Save draft', shortcut: 'Ctrl+Shift+S' },
+      { label: 'Publish workflow', shortcut: 'Ctrl+Shift+P' },
+      { label: 'Export JSON', shortcut: 'Ctrl+Shift+E' },
+    ],
+  },
+  {
+    label: 'Edit',
+    items: [
+      { label: 'Undo', shortcut: 'Ctrl+Z' },
+      { label: 'Redo', shortcut: 'Ctrl+Y' },
+      { type: 'separator' },
+      { label: 'Copy selection', shortcut: 'Ctrl+C', icon: CopyIcon },
+      { label: 'Paste', shortcut: 'Ctrl+V' },
+      { type: 'separator' },
+      { label: 'Duplicate node', shortcut: 'Ctrl+D' },
+      { label: 'Delete selection', shortcut: 'Delete', icon: RemoveIcon },
+    ],
+  },
+  {
+    label: 'View',
+    items: [
+      { label: 'Search panels', shortcut: 'Ctrl+K', icon: PanelSearchIcon },
+      { type: 'separator' },
+      { label: 'Zoom in' },
+      { label: 'Zoom out' },
+      { type: 'separator' },
+      { label: 'Fit workflow' },
+      { label: 'Reset canvas' },
+      { type: 'separator' },
+      { label: 'Toggle grid' },
+      { label: 'Snap to grid' },
+    ],
+  },
+  {
+    label: 'Run',
+    items: [
+      { label: 'Validate workflow' },
+      { label: 'Run workflow' },
+      { label: 'Debug run' },
+      { label: 'Stop run' },
+      { type: 'separator' },
+      { label: 'Run history' },
+      { label: 'Clear execution logs' },
+    ],
+  },
+  {
+    label: 'Help',
+    items: [
+      { label: 'Workflow guide' },
+      { label: 'Tool catalog' },
+      { label: 'Keyboard shortcuts' },
+      { type: 'separator' },
+      { label: 'MCP connection status' },
+      { label: 'Report issue' },
+      { label: 'About Meshingress' },
+    ],
+  },
 ]
 
 interface TopBarProps {
   workflowName: string
-  running: boolean
+  running?: boolean
   onRun: () => void
   onValidate: () => void
   onStatus: (message: string) => void
+  onSearchPanels: () => void
+  onCopySelection?: () => void
+  onCutSelection?: () => void
+  onPaste?: () => void
+  onDuplicateNode?: () => void
+  onDeleteSelection?: () => void
+  onUndo?: () => void
+  onRedo?: () => void
+  onNewWorkspace?: () => void
+  onOpenWorkspace?: () => void
+  onOpenRecent?: () => void
+  googleClientId: string
+  profile: StudioProfile | null
+  onGoogleCredential: (credential: string) => void
+  onGoogleError: (message: string) => void
+  onNativeValidate: (username: string, password: string) => Promise<{ accepted: boolean; message: string; identifierFingerprint: string | null }>
+  nativeValidationAvailable: boolean
+  nativeValidationNotice: string
+  onSignOut: () => void
 }
 
-export function TopBar({ workflowName, running, onRun, onValidate, onStatus }: TopBarProps) {
+export function TopBar({
+  workflowName,
+  onRun,
+  onValidate,
+  onStatus,
+  onSearchPanels,
+  onCopySelection,
+  onCutSelection,
+  onPaste,
+  onDuplicateNode,
+  onDeleteSelection,
+  onUndo,
+  onRedo,
+  onNewWorkspace,
+  onOpenWorkspace,
+  onOpenRecent,
+  googleClientId,
+  profile,
+  onGoogleCredential,
+  onGoogleError,
+  onNativeValidate,
+  nativeValidationAvailable,
+  nativeValidationNotice,
+  onSignOut,
+}: TopBarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const [openAction, setOpenAction] = useState<'run' | 'runtime' | null>(null)
   const [brandHovered, setBrandHovered] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const brandRef = useRef<HTMLDivElement>(null)
@@ -29,18 +152,56 @@ export function TopBar({ workflowName, running, onRun, onValidate, onStatus }: T
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
       if (!brandRef.current?.contains(event.target as Node)) setOpenMenu(null)
-      if (!headerRef.current?.contains(event.target as Node)) setOpenAction(null)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
-  const execute = (label: string) => {
+  const execute = (item: Command) => {
     setOpenMenu(null)
-    if (label === 'Save draft') onStatus('Draft saved')
-    else if (label === 'Validate workflow') onValidate()
-    else if (label === 'Run workflow') onRun()
-    else onStatus(`${label} is ready to connect.`)
+    if (item.action) {
+      item.action()
+      return
+    }
+    const label = item.label
+    if (label === 'New workspace') {
+      onNewWorkspace?.()
+    } else if (label === 'Open workspace') {
+      onOpenWorkspace?.()
+    } else if (label === 'Open recent') {
+      onOpenRecent?.()
+    } else if (label === 'Search panels') {
+      onSearchPanels()
+    } else if (label === 'Save draft') {
+      onStatus('Draft saved')
+    } else if (label === 'Validate workflow') {
+      onValidate()
+    } else if (label === 'Run workflow') {
+      onRun()
+    } else if (label === 'Copy selection') {
+      if (onCopySelection) onCopySelection()
+      else window.dispatchEvent(new CustomEvent('workflow-node-command', { detail: 'copy' }))
+    } else if (label === 'Cut selection') {
+      if (onCutSelection) onCutSelection()
+      else window.dispatchEvent(new CustomEvent('workflow-node-command', { detail: 'cut' }))
+    } else if (label === 'Paste') {
+      if (onPaste) onPaste()
+      else window.dispatchEvent(new CustomEvent('workflow-node-command', { detail: 'paste' }))
+    } else if (label === 'Duplicate node') {
+      if (onDuplicateNode) onDuplicateNode()
+      else window.dispatchEvent(new CustomEvent('workflow-node-command', { detail: 'duplicate' }))
+    } else if (label === 'Delete selection') {
+      if (onDeleteSelection) onDeleteSelection()
+      else window.dispatchEvent(new CustomEvent('workflow-node-command', { detail: 'delete' }))
+    } else if (label === 'Undo') {
+      if (onUndo) onUndo()
+      else window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }))
+    } else if (label === 'Redo') {
+      if (onRedo) onRedo()
+      else window.dispatchEvent(new KeyboardEvent('keydown', { key: 'y', ctrlKey: true, bubbles: true }))
+    } else {
+      onStatus(`${label} is ready to connect.`)
+    }
   }
 
   const updateBrandHover = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -68,15 +229,41 @@ export function TopBar({ workflowName, running, onRun, onValidate, onStatus }: T
             </div>
             <nav aria-label="Meshingress menu" className="brand-menu">
               {menus.map((menu) => (
-                <div className={`brand-menu-entry${openMenu === menu.label ? ' is-open' : ''}`} key={menu.label} onMouseEnter={() => { setOpenAction(null); setOpenMenu(menu.label) }}>
-                  <span className="brand-menu-item">{menu.label}</span>
+                <div
+                  className={`brand-menu-entry${openMenu === menu.label ? ' is-open' : ''}`}
+                  key={menu.label}
+                  onMouseEnter={() => {
+                    if (openMenu !== null) {
+                      setOpenMenu(menu.label)
+                    }
+                  }}
+                >
+                  <button
+                    className="brand-menu-item"
+                    onClick={() => setOpenMenu((prev) => (prev === menu.label ? null : menu.label))}
+                    type="button"
+                  >
+                    {menu.label}
+                  </button>
                   <div aria-label={`${menu.label} commands`} className="brand-menu-children">
-                    {menu.commands.map((command) => (
-                      <span key={command.label}>
-                        {command.separatorBefore && <span className="brand-menu-separator" role="separator" />}
-                        <button className="brand-menu-child" onClick={() => execute(command.label)} type="button"><CodeSquareFilledIcon size={16} /><span>{command.label}</span></button>
-                      </span>
-                    ))}
+                    {menu.items.map((item, index) => {
+                      if ('type' in item && item.type === 'separator') {
+                        return <span className="brand-menu-separator" key={`sep-${index}`} role="separator" />
+                      }
+                      const Icon = item.icon ?? CodeSquareFilledIcon
+                      return (
+                        <button
+                          className={`brand-menu-child${item.shortcut ? ' has-shortcut' : ''}`}
+                          key={item.label}
+                          onClick={() => execute(item)}
+                          type="button"
+                        >
+                          <Icon size={16} />
+                          <span>{item.label}</span>
+                          {item.shortcut && <span className="brand-menu-shortcut">{item.shortcut}</span>}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               ))}
@@ -84,37 +271,18 @@ export function TopBar({ workflowName, running, onRun, onValidate, onStatus }: T
           </div>
         </div>
       </div>
-
-      <div className="actions">
-        <HeaderMenu id="run-options-menu" open={openAction === 'run'} onToggle={() => { setOpenMenu(null); setOpenAction(openAction === 'run' ? null : 'run') }} toggle={<span className="header-action-chevron">▾</span>} label="Open run options" split primary>
-          <button className="header-icon-button primary" disabled={running} onClick={onRun} title={`Run ${workflowName}`} type="button"><CodeSquareFilledIcon className="header-action-icon" size={16} /></button>
-          <button className="header-action-menu-item" onClick={onValidate} role="menuitem" type="button">Validate workflow</button>
-          <button className="header-action-menu-item" onClick={onRun} role="menuitem" type="button">Run from Manual Trigger</button>
-          <span className="header-action-menu-separator" role="separator" />
-          <button className="header-action-menu-item" onClick={() => onStatus('Debug run options are ready to configure.')} role="menuitem" type="button">Debug run</button>
-          <button className="header-action-menu-item" onClick={() => onStatus('Execution history is available in the Logs rail.')} role="menuitem" type="button">Execution history</button>
-        </HeaderMenu>
-        <HeaderMenu id="runtime-options-menu" open={openAction === 'runtime'} onToggle={() => { setOpenMenu(null); setOpenAction(openAction === 'runtime' ? null : 'runtime') }} toggle={<span className="header-action-ellipsis">…</span>} label="Open runtime configurations">
-          {['Edit configurations', 'Environment variables', 'Runtime defaults', 'Permissions and scopes', 'View runtime details'].map((command, index) => (
-            <span key={command}>
-              {index === 4 && <span className="header-action-menu-separator" role="separator" />}
-              <button className="header-action-menu-item" onClick={() => onStatus(`${command} is ready to connect.`)} role="menuitem" type="button">{command}</button>
-            </span>
-          ))}
-        </HeaderMenu>
+      <div className="topbar-right-container">
+        <ProfileMenu
+          googleClientId={googleClientId}
+          onGoogleCredential={onGoogleCredential}
+          onGoogleError={onGoogleError}
+          onNativeValidate={onNativeValidate}
+          onSignOut={onSignOut}
+          profile={profile}
+          nativeValidationAvailable={nativeValidationAvailable}
+          nativeValidationNotice={nativeValidationNotice}
+        />
       </div>
     </header>
   )
-}
-
-interface HeaderMenuProps { id: string; open: boolean; onToggle: () => void; toggle: React.ReactNode; label: string; split?: boolean; primary?: boolean; children: React.ReactNode }
-
-function HeaderMenu({ id, open, onToggle, toggle, label, split, primary, children }: HeaderMenuProps) {
-  return <div className={`header-action-menu${open ? ' is-open' : ''}`}>
-    <div className={split ? 'header-action-split' : undefined}>
-      {split && (children as React.ReactNode[])[0]}
-      <button aria-controls={id} aria-expanded={open} aria-haspopup="menu" aria-label={label} className={`header-icon-button${primary ? ' primary' : ''}`} onClick={onToggle} type="button">{toggle}</button>
-    </div>
-    <div aria-label={label} className="header-action-menu-popover" id={id} role="menu">{split ? (children as React.ReactNode[]).slice(1) : children}</div>
-  </div>
 }

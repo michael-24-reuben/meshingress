@@ -54,7 +54,7 @@ public class DispatchExecutionResultJsonCodec {
         String type = item.path("type").asString("");
         if (ResultContent.TYPE_TEXT.equals(type)) {
             JsonNode text = item.path("text");
-            if (text.isTextual()) {
+            if (text.isString()) {
                 return ResultContent.text(text);
             }
             return ResultContent.text(text.asString(""));

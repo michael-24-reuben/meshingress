@@ -33,10 +33,10 @@ class McpDispatchExecutorTests {
         ToolRegistry registry = mock(ToolRegistry.class);
         ObjectNode annotations = objectMapper.createObjectNode().put("timeoutMs", 250);
         McpFunctionDescriptor function = new McpFunctionDescriptor(
-                "toonverse.download-book", "Download", "", 1, true, ToolVisibility.PUBLIC,
-                "toonverse.download-book", objectMapper.createObjectNode(), null, annotations, false
+                "open-ink-library.toonverse.download-book", "Download", "", 1, true, ToolVisibility.PUBLIC,
+                "open-ink-library.toonverse.download-book", objectMapper.createObjectNode(), null, annotations, false
         );
-        when(registry.findEnabledFunction("toonverse.download-book")).thenReturn(Optional.of(function));
+        when(registry.findEnabledFunction("open-ink-library.toonverse.download-book")).thenReturn(Optional.of(function));
 
         McpHandlerMethodInvoker invoker = mock(McpHandlerMethodInvoker.class);
         ObjectNode expected = objectMapper.createObjectNode().put("completed", true);
@@ -54,7 +54,7 @@ class McpDispatchExecutorTests {
         try {
             Method method = TestToolsController.class.getDeclaredMethod("call");
             McpDispatchHandlerMethod handler = new McpDispatchHandlerMethod("tools/call", new TestToolsController(), method, List.of());
-            ObjectNode params = objectMapper.createObjectNode().put("name", "toonverse.download-book");
+            ObjectNode params = objectMapper.createObjectNode().put("name", "open-ink-library.toonverse.download-book");
 
             assertEquals(expected, executor.execute(handler, params, new McpCallContext(null, null, "session-1", "request-1")));
         } finally {
@@ -69,7 +69,7 @@ class McpDispatchExecutorTests {
                 .put("timeoutMs", 25)
                 .put("progressReporter", true);
         McpFunctionDescriptor function = function(annotations);
-        when(registry.findEnabledFunction("toonverse.download-book")).thenReturn(Optional.of(function));
+        when(registry.findEnabledFunction("open-ink-library.toonverse.download-book")).thenReturn(Optional.of(function));
 
         McpHandlerMethodInvoker invoker = mock(McpHandlerMethodInvoker.class);
         ObjectNode expected = objectMapper.createObjectNode().put("completed", true);
@@ -96,7 +96,7 @@ class McpDispatchExecutorTests {
         ObjectNode annotations = objectMapper.createObjectNode()
                 .put("timeoutMs", 250)
                 .put("progressReporter", true);
-        when(registry.findEnabledFunction("toonverse.download-book")).thenReturn(Optional.of(function(annotations)));
+        when(registry.findEnabledFunction("open-ink-library.toonverse.download-book")).thenReturn(Optional.of(function(annotations)));
 
         McpHandlerMethodInvoker invoker = mock(McpHandlerMethodInvoker.class);
         when(invoker.invoke(any(), any(), any())).thenAnswer(ignored -> {
@@ -120,8 +120,8 @@ class McpDispatchExecutorTests {
 
     private McpFunctionDescriptor function(ObjectNode annotations) {
         return new McpFunctionDescriptor(
-                "toonverse.download-book", "Download", "", 1, true, ToolVisibility.PUBLIC,
-                "toonverse.download-book", objectMapper.createObjectNode(), null, annotations, false
+                "open-ink-library.toonverse.download-book", "Download", "", 1, true, ToolVisibility.PUBLIC,
+                "open-ink-library.toonverse.download-book", objectMapper.createObjectNode(), null, annotations, false
         );
     }
 
@@ -139,7 +139,7 @@ class McpDispatchExecutorTests {
     }
 
     private ObjectNode toolParams() {
-        return objectMapper.createObjectNode().put("name", "toonverse.download-book");
+        return objectMapper.createObjectNode().put("name", "open-ink-library.toonverse.download-book");
     }
 
     static final class TestToolsController {

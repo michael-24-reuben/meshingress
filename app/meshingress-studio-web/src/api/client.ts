@@ -1,9 +1,12 @@
-const configuredApiBaseUrl = import.meta.env.VITE_MESHINGRESS_API_BASE_URL
+import { RuntimeConfiguration } from '../runtime/RuntimeConfiguration'
 
-export const meshingressApiBaseUrl = (configuredApiBaseUrl ?? 'http://localhost:4737').replace(
-  /\/$/,
-  '',
-)
+export const meshingressApiBaseUrl = () => RuntimeConfiguration.current.apiBaseUrl
+
+let studioAccessToken = ''
+
+export function setStudioAccessToken(value: string | null): void {
+  studioAccessToken = value?.trim() ?? ''
+}
 
 export class MeshingressApiError extends Error {
   readonly status: number
@@ -18,12 +21,14 @@ export class MeshingressApiError extends Error {
 }
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${meshingressApiBaseUrl}${path}`, {
+  const headers = new Headers(init.headers)
+  headers.set('Accept', 'application/json')
+  if (studioAccessToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${studioAccessToken}`)
+  }
+  const response = await fetch(`${meshingressApiBaseUrl()}${path}`, {
     ...init,
-    headers: {
-      Accept: 'application/json',
-      ...init.headers,
-    },
+    headers,
   })
 
   const body = await readResponseBody(response)

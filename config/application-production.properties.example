@@ -1,0 +1,12 @@
+# Copy this file to application-production.properties on the production host.
+# The non-example file is Git-ignored and must contain the real values there only.
+
+meshingress.youtube.api-key=
+
+# Reserved for the future OAuth authorization-code integration. These are not used yet.
+meshingress.youtube.oauth.client-id=
+meshingress.youtube.oauth.client-secret=
+meshingress.youtube.oauth.redirect-uri=
+
+meshingress.youtube.data-api-base-url=https://www.googleapis.com/youtube/v3
+meshingress.youtube.request-timeout-ms=30000

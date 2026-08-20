@@ -58,7 +58,7 @@ function connect() {
             id: downloadCallId,
             method: "tools/call",
             params: {
-                name: "toonverse.download-book",
+                name: "open-ink-library.toonverse.download-book",
                 arguments: {name: bookName, minChapterNumber, maxChapterNumber, ttlSeconds, maxRequests},
             },
         }));

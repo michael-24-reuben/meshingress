@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.CompletableFuture;
@@ -61,7 +63,10 @@ public class McpDispatchExecutor implements DisposableBean {
     }
 
     public JsonNode execute(McpDispatchHandlerMethod handler, JsonNode params, McpInvocation invocation) {
-        McpCallContext context = invocation.context();
+        TimeoutPolicy policy = timeoutFor(handler, params);
+        AtomicBoolean cancelled = new AtomicBoolean();
+        McpCallContext context = invocation.context().withExecution(new dev.mrk.meshingress.api.McpExecutionControl(
+                Instant.now().plus(policy.timeout()), cancelled, invocation.context().progressReporter()));
         CompletableFuture<JsonNode> completion = new CompletableFuture<>();
         Future<JsonNode> future;
         try {
@@ -80,7 +85,6 @@ public class McpDispatchExecutor implements DisposableBean {
         }
 
         try {
-            TimeoutPolicy policy = timeoutFor(handler, params);
             if (invocation.transport() == McpInvocation.Transport.WEBSOCKET
                     && policy.progressReporter()
                     && invocation.progressLifecycle() != null) {
@@ -88,6 +92,7 @@ public class McpDispatchExecutor implements DisposableBean {
             }
             return awaitCompletion(future, completion, policy.timeout());
         } finally {
+            cancelled.set(true);
             if (invocation.progressLifecycle() != null && !invocation.progressLifecycle().terminalReported()) {
                 invocation.progressLifecycle().close();
             }

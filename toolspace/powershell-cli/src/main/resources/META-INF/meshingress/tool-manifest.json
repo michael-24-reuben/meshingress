@@ -1,6 +1,28 @@
 {
-  "schemaVersion": 1,
-  "toolId": "cli.powershell",
+  "schemaVersion": 2,
+  "metadata": {
+    "namespace": "powershell",
+    "title": "PowerShell CLI",
+    "summary": "PowerShell command execution",
+    "description": "Executes PowerShell scripts through the PowerShell tool functions.",
+    "authors": [
+      {
+        "name": "Markus Ressel",
+        "urls": ["mailto:markus@ressel.dev"]
+      }
+    ],
+    "license": "",
+    "tags": ["powershell", "cli"],
+    "links": [
+      {"kind": "documentation", "url": "https://learn.microsoft.com/powershell/", "label": "PowerShell Documentation"},
+      {"kind": "source", "url": "https://github.com/PowerShell/PowerShell", "label": "PowerShell GitHub Repository"}
+    ],
+    "icon": {
+      "resourcePath": "powershell.svg",
+      "mimeType": "SVG_IMAGE",
+      "accessibleLabel": "PowerShell"
+    }
+  },
   "properties": [
     {
       "name": "meshingress.powershell.executable",
@@ -66,17 +88,5 @@
       "canonicalIdentity": ""
     }
   ],
-  "links": [
-    {
-      "kind": "documentation",
-      "url": "https://learn.microsoft.com/powershell/",
-      "label": "PowerShell Documentation"
-    },
-    {
-      "kind": "source",
-      "url": "https://github.com/PowerShell/PowerShell",
-      "label": "PowerShell GitHub Repository"
-    }
-  ],
-  "readme": "# PowerShell CLI\n\nExecutes PowerShell scripts through the `cli.powershell.execute` MCP function.\n\nNative deployments require a PowerShell executable. By default, Meshingress uses `pwsh`.\nOverride this through `meshingress.powershell.executable` when needed.\nConfigure `resources/application.properties` beside this artifact when a native deployment needs a host-specific PowerShell executable or timeout default."
+  "readme": "# PowerShell CLI\n\nExecutes PowerShell scripts through the `powershell.cli.execute` MCP function.\n\nNative deployments require a PowerShell executable. By default, Meshingress uses `pwsh`.\nOverride this through `meshingress.powershell.executable` when needed.\nConfigure `resources/application.properties` beside this artifact when a native deployment needs a host-specific PowerShell executable or timeout default."
 }

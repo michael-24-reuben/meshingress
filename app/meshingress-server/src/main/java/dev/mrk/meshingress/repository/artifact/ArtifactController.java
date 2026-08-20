@@ -187,6 +187,39 @@ public class ArtifactController {
         }
     }
 
+    @GetMapping(path = "/{groupId}/{artifactId}/{version}/icon")
+    @Operation(summary = "Get a declared tool icon", description = "Returns only the artifact-local icon declared by the reviewed tool manifest.")
+    @ArtifactOpenApiHeaders
+    public ResponseEntity<Resource> icon(
+            @PathVariable String groupId,
+            @PathVariable String artifactId,
+            @PathVariable String version,
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestHeader(value = "X-Repository-Role", required = false) String role,
+            @RequestHeader(value = "X-Repository-Actor", required = false) String actor,
+            @RequestHeader(value = "X-Request-Id", required = false) String requestId
+    ) {
+        accessPolicy.require(context(authorization, role, actor, requestId), RepositoryAction.READ);
+        ArtifactIconResource icon;
+        try {
+            icon = artifactService.artifactIcon(groupId, artifactId, version);
+        } catch (RepositoryException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
+        }
+        try {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(icon.mimeType()))
+                    .contentLength(Files.size(icon.path()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                            .filename(icon.path().getFileName().toString())
+                            .build()
+                            .toString())
+                    .body(new FileSystemResource(icon.path()));
+        } catch (Exception exception) {
+            throw new RepositoryException("artifact icon download failed: " + exception.getMessage(), exception);
+        }
+    }
+
     @PostMapping("/{groupId}/{artifactId}/{version}/assess")
     @Operation(summary = "Assess an artifact", description = "Runs the configured assessment pipeline and records its resulting lifecycle state.")
     @ArtifactOpenApiHeaders

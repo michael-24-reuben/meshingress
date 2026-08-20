@@ -63,6 +63,18 @@ class FileToolRegistrationStoreTests {
         assertThat(restartedStore.findActive("sample.echo")).isEmpty();
     }
 
+    @Test
+    void currentFunctionConflictsSurviveStoreRestart() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        FileToolRegistrationStore firstStore = new FileToolRegistrationStore(objectMapper, meshingressProperties());
+        ToolContributionConflict conflict = new ToolContributionConflict("youtube", "youtube.video.metadata", "official", "extension",
+                OffsetDateTime.parse("2026-08-07T00:00:00Z"));
+        firstStore.replaceConflicts("youtube", List.of(conflict));
+
+        FileToolRegistrationStore restartedStore = new FileToolRegistrationStore(objectMapper, meshingressProperties());
+        assertThat(restartedStore.listConflicts("youtube")).containsExactly(conflict);
+    }
+
     private ToolRegistrationRecord record(String registrationId, String status) {
         return new ToolRegistrationRecord(
                 registrationId,

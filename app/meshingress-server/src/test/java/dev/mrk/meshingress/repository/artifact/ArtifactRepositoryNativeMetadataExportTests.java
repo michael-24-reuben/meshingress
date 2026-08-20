@@ -75,7 +75,7 @@ class ArtifactRepositoryNativeMetadataExportTests {
                 .contains("# Native Metadata Sample")
                 .contains("README content exported beside the assessed artifact.");
         org.assertj.core.api.Assertions.assertThat(Files.readString(artifactDirectory.resolve("resources/tool-manifest.json")))
-                .contains("\"toolId\":\"sample.native\"")
+                .contains("\"namespace\":\"sample\"")
                 .contains("\"meshingress.sample.native.command\"");
 
         mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/application.properties")
@@ -85,7 +85,12 @@ class ArtifactRepositoryNativeMetadataExportTests {
         mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/resources/tool-manifest.json")
                         .header("X-Repository-Role", "reviewer"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("\"toolId\":\"sample.native\"")));
+                .andExpect(content().string(containsString("\"namespace\":\"sample\"")));
+        mockMvc.perform(get("/api/v1/artifact/dev.mrk.tools/native-metadata-sample/1.0.0/icon")
+                        .header("X-Repository-Role", "reviewer"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/svg+xml"))
+                .andExpect(content().string(containsString("Native sample icon")));
     }
 
     private byte[] sampleJarBytes() throws Exception {
@@ -97,6 +102,10 @@ class ArtifactRepositoryNativeMetadataExportTests {
 
             zip.putNextEntry(new ZipEntry("META-INF/meshingress/tool-manifest.json"));
             zip.write(nativeManifestJson().getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+
+            zip.putNextEntry(new ZipEntry("icons/sample.svg"));
+            zip.write("<svg xmlns=\"http://www.w3.org/2000/svg\"><title>Native sample icon</title></svg>".getBytes(StandardCharsets.UTF_8));
             zip.closeEntry();
 
             String fixtureClass = NativeMetadataFixture.class.getName().replace('.', '/') + ".class";
@@ -118,8 +127,22 @@ class ArtifactRepositoryNativeMetadataExportTests {
     private String nativeManifestJson() {
         return """
                 {
-                  "schemaVersion": 1,
-                  "toolId": "sample.native",
+                  "schemaVersion": 2,
+                  "metadata": {
+                    "namespace": "sample",
+                    "title": "Native sample",
+                    "summary": "",
+                    "description": "",
+                    "authors": [],
+                    "license": "",
+                    "tags": [],
+                    "links": [],
+                    "icon": {
+                      "resourcePath": "icons/sample.svg",
+                      "mimeType": "image/svg+xml",
+                      "accessibleLabel": "Native sample icon"
+                    }
+                  },
                   "properties": [
                     {
                       "name": "meshingress.sample.native.command",
@@ -131,8 +154,7 @@ class ArtifactRepositoryNativeMetadataExportTests {
                     }
                   ],
                   "requirements": [],
-                  "links": [],
-                  "readme": "# Native Metadata Sample\\n\\nREADME content exported beside the assessed artifact."
+                  "readme": { "markdown": "# Native Metadata Sample\\n\\nREADME content exported beside the assessed artifact." }
                 }
                 """;
     }

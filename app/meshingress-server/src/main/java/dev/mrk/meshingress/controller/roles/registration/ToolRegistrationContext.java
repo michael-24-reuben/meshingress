@@ -10,7 +10,7 @@ public record ToolRegistrationContext(
         OffsetDateTime requestedAt
 ) {
     public static ToolRegistrationContext from(McpCallContext call) {
-        String actor = call.authorizationHeader() == null ? "role-header" : "bearer-role-admin";
+        String actor = call == null ? "unknown" : call.principal().subject();
         return new ToolRegistrationContext(call, actor, OffsetDateTime.now());
     }
 }

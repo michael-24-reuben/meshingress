@@ -17,6 +17,7 @@ public final class JsonRpcErrorCodes {
     public static final int TOOL_UNAVAILABLE = -32004;
     public static final int TOOL_TIMEOUT = -32005;
     public static final int TOOL_EXECUTION_FAILED = -32006;
+    public static final int REVISION_CONFLICT = -32007;
 
     private JsonRpcErrorCodes() {}
 }

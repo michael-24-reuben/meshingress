@@ -20,6 +20,7 @@ public class McpToolMetadata {
     private final ClassMappedMcpToolArtifactDirectoryResolver resolver;
     private final Map<Class<?>, CachedToolMetadata> cache = new WeakHashMap<>();
     private final Map<Class<?>, McpToolNativeMetadata> registeredManifests = new WeakHashMap<>();
+    private final Map<Class<?>, McpToolManifestDefinition> registeredManifestDefinitions = new WeakHashMap<>();
 
     public McpToolMetadata() {
         this(new ClassMappedMcpToolArtifactDirectoryResolver());
@@ -37,15 +38,26 @@ public class McpToolMetadata {
     }
 
     public synchronized void registerManifest(Class<?> toolClass, McpToolManifestDefinition manifest) {
-        registerManifest(toolClass, McpToolNativeMetadata.fromManifest(manifest));
+        if (toolClass == null) {
+            throw new IllegalArgumentException("toolClass must not be null");
+        }
+        registeredManifestDefinitions.put(toolClass, manifest);
+        registeredManifests.put(toolClass, McpToolNativeMetadata.fromManifest(manifest));
+        evict(toolClass);
     }
 
     public synchronized void registerManifest(Class<?> toolClass, McpToolNativeMetadata metadata) {
         if (toolClass == null) {
             throw new IllegalArgumentException("toolClass must not be null");
         }
+        registeredManifestDefinitions.remove(toolClass);
         registeredManifests.put(toolClass, metadata == null ? McpToolNativeMetadata.empty() : metadata);
         evict(toolClass);
+    }
+
+    /** Returns the classpath manifest instance associated with a tool class, if one was registered. */
+    public synchronized Optional<McpToolManifestDefinition> registeredManifestDefinition(Class<?> toolClass) {
+        return Optional.ofNullable(registeredManifestDefinitions.get(toolClass));
     }
 
     public List<McpToolPropertyMetadata> toolProperties(Class<?> toolClass) {
@@ -69,6 +81,18 @@ public class McpToolMetadata {
 
     public String toolReadme(Class<?> toolClass) {
         return metadata(toolClass).readme();
+    }
+
+    /** Returns the manifest-owned namespace and presentation metadata for an annotated tool class. */
+    public ToolModuleMetadata moduleMetadata(Class<?> toolClass) {
+        if (toolClass == null) {
+            throw new IllegalArgumentException("toolClass must not be null");
+        }
+        Path artifactDirectory = resolver.artifactDirectory(toolClass).orElse(null);
+        McpToolNativeMetadata manifest = artifactDirectory == null
+                ? registeredManifest(toolClass)
+                : readManifest(artifactDirectory).orElseGet(() -> registeredManifest(toolClass));
+        return manifest.metadata();
     }
 
     public synchronized void evict(Class<?> toolClass) {

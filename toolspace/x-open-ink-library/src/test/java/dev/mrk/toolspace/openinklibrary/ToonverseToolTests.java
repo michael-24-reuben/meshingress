@@ -312,13 +312,13 @@ class ToonverseToolTests {
 
     @Test
     void reflectionDiscoversOnlyTheFetchAndSearchSourceOperations() {
-        var annotation = new McpToolAnnotationScanner(objectMapper).scan(ToonverseTool.class);
+        var annotation = new McpToolAnnotationScanner(objectMapper, new OpenInkLibraryManifest()).scan(ToonverseTool.class);
 
-        assertEquals("toonverse", annotation.descriptor().name());
-        assertEquals(java.util.Set.of("toonverse.fetch", "toonverse.fetch-full", "toonverse.fetch-chapter", "toonverse.fetch-chapters", "toonverse.download-book", "toonverse.search"),
+        assertEquals("open-ink-library.toonverse", annotation.descriptor().name());
+        assertEquals(java.util.Set.of("open-ink-library.toonverse.fetch", "open-ink-library.toonverse.fetch-full", "open-ink-library.toonverse.fetch-chapter", "open-ink-library.toonverse.fetch-chapters", "open-ink-library.toonverse.download-book", "open-ink-library.toonverse.search"),
                 annotation.functions().stream().map(function -> function.descriptor().name()).collect(java.util.stream.Collectors.toSet()));
         assertEquals(900_000L, annotation.functions().stream()
-                .filter(function -> function.descriptor().name().equals("toonverse.download-book"))
+                .filter(function -> function.descriptor().name().equals("open-ink-library.toonverse.download-book"))
                 .findFirst().orElseThrow().descriptor().annotations().path("timeoutMs").asLong());
     }
 

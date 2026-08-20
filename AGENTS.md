@@ -51,7 +51,7 @@ What to know about MCP (concrete patterns)
 - Protocol: JSON-RPC 2.0. Dispatcher expects `jsonrpc: "2.0"` and supports single requests and batches.
 - Supported methods (as implemented): `initialize`, `notifications/initialized`, `ping`, `tools/list`, `tools/call`, and role-gated methods under `roles/tools/*` (check/register/update/delete/list/reload).
 - Initialization: `initialize` returns `protocolVersion` (default constant `2025-11-25`) and `capabilities.tools.listChanged = true`.
-- Tool call shape: POST `/mcp` body {"jsonrpc":"2.0","id":...,"method":"tools/call","params":{"name":"<tool>","arguments":{...}}}
+- Tool call shape: POST `/mcp` body {"jsonrpc":"2.0","id":...,"method":"tools/call","params":{"name":"<namespace>.<tool>.<function>","arguments":{...}}}
 - MCP WebSocket transport uses the same JSON-RPC methods at `meshingress.mcp.websocket.path` (default `/mcp/ws`); see `samples/mcp-websocket/README.md`.
 - Tool integration points to implement or inspect:
   - `ToolRegistry#listPublicEnabledTools()` — dispatcher uses this to produce `tools/list`.
@@ -96,7 +96,7 @@ Quick JSON-RPC examples
 - tools/list request:
   {"jsonrpc":"2.0","id":1,"method":"tools/list"}
 - tools/call request (example):
-  {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"helloworld.greet","arguments":{"name":"Meshingress"}}}
+  {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"helloworld.greeting.greet","arguments":{"name":"Meshingress"}}}
 
 Where to look for missing pieces
 --------------------------------

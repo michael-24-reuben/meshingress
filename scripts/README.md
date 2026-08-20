@@ -40,4 +40,6 @@ bash ./scripts/Meshingress.sh Stop
 
 `Headless` / `--headless` starts the application through a detached launcher. Logs are written to `var/logs/meshingress/`; managed process state is stored in `var/run/meshingress-services.json`. Both paths are ignored by Git.
 
+When that state file is absent, the Windows launcher can adopt a healthy server already listening on the configured port if its Java command line identifies either the packaged Meshingress JAR or the exact `dev.mrk.meshingress.MeshingressApplication` development main class. This includes a local `spring-boot:run` instance; because it was not launcher-started, its Maven console output is not available through `-Action Logs`.
+
 The launchers block duplicate starts and existing port listeners, and wait for the anonymous actuator health endpoint before reporting success. Use `ServerAddress` / `--server-address` and `ServerPort` / `--server-port` to override the normal binding.

@@ -5,7 +5,6 @@ import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
-import dev.mrk.meshingress.api.tools.annotation.McpToolMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.dispatch.data.RecordsContent;
 import dev.mrk.meshingress.dispatch.text.CodeContent;
@@ -16,9 +15,8 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 
-@McpTool(value = "code-block.transform", title = "Transform", description = "Backend-only polyglot transformations from ritz078/transform.")
+@McpTool(value = "code-block", title = "Transform", description = "Backend-only polyglot transformations from ritz078/transform.")
 @McpToolScopes(McpToolScope.PROCESS_EXECUTE)
-@McpToolMapping("tools")
 public final class TransformTool {
     private final ObjectMapper objectMapper;
     private final TransformBackend backend;

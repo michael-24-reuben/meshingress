@@ -42,7 +42,7 @@ public class McpCacheKeyGenerator {
             keyMaterial.put("functionName", functionName);
         }
         if (policy.includePrincipal()) {
-            keyMaterial.put("principal", context.authorizationHeader() == null ? "" : context.authorizationHeader());
+            keyMaterial.put("principal", context == null ? "" : context.principal().subject());
         }
         if (policy.includeSession()) {
             keyMaterial.put("sessionId", context.sessionId() == null ? "" : context.sessionId());

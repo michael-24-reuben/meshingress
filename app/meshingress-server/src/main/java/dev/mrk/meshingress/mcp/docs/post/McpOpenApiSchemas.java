@@ -49,6 +49,19 @@ public final class McpOpenApiSchemas {
     ) {
     }
 
+    @Schema(name = "McpJsonRpcResponse", description = "Generic JSON-RPC 2.0 response returned by the MCP transport.")
+    public record JsonRpcResponse(
+            @Schema(description = "JSON-RPC protocol version.", allowableValues = "2.0", example = "2.0")
+            String jsonrpc,
+            @Schema(description = "The request identifier, or null when JSON-RPC requires it.", example = "1")
+            Object id,
+            @Schema(description = "Successful method result. The concrete shape depends on the invoked MCP method.", implementation = Object.class)
+            Object result,
+            @Schema(description = "JSON-RPC error object when the method cannot be completed.", implementation = Object.class)
+            Object error
+    ) {
+    }
+
     @Schema(name = "McpInitializeRequest", description = "Initializes an MCP session and returns server capabilities.")
     public record InitializeRequest(
             @Schema(description = "JSON-RPC protocol version.", allowableValues = "2.0", example = "2.0", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -238,7 +251,7 @@ public final class McpOpenApiSchemas {
 
     @Schema(name = "McpToolsCallParams", description = "Parameters for tools/call.")
     public record ToolsCallParams(
-            @Schema(description = "Name of the MCP tool function to invoke.", example = "helloworld.greet", requiredMode = Schema.RequiredMode.REQUIRED)
+            @Schema(description = "Name of the MCP tool function to invoke.", example = "helloworld.greeting.greet", requiredMode = Schema.RequiredMode.REQUIRED)
             String name,
             @Schema(description = "Tool-specific arguments object. Its schema is supplied by tools/list for each tool.", implementation = Map.class, example = "{\"name\":\"Meshingress\"}")
             Map<String, Object> arguments

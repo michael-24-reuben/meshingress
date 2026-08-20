@@ -21,7 +21,7 @@ class McpToolManifestExecutorTests {
         McpToolManifestExecutor.export(SampleManifest.class.getName(), output);
 
         McpToolNativeMetadata metadata = McpToolManifestJson.read(output);
-        assertThat(metadata.toolId()).isEqualTo("sample.executor");
+        assertThat(metadata.metadata().namespace()).isEqualTo("sample");
         assertThat(metadata.properties()).extracting(ToolProperty::name).containsExactly("sample.executor.enabled");
     }
 
@@ -35,8 +35,8 @@ class McpToolManifestExecutorTests {
     public static final class SampleManifest implements McpToolManifestDefinition {
 
         @Override
-        public String toolId() {
-            return "sample.executor";
+        public ToolModuleMetadata metadata() {
+            return new ToolModuleMetadata("sample", "Sample", "", "", List.of(), "", List.of(), List.of(), null);
         }
 
         @Override

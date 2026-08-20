@@ -1,0 +1,1398 @@
+openapi: 3.1.0
+info:
+  title: Meshingress MCP Dispatch API
+  version: v0
+  description: Reflection-scraped MCP dispatch methods discovered from @McpDispatchMapping classes.
+servers:
+- url: http://100.121.15.11:4737
+  description: Generated server url
+tags:
+- name: Internal MCP
+  description: Core MCP lifecycle and transport control methods.
+- name: Roles MCP
+  description: Role-gated registry and publication management methods.
+- name: Storage MCP
+  description: MCP workspace publication state lookup methods.
+x-dispatch-map:
+  targetModules:
+  - app/meshingress-server
+  scanBasePackages:
+  - dev.mrk.meshingress
+  methods:
+  - method: initialize
+    className: dev.mrk.meshingress.controller.internal.InternalMcpController
+    javaMethod: initialize
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: notifications/initialized
+    className: dev.mrk.meshingress.controller.internal.InternalMcpController
+    javaMethod: initialized
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: ping
+    className: dev.mrk.meshingress.controller.internal.InternalMcpController
+    javaMethod: ping
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/credential-bindings/get
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: bindingsGet
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/credential-bindings/list
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: bindingsList
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/activate
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profilesActivate
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/create
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profilesCreate
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/credentials/bind
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: credentialsBind
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/credentials/replace
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: credentialsReplace
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/credentials/revoke
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: credentialsRevoke
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/credentials/unbind
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: credentialsUnbind
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/disable
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profilesDisable
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/get
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profilesGet
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/identities/link
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: identitiesLink
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/identities/unlink
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: identitiesUnlink
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/limits/get
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profileLimitsGet
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/limits/update
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profileLimitsUpdate
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/list
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profilesList
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/revoke
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profilesRevoke
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/update
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profilesUpdate
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/profiles/usage/list
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: profileUsageList
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/tool-policies/create
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: policiesCreate
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/tool-policies/delete
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: policiesDelete
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/tool-policies/evaluate
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: policiesEvaluate
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/tool-policies/get
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: policiesGet
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/tool-policies/list
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: policiesList
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/security/tool-policies/update
+    className: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+    javaMethod: policiesUpdate
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: roles/tools/alias
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: alias
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/check
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: check
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/contributions/list
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: listContributions
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/contributions/update
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: updateContribution
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/delete
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: delete
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/installPublication
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: installPublication
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/list
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: list
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/register
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: register
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/reload
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: reload
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: roles/tools/update
+    className: dev.mrk.meshingress.controller.roles.RolesMcpController
+    javaMethod: update
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.JsonNode
+  - method: security/whoami
+    className: dev.mrk.meshingress.controller.security.SecurityMcpController
+    javaMethod: whoami
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: storage/publication-status
+    className: dev.mrk.meshingress.storage.mcp.StoragePublicationMcpController
+    javaMethod: publicationStatus
+    paramsType: dev.mrk.meshingress.storage.mcp.StoragePublicationStatusParams
+    returnType: dev.mrk.meshingress.api.storage.ToolStoragePublicationStatus
+  - method: tools/call
+    className: dev.mrk.meshingress.controller.tools.ToolsMcpController
+    javaMethod: toolsCall
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+  - method: tools/list
+    className: dev.mrk.meshingress.controller.tools.ToolsMcpController
+    javaMethod: toolsList
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
+paths:
+  /mcp:
+    post:
+      tags:
+      - mcp-controller
+      summary: Dispatch annotated MCP JSON-RPC requests
+      description: JSON-RPC 2.0 requests routed through methods discovered by @McpDispatchMapping and @McpDispatchMethod.
+      operationId: postDispatchAnnotatedMethods
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          type: string
+        example: Bearer dev-admin
+      - name: X-Mcp-Role
+        in: header
+        required: false
+        schema:
+          type: string
+        example: admin
+      - name: X-Mcp-Admin
+        in: header
+        required: false
+        schema:
+          type: string
+        example: 'true'
+      - name: Mcp-Session-Id
+        in: header
+        required: false
+        schema:
+          type: string
+        example: session-123
+      - name: X-Request-Id
+        in: header
+        required: false
+        schema:
+          type: string
+        example: req-123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/McpInitializeRequest'
+              - $ref: '#/components/schemas/McpNotificationsInitializedRequest'
+              - $ref: '#/components/schemas/McpPingRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityCredentialBindingsGetRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityCredentialBindingsListRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesActivateRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesCreateRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesCredentialsBindRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesCredentialsReplaceRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesCredentialsRevokeRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesCredentialsUnbindRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesDisableRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesGetRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesIdentitiesLinkRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesIdentitiesUnlinkRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesLimitsGetRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesLimitsUpdateRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesListRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesRevokeRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesUpdateRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityProfilesUsageListRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityToolPoliciesCreateRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityToolPoliciesDeleteRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityToolPoliciesEvaluateRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityToolPoliciesGetRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityToolPoliciesListRequest'
+              - $ref: '#/components/schemas/McpRolesSecurityToolPoliciesUpdateRequest'
+              - $ref: '#/components/schemas/McpRolesToolsAliasRequest'
+              - $ref: '#/components/schemas/McpRolesToolsCheckRequest'
+              - $ref: '#/components/schemas/McpRolesToolsContributionsListRequest'
+              - $ref: '#/components/schemas/McpRolesToolsContributionsUpdateRequest'
+              - $ref: '#/components/schemas/McpRolesToolsDeleteRequest'
+              - $ref: '#/components/schemas/McpRolesToolsInstallPublicationRequest'
+              - $ref: '#/components/schemas/McpRolesToolsListRequest'
+              - $ref: '#/components/schemas/McpRolesToolsRegisterRequest'
+              - $ref: '#/components/schemas/McpRolesToolsReloadRequest'
+              - $ref: '#/components/schemas/McpRolesToolsUpdateRequest'
+              - $ref: '#/components/schemas/McpSecurityWhoamiRequest'
+              - $ref: '#/components/schemas/McpStoragePublicationStatusRequest'
+              - $ref: '#/components/schemas/McpToolsCallRequest'
+              - $ref: '#/components/schemas/McpToolsListRequest'
+      responses:
+        '200':
+          description: JSON-RPC response object or response batch.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '204':
+          description: Notification-only request produced no response body.
+components:
+  schemas:
+    McpInitializeRequest:
+      type: object
+      description: MCP request for initialize.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - initialize
+          example: initialize
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.internal.InternalMcpController
+      x-dispatch-java-method: initialize
+    McpNotificationsInitializedRequest:
+      type: object
+      description: MCP request for notifications/initialized.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - notifications/initialized
+          example: notifications/initialized
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.internal.InternalMcpController
+      x-dispatch-java-method: initialized
+    McpPingRequest:
+      type: object
+      description: MCP request for ping.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - ping
+          example: ping
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.internal.InternalMcpController
+      x-dispatch-java-method: ping
+    McpRolesSecurityCredentialBindingsGetRequest:
+      type: object
+      description: MCP request for roles/security/credential-bindings/get.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/credential-bindings/get
+          example: roles/security/credential-bindings/get
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: bindingsGet
+    McpRolesSecurityCredentialBindingsListRequest:
+      type: object
+      description: MCP request for roles/security/credential-bindings/list.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/credential-bindings/list
+          example: roles/security/credential-bindings/list
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: bindingsList
+    McpRolesSecurityProfilesActivateRequest:
+      type: object
+      description: MCP request for roles/security/profiles/activate.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/activate
+          example: roles/security/profiles/activate
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profilesActivate
+    McpRolesSecurityProfilesCreateRequest:
+      type: object
+      description: MCP request for roles/security/profiles/create.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/create
+          example: roles/security/profiles/create
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profilesCreate
+    McpRolesSecurityProfilesCredentialsBindRequest:
+      type: object
+      description: MCP request for roles/security/profiles/credentials/bind.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/credentials/bind
+          example: roles/security/profiles/credentials/bind
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: credentialsBind
+    McpRolesSecurityProfilesCredentialsReplaceRequest:
+      type: object
+      description: MCP request for roles/security/profiles/credentials/replace.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/credentials/replace
+          example: roles/security/profiles/credentials/replace
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: credentialsReplace
+    McpRolesSecurityProfilesCredentialsRevokeRequest:
+      type: object
+      description: MCP request for roles/security/profiles/credentials/revoke.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/credentials/revoke
+          example: roles/security/profiles/credentials/revoke
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: credentialsRevoke
+    McpRolesSecurityProfilesCredentialsUnbindRequest:
+      type: object
+      description: MCP request for roles/security/profiles/credentials/unbind.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/credentials/unbind
+          example: roles/security/profiles/credentials/unbind
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: credentialsUnbind
+    McpRolesSecurityProfilesDisableRequest:
+      type: object
+      description: MCP request for roles/security/profiles/disable.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/disable
+          example: roles/security/profiles/disable
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profilesDisable
+    McpRolesSecurityProfilesGetRequest:
+      type: object
+      description: MCP request for roles/security/profiles/get.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/get
+          example: roles/security/profiles/get
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profilesGet
+    McpRolesSecurityProfilesIdentitiesLinkRequest:
+      type: object
+      description: MCP request for roles/security/profiles/identities/link.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/identities/link
+          example: roles/security/profiles/identities/link
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: identitiesLink
+    McpRolesSecurityProfilesIdentitiesUnlinkRequest:
+      type: object
+      description: MCP request for roles/security/profiles/identities/unlink.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/identities/unlink
+          example: roles/security/profiles/identities/unlink
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: identitiesUnlink
+    McpRolesSecurityProfilesLimitsGetRequest:
+      type: object
+      description: MCP request for roles/security/profiles/limits/get.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/limits/get
+          example: roles/security/profiles/limits/get
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profileLimitsGet
+    McpRolesSecurityProfilesLimitsUpdateRequest:
+      type: object
+      description: MCP request for roles/security/profiles/limits/update.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/limits/update
+          example: roles/security/profiles/limits/update
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profileLimitsUpdate
+    McpRolesSecurityProfilesListRequest:
+      type: object
+      description: MCP request for roles/security/profiles/list.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/list
+          example: roles/security/profiles/list
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profilesList
+    McpRolesSecurityProfilesRevokeRequest:
+      type: object
+      description: MCP request for roles/security/profiles/revoke.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/revoke
+          example: roles/security/profiles/revoke
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profilesRevoke
+    McpRolesSecurityProfilesUpdateRequest:
+      type: object
+      description: MCP request for roles/security/profiles/update.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/update
+          example: roles/security/profiles/update
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profilesUpdate
+    McpRolesSecurityProfilesUsageListRequest:
+      type: object
+      description: MCP request for roles/security/profiles/usage/list.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/profiles/usage/list
+          example: roles/security/profiles/usage/list
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: profileUsageList
+    McpRolesSecurityToolPoliciesCreateRequest:
+      type: object
+      description: MCP request for roles/security/tool-policies/create.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/tool-policies/create
+          example: roles/security/tool-policies/create
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: policiesCreate
+    McpRolesSecurityToolPoliciesDeleteRequest:
+      type: object
+      description: MCP request for roles/security/tool-policies/delete.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/tool-policies/delete
+          example: roles/security/tool-policies/delete
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: policiesDelete
+    McpRolesSecurityToolPoliciesEvaluateRequest:
+      type: object
+      description: MCP request for roles/security/tool-policies/evaluate.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/tool-policies/evaluate
+          example: roles/security/tool-policies/evaluate
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: policiesEvaluate
+    McpRolesSecurityToolPoliciesGetRequest:
+      type: object
+      description: MCP request for roles/security/tool-policies/get.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/tool-policies/get
+          example: roles/security/tool-policies/get
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: policiesGet
+    McpRolesSecurityToolPoliciesListRequest:
+      type: object
+      description: MCP request for roles/security/tool-policies/list.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/tool-policies/list
+          example: roles/security/tool-policies/list
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: policiesList
+    McpRolesSecurityToolPoliciesUpdateRequest:
+      type: object
+      description: MCP request for roles/security/tool-policies/update.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/security/tool-policies/update
+          example: roles/security/tool-policies/update
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.RolesSecurityMcpController
+      x-dispatch-java-method: policiesUpdate
+    McpRolesToolsAliasRequest:
+      type: object
+      description: MCP request for roles/tools/alias.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/alias
+          example: roles/tools/alias
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: alias
+    McpRolesToolsCheckRequest:
+      type: object
+      description: MCP request for roles/tools/check.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/check
+          example: roles/tools/check
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: check
+    McpRolesToolsContributionsListRequest:
+      type: object
+      description: MCP request for roles/tools/contributions/list.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/contributions/list
+          example: roles/tools/contributions/list
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: listContributions
+    McpRolesToolsContributionsUpdateRequest:
+      type: object
+      description: MCP request for roles/tools/contributions/update.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/contributions/update
+          example: roles/tools/contributions/update
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: updateContribution
+    McpRolesToolsDeleteRequest:
+      type: object
+      description: MCP request for roles/tools/delete.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/delete
+          example: roles/tools/delete
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: delete
+    McpRolesToolsInstallPublicationRequest:
+      type: object
+      description: MCP request for roles/tools/installPublication.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/installPublication
+          example: roles/tools/installPublication
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: installPublication
+    McpRolesToolsListRequest:
+      type: object
+      description: MCP request for roles/tools/list.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/list
+          example: roles/tools/list
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: list
+    McpRolesToolsRegisterRequest:
+      type: object
+      description: MCP request for roles/tools/register.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/register
+          example: roles/tools/register
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: register
+    McpRolesToolsReloadRequest:
+      type: object
+      description: MCP request for roles/tools/reload.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/reload
+          example: roles/tools/reload
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: reload
+    McpRolesToolsUpdateRequest:
+      type: object
+      description: MCP request for roles/tools/update.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - roles/tools/update
+          example: roles/tools/update
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.roles.RolesMcpController
+      x-dispatch-java-method: update
+    McpSecurityWhoamiRequest:
+      type: object
+      description: MCP request for security/whoami.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - security/whoami
+          example: security/whoami
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.security.SecurityMcpController
+      x-dispatch-java-method: whoami
+    McpStoragePublicationStatusRequest:
+      type: object
+      description: MCP request for storage/publication-status.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - storage/publication-status
+          example: storage/publication-status
+        params:
+          $ref: '#/components/schemas/StoragePublicationStatusParams'
+      required:
+      - jsonrpc
+      - id
+      - method
+      - params
+      x-dispatch-class: dev.mrk.meshingress.storage.mcp.StoragePublicationMcpController
+      x-dispatch-java-method: publicationStatus
+    McpToolsCallRequest:
+      type: object
+      description: MCP request for tools/call.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - tools/call
+          example: tools/call
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.tools.ToolsMcpController
+      x-dispatch-java-method: toolsCall
+    McpToolsListRequest:
+      type: object
+      description: MCP request for tools/list.
+      properties:
+        jsonrpc:
+          type: string
+          enum:
+          - '2.0'
+          example: '2.0'
+        id:
+          description: Client-supplied request identifier.
+          example: 1
+        method:
+          type: string
+          enum:
+          - tools/list
+          example: tools/list
+        params:
+          type: object
+          additionalProperties: true
+      required:
+      - jsonrpc
+      - id
+      - method
+      x-dispatch-class: dev.mrk.meshingress.controller.tools.ToolsMcpController
+      x-dispatch-java-method: toolsList
+    StoragePublicationStatusParams:
+      type: object
+      description: Schema for dev.mrk.meshingress.storage.mcp.StoragePublicationStatusParams.
+      properties:
+        sessionId:
+          type: string
+        requestId:
+          type: string

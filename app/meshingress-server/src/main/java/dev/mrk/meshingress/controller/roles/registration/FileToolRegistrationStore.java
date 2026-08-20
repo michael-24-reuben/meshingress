@@ -16,13 +16,15 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-class FileToolRegistrationStore implements ToolRegistrationStore {
+class FileToolRegistrationStore implements ToolRegistrationStore, ToolContributionStore {
 
-    private static final int SCHEMA_VERSION = 1;
+    private static final int SCHEMA_VERSION = 3;
 
     private final ObjectMapper objectMapper;
     private final Path storePath;
     private final Map<String, ToolRegistrationRecord> records = new LinkedHashMap<>();
+    private final Map<String, ToolContributionRecord> contributions = new LinkedHashMap<>();
+    private final Map<String, ToolContributionConflict> conflicts = new LinkedHashMap<>();
 
     FileToolRegistrationStore(ObjectMapper objectMapper, MeshingressProperties properties) {
         this.objectMapper = objectMapper;
@@ -79,17 +81,63 @@ class FileToolRegistrationStore implements ToolRegistrationStore {
         return List.copyOf(new ArrayList<>(records.values()));
     }
 
+    @Override
+    public synchronized ToolContributionRecord reserve(ToolContributionRecord contribution) {
+        String key = contribution.namespace() + ":" + contribution.toolId();
+        contributions.put(key, contribution);
+        persist();
+        return contribution;
+    }
+
+    @Override
+    public synchronized List<ToolContributionRecord> listNamespace(String namespace) {
+        return contributions.values().stream()
+                .filter(contribution -> contribution.namespace().equals(namespace))
+                .sorted(java.util.Comparator.comparingInt(ToolContributionRecord::precedence))
+                .toList();
+    }
+
+    @Override
+    public synchronized List<ToolContributionRecord> listContributions() {
+        return List.copyOf(new ArrayList<>(contributions.values()));
+    }
+
+    @Override
+    public synchronized void replaceConflicts(String namespace, List<ToolContributionConflict> currentConflicts) {
+        conflicts.entrySet().removeIf(entry -> entry.getValue().namespace().equals(namespace));
+        for (ToolContributionConflict conflict : currentConflicts == null ? List.<ToolContributionConflict>of() : currentConflicts) {
+            conflicts.put(conflict.namespace() + ":" + conflict.functionName() + ":" + conflict.rejectedToolId(), conflict);
+        }
+        persist();
+    }
+
+    @Override
+    public synchronized List<ToolContributionConflict> listConflicts(String namespace) {
+        return conflicts.values().stream()
+                .filter(conflict -> namespace == null || namespace.isBlank() || conflict.namespace().equals(namespace))
+                .sorted(java.util.Comparator.comparing(ToolContributionConflict::namespace)
+                        .thenComparing(ToolContributionConflict::functionName)
+                        .thenComparing(ToolContributionConflict::rejectedToolId))
+                .toList();
+    }
+
     private void load() {
         if (!Files.isRegularFile(storePath)) {
             return;
         }
         try {
             StoreDocument document = objectMapper.readValue(Files.readString(storePath, StandardCharsets.UTF_8), StoreDocument.class);
-            if (document.schemaVersion() != SCHEMA_VERSION) {
+            if (document.schemaVersion() < 1 || document.schemaVersion() > SCHEMA_VERSION) {
                 throw new IllegalStateException("Unsupported tool registration store schema: " + document.schemaVersion());
             }
             for (ToolRegistrationRecord record : document.records()) {
                 records.put(record.registrationId(), record);
+            }
+            for (ToolContributionRecord contribution : document.contributions()) {
+                contributions.put(contribution.namespace() + ":" + contribution.toolId(), contribution);
+            }
+            for (ToolContributionConflict conflict : document.conflicts()) {
+                conflicts.put(conflict.namespace() + ":" + conflict.functionName() + ":" + conflict.rejectedToolId(), conflict);
             }
         } catch (Exception exception) {
             throw new IllegalStateException("Unable to load tool registration store: " + storePath, exception);
@@ -100,7 +148,7 @@ class FileToolRegistrationStore implements ToolRegistrationStore {
         try {
             Files.createDirectories(storePath.getParent());
             Path temporary = storePath.resolveSibling(storePath.getFileName() + ".tmp");
-            String json = objectMapper.writeValueAsString(new StoreDocument(SCHEMA_VERSION, List.copyOf(records.values())));
+            String json = objectMapper.writeValueAsString(new StoreDocument(SCHEMA_VERSION, List.copyOf(records.values()), List.copyOf(contributions.values()), List.copyOf(conflicts.values())));
             Files.writeString(temporary, json, StandardCharsets.UTF_8);
             try {
                 Files.move(temporary, storePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -127,9 +175,12 @@ class FileToolRegistrationStore implements ToolRegistrationStore {
         };
     }
 
-    private record StoreDocument(int schemaVersion, List<ToolRegistrationRecord> records) {
+    private record StoreDocument(int schemaVersion, List<ToolRegistrationRecord> records, List<ToolContributionRecord> contributions,
+                                 List<ToolContributionConflict> conflicts) {
         private StoreDocument {
             records = records == null ? List.of() : List.copyOf(records);
+            contributions = contributions == null ? List.of() : List.copyOf(contributions);
+            conflicts = conflicts == null ? List.of() : List.copyOf(conflicts);
         }
     }
 }

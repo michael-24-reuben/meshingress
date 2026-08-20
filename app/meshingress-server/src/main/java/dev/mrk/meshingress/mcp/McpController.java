@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.mcp;
 
-import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.security.McpTransportContextFactory;
+import dev.mrk.meshingress.security.McpTransportEvidence;
 import dev.mrk.meshingress.mcp.docs.post.McpOpenApiRequestBody;
 import dev.mrk.meshingress.mcp.docs.post.McpOpenApiResponses;
 import dev.mrk.meshingress.route.annotations.McpHttpMethod;
@@ -32,9 +33,11 @@ public class McpController {
     private static final Logger LOGGER = LoggerFactory.getLogger(McpController.class);
 
     private final McpTransportDispatcher transportDispatcher;
+    private final McpTransportContextFactory contextFactory;
 
-    public McpController(McpTransportDispatcher transportDispatcher) {
+    public McpController(McpTransportDispatcher transportDispatcher, McpTransportContextFactory contextFactory) {
         this.transportDispatcher = transportDispatcher;
+        this.contextFactory = contextFactory;
     }
 
     @McpRoute(id = "mcp.transport.post.v1", method = McpHttpMethod.POST, path = "/mcp")
@@ -48,14 +51,8 @@ public class McpController {
     public ResponseEntity<JsonNode> post(
             @RequestBody String body,
 
-            @Parameter(description = "Bearer admin token for role-gated MCP methods.", example = "Bearer dev-admin")
+            @Parameter(description = "Authentication evidence accepted by the configured server-side identity adapter.")
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
-
-            @Parameter(description = "MCP role hint. Use admin for role-gated registry methods.", example = "admin")
-            @RequestHeader(value = "X-Mcp-Role", required = false) String roleHeader,
-
-            @Parameter(description = "Legacy admin flag accepted for compatibility.", example = "true")
-            @RequestHeader(value = "X-Mcp-Admin", required = false) String legacyAdminHeader,
 
             @Parameter(description = "Client MCP session identifier.", example = "session-123")
             @RequestHeader(value = "Mcp-Session-Id", required = false) String sessionId,
@@ -66,8 +63,8 @@ public class McpController {
         String effectiveSessionId = sessionId == null || sessionId.isBlank()
                 ? UUID.randomUUID().toString()
                 : sessionId;
-        McpCallContext context = new McpCallContext(authorization, roleHeader == null ? legacyAdminHeader : roleHeader, effectiveSessionId, requestId);
-        Optional<JsonNode> response = transportDispatcher.dispatch(body, McpInvocationFactory.http(context));
+        McpTransportEvidence evidence = new McpTransportEvidence(authorization, effectiveSessionId, requestId, McpTransportEvidence.Transport.HTTP);
+        Optional<JsonNode> response = transportDispatcher.dispatch(body, contextFactory.http(evidence));
         return response
                 .map(payload -> ResponseEntity.ok()
                         .header("Mcp-Session-Id", effectiveSessionId)

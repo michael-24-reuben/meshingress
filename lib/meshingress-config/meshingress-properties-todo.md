@@ -33,7 +33,7 @@ Meshingress tool modules are intended to expose MCP tools through the server, so
 ### tools
 Controls tool registry behavior.
 
-These properties should decide how strict startup discovery is, whether disabled/private tools are visible, and whether global defaults apply when individual tools do not specify timeout, audit, or debug settings. Tool modules already use annotations such as `@McpTool`, `@McpToolMapping`, `@McpToolScopes`, and `@McpConfigureMapping`, so this group should act as the server-side policy layer over annotated metadata. :contentReference[oaicite:2]{index=2}
+These properties should decide how strict startup discovery is, whether disabled/private tools are visible, and whether global defaults apply when individual tools do not specify timeout, audit, or debug settings. Tool modules already use annotations such as `@McpTool`, `@McpToolScopes`, and `@McpConfigureMapping`, so this group should act as the server-side policy layer over annotated metadata. :contentReference[oaicite:2]{index=2}
 
 - [ ] meshingress.tools.registry.enabled=`true`
 - [ ] meshingress.tools.registry.fail-on-duplicate-tool-id=`true`

@@ -1,7 +1,9 @@
 package dev.mrk.meshingress.config;
 
-import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.security.McpAccessPolicyService;
+import dev.mrk.meshingress.security.McpTransportContextFactory;
+import dev.mrk.meshingress.security.McpTransportEvidence;
+import dev.mrk.meshingress.api.McpPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -20,9 +22,11 @@ public class McpWebSocketHandshakeInterceptor implements HandshakeInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(McpWebSocketHandshakeInterceptor.class);
 
     private final McpAccessPolicyService accessPolicyService;
+    private final McpTransportContextFactory contextFactory;
 
-    public McpWebSocketHandshakeInterceptor(McpAccessPolicyService accessPolicyService) {
+    public McpWebSocketHandshakeInterceptor(McpAccessPolicyService accessPolicyService, McpTransportContextFactory contextFactory) {
         this.accessPolicyService = accessPolicyService;
+        this.contextFactory = contextFactory;
     }
 
     @Override
@@ -34,22 +38,19 @@ public class McpWebSocketHandshakeInterceptor implements HandshakeInterceptor {
     ) {
         HttpHeaders headers = request.getHeaders();
         String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
-        String role = firstHeader(headers, "X-Mcp-Role", "X-Mcp-Admin");
         String sessionId = firstHeader(headers, "Mcp-Session-Id", "X-Mcp-Session-Id");
         String requestId = headers.getFirst("X-Request-Id");
 
-        McpCallContext context = new McpCallContext(authorization, role, sessionId, requestId);
-        if (accessPolicyService.websocketAuthenticationRequired() && authorization == null) {
+        McpTransportEvidence evidence = new McpTransportEvidence(authorization, sessionId, requestId, McpTransportEvidence.Transport.WEBSOCKET);
+        McpPrincipal principal = contextFactory.resolve(evidence);
+        if (accessPolicyService.websocketAuthenticationRequired() && !principal.authenticated()) {
             LOGGER.warn("Rejected unauthenticated MCP WebSocket handshake: requestId={} sessionId={}", requestId, sessionId);
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
 
-        attributes.put("mcp.authorization", authorization);
-        attributes.put("mcp.role", role);
-        attributes.put("mcp.sessionId", sessionId);
-        attributes.put("mcp.requestId", requestId);
-        attributes.put("mcp.admin", accessPolicyService.isAdmin(context));
+        attributes.put("mcp.transportEvidence", evidence);
+        attributes.put("mcp.principal", principal);
         return true;
     }
 
