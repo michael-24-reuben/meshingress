@@ -6,7 +6,7 @@ import {
     FolderOpenIcon,
     WorkflowFolderIcon,
 } from '../../../../components/icons/node-icons'
-import { ensureDirectoryChildrenIndexed, type LocalWorkspace, type LocalWorkspaceNode, type RecentWorkspaceEntry } from '../../local-workspace'
+import { ensureDirectoryChildrenIndexed, type LocalWorkspace, type LocalWorkspaceNode, type RecentWorkspaceEntry } from '../../storage/local-workspace'
 
 export interface WorkspaceExplorerPanelProps {
     workspace?: LocalWorkspace | null
@@ -17,6 +17,7 @@ export interface WorkspaceExplorerPanelProps {
     onOpenRecent?: (recent: RecentWorkspaceEntry) => void
     expandAllState?: boolean | null
     expandKey?: number
+    revealFilePath?: string | null
 }
 
 function WorkspaceTree({
@@ -25,15 +26,18 @@ function WorkspaceTree({
     onFileSelect,
     expandAllState,
     expandKey,
+    revealFilePath,
 }: {
     node: LocalWorkspaceNode
     depth?: number
     onFileSelect?: (node: LocalWorkspaceNode) => void
     expandAllState?: boolean | null
     expandKey?: number
+    revealFilePath?: string | null
 }) {
     const isRoot = depth === 0
-    const defaultOpen = isRoot ? true : (expandAllState === true)
+    const containsRevealedFile = revealFilePath?.startsWith(`${node.path}/`) ?? false
+    const defaultOpen = isRoot || expandAllState === true || containsRevealedFile
     const [isOpen, setIsOpen] = useState(defaultOpen)
 
     useEffect(() => {
@@ -42,9 +46,13 @@ function WorkspaceTree({
         }
     }, [expandAllState, expandKey, isRoot])
 
+    useEffect(() => {
+        if (containsRevealedFile) setIsOpen(true)
+    }, [containsRevealedFile])
+
     if (node.kind === 'file') {
         return (
-            <button className="tree-view-item list-item workspace-tree-file" onClick={() => onFileSelect?.(node)} title={node.path} type="button">
+            <button className="tree-view-item list-item workspace-tree-file" onClick={() => onFileSelect?.(node)} aria-label={node.path} type="button">
                 <FileObjectTypeIcon size={15} />
                 <span>{node.name}</span>
             </button>
@@ -61,7 +69,7 @@ function WorkspaceTree({
 
     return (
         <details className="workspace-tree-directory" open={isOpen} onToggle={handleToggle}>
-            <summary className="tree-view-item list-item" title={node.path}>
+            <summary className="tree-view-item list-item" aria-label={node.path}>
                 <FolderIcon className="workspace-tree-folder-closed" size={16} />
                 <FolderOpenIcon className="workspace-tree-folder-open" size={16} />
                 <span>{node.name}</span>
@@ -76,6 +84,7 @@ function WorkspaceTree({
                             onFileSelect={onFileSelect}
                             expandAllState={expandAllState}
                             expandKey={expandKey}
+                            revealFilePath={revealFilePath}
                         />
                     ))}
                 </div>
@@ -97,6 +106,7 @@ export function WorkspaceExplorerPanel({
     onOpenRecent,
     expandAllState,
     expandKey,
+    revealFilePath,
 }: WorkspaceExplorerPanelProps) {
     const [isCollapsed, setIsCollapsed] = useState(false)
     const [bodyHeight, setBodyHeight] = useState(DEFAULT_HEIGHT)
@@ -181,11 +191,13 @@ export function WorkspaceExplorerPanel({
                     </div>
                     <div aria-label={`${workspace.name} contents`} className="workspace-tree">
                         <WorkspaceTree
+                            key={workspace.id}
                             node={workspace.root}
                             depth={0}
                             onFileSelect={onFileSelect}
                             expandAllState={expandAllState}
                             expandKey={expandKey}
+                            revealFilePath={revealFilePath}
                         />
                     </div>
                 </div>
@@ -221,14 +233,10 @@ export function WorkspaceExplorerPanel({
                     </div>
                     <div className="panel-section-body" style={{ height: `${bodyHeight}px` }}>
                         {recents.map((entry) => (
-                            <button className={`explorer-recent-item${recentItemsWithoutHandle.has(entry.id) ? ' is-missing-handle' : ''}`} key={entry.id} onClick={() => onOpenRecent?.(entry)} title={entry.path} type="button">
-                                <span>
-                                    {entry.kind === 'workspace' ? <WorkflowFolderIcon size={15} /> : <FileObjectTypeIcon size={15} />}
-                                </span>
-                                <span>
-                                    <strong>{entry.label}</strong>
-                                    <small>{entry.path}</small>
-                                </span>
+                            <button className={`tree-view-item list-item explorer-recent-item${recentItemsWithoutHandle.has(entry.id) ? ' is-missing-handle' : ''}`} key={entry.id} onClick={() => onOpenRecent?.(entry)} aria-label={entry.path} type="button">
+                                {entry.kind === 'workspace' ? <WorkflowFolderIcon size={15} /> : <FileObjectTypeIcon size={15} />}
+                                <span>{entry.label}</span>
+                                {entry.kind === 'file' ? <small>{entry.path}</small> : null}
                             </button>
                         ))}
                     </div>

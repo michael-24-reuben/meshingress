@@ -42,6 +42,31 @@ public interface StructuredContentKind {
         }
     }
 
+    /**
+     * Canonical envelope kinds for parsed JSON whose field-level schema is not declared by the
+     * producing tool. The subtype identifies only the root JSON shape; it is not a claim that
+     * the payload fields are stable.
+     */
+    enum GeneratedJson implements StructuredContentKind {
+        OBJECT("generated.json.object", 1),
+        ARRAY("generated.json.array", 1),
+        STRING("generated.json.string", 1),
+        NUMBER("generated.json.number", 1),
+        BOOLEAN("generated.json.boolean", 1),
+        NULL("generated.json.null", 1);
+
+        private final Metadata contentData;
+
+        GeneratedJson(String value, int version) {
+            this.contentData = new Metadata(value, version);
+        }
+
+        @Override
+        public Metadata contentData() {
+            return contentData;
+        }
+    }
+
     enum Media implements StructuredContentKind {
         MEDIA_VIDEO("media.video", 1),
         MEDIA_IMAGE("media.image", 1),

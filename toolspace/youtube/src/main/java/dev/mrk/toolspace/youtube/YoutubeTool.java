@@ -5,8 +5,10 @@ import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
+import dev.mrk.meshingress.dispatch.data.RecordContent;
 import dev.mrk.toolspace.youtube.data.YoutubeDataApiClient;
 import dev.mrk.toolspace.youtube.data.YoutubeDataApiException;
+import dev.mrk.toolspace.youtube.data.YoutubeApiResponseContent;
 import dev.mrk.toolspace.youtube.data.YoutubeResourceArgs;
 import dev.mrk.toolspace.youtube.data.YoutubeSearchArgs;
 import dev.mrk.meshingress.scopes.McpToolScope;
@@ -27,7 +29,7 @@ public final class YoutubeTool {
         this.dataApiClient = dataApiClient;
     }
 
-    @McpFunction(value = "search", title = "Search YouTube", description = "Search public YouTube videos, channels, or playlists through the official Data API.")
+    @McpFunction(value = "search", title = "Search YouTube", description = "Search public YouTube videos, channels, or playlists through the official Data API.", outputTypes = RecordContent.class)
     public DispatchExecutionResult search(YoutubeSearchArgs arguments, McpCallContext context) {
         if (arguments == null || isBlank(arguments.query())) {
             return invalid("query is required.");
@@ -36,7 +38,7 @@ public final class YoutubeTool {
         if (maxResults == null) {
             return invalid("maxResults must be from 1 through 50.");
         }
-        return call(() -> dataApiClient.search(Map.of(
+        return call("search", () -> dataApiClient.search(Map.of(
                 "part", "snippet",
                 "q", arguments.query().strip(),
                 "type", blankOr(arguments.type(), "video"),
@@ -47,23 +49,24 @@ public final class YoutubeTool {
         )), "YouTube search completed.");
     }
 
-    @McpFunction(value = "videos-get", title = "Get videos", description = "Get public video metadata through the official YouTube Data API.")
+    @McpFunction(value = "videos-get", title = "Get videos", description = "Get public video metadata through the official YouTube Data API.", outputTypes = YoutubeApiResponseContent.class)
     public DispatchExecutionResult videos(YoutubeResourceArgs arguments, McpCallContext context) {
-        return resources(arguments, "snippet,contentDetails,statistics,status,liveStreamingDetails", dataApiClient::videos, "YouTube video lookup completed.");
+        return resources(arguments, "videos", "snippet,contentDetails,statistics,status,liveStreamingDetails", dataApiClient::videos, "YouTube video lookup completed.");
     }
 
-    @McpFunction(value = "channels-get", title = "Get channels", description = "Get public channel metadata through the official YouTube Data API.")
+    @McpFunction(value = "channels-get", title = "Get channels", description = "Get public channel metadata through the official YouTube Data API.", outputTypes = YoutubeApiResponseContent.class)
     public DispatchExecutionResult channels(YoutubeResourceArgs arguments, McpCallContext context) {
-        return resources(arguments, "snippet,contentDetails,statistics,brandingSettings,status", dataApiClient::channels, "YouTube channel lookup completed.");
+        return resources(arguments, "channels", "snippet,contentDetails,statistics,brandingSettings,status", dataApiClient::channels, "YouTube channel lookup completed.");
     }
 
-    @McpFunction(value = "playlists-get", title = "Get playlists", description = "Get public playlist metadata through the official YouTube Data API.")
+    @McpFunction(value = "playlists-get", title = "Get playlists", description = "Get public playlist metadata through the official YouTube Data API.", outputTypes = YoutubeApiResponseContent.class)
     public DispatchExecutionResult playlists(YoutubeResourceArgs arguments, McpCallContext context) {
-        return resources(arguments, "snippet,contentDetails,status", dataApiClient::playlists, "YouTube playlist lookup completed.");
+        return resources(arguments, "playlists", "snippet,contentDetails,status", dataApiClient::playlists, "YouTube playlist lookup completed.");
     }
 
     private DispatchExecutionResult resources(
             YoutubeResourceArgs arguments,
+            String resource,
             String part,
             java.util.function.Function<Map<String, String>, JsonNode> operation,
             String summary
@@ -72,16 +75,18 @@ public final class YoutubeTool {
                 || arguments.ids().stream().anyMatch(YoutubeTool::isBlank)) {
             return invalid("ids must contain from 1 through 50 nonblank resource IDs.");
         }
-        return call(() -> operation.apply(Map.of(
+        return call(resource, () -> operation.apply(Map.of(
                 "part", part,
                 "id", String.join(",", arguments.ids().stream().map(String::strip).toList())
         )), summary);
     }
 
-    private DispatchExecutionResult call(java.util.function.Supplier<JsonNode> operation, String summary) {
+    private DispatchExecutionResult call(String resource, java.util.function.Supplier<JsonNode> operation, String summary) {
         try {
+            JsonNode response = operation.get();
             return DispatchExecutionResult.builder()
-                    .object(operation.get())
+                    .object(response)
+                    .structuredContent(new YoutubeApiResponseContent(resource, response))
                     .status("completed")
                     .summary(summary)
                     .build();

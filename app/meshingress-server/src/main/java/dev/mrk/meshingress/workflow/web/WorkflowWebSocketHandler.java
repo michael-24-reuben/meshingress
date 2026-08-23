@@ -137,35 +137,30 @@ public class WorkflowWebSocketHandler extends TextWebSocketHandler {
 
         @Override
         public void onRunStarted(String runId) {
-            ObjectNode event = event("workflow.started", requestId);
+            ObjectNode event = sequencedEvent("workflow.started");
             event.put("runId", runId);
             safelySend(event);
         }
 
         @Override
-        public void onNodeStarted(String nodeRequestId) {
-            ObjectNode event = event("workflow.node.started", requestId);
-            event.put("nodeRequestId", nodeRequestId);
+        public void onNodeStarted(WorkflowRun.NodeStarted nodeStarted) {
+            ObjectNode event = sequencedEvent("workflow.node.started");
+            event.put("nodeRequestId", nodeStarted.nodeId());
+            event.put("startedAt", nodeStarted.startedAt());
             safelySend(event);
         }
 
         @Override
-        public void onNodeCompleted(WorkflowRun.NodeOutcome outcome) {
-            ObjectNode event = event("workflow.node.completed", requestId);
-            ObjectNode node = event.putObject("outcome");
-            node.put("requestId", outcome.requestId());
-            node.put("port", outcome.port());
-            node.put("attempts", outcome.attempts());
-            node.put("failed", outcome.failed());
-            if (outcome.message() != null) {
-                node.put("message", outcome.message());
-            }
+        public void onNodeCompleted(WorkflowRun.NodeResult nodeResult) {
+            ObjectNode event = sequencedEvent("workflow.node.completed");
+            event.set("node", objectMapper.valueToTree(nodeResult));
+            event.put("completedAt", nodeResult.completedAt());
             safelySend(event);
         }
 
         @Override
         public void onRunCompleted(WorkflowRun run) {
-            ObjectNode event = event("workflow.completed", requestId);
+            ObjectNode event = sequencedEvent("workflow.completed");
             event.set("run", objectMapper.valueToTree(run));
             safelySend(event);
         }
@@ -176,6 +171,14 @@ public class WorkflowWebSocketHandler extends TextWebSocketHandler {
             } catch (Exception exception) {
                 LOGGER.warn("Unable to send workflow WebSocket event: requestId={}", requestId, exception);
             }
+        }
+
+        private long nextSequence = 1;
+
+        private ObjectNode sequencedEvent(String type) {
+            ObjectNode event = event(type, requestId);
+            event.put("sequence", nextSequence++);
+            return event;
         }
     }
 }

@@ -1,18 +1,12 @@
 package dev.mrk.meshingress.dispatch;
 
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-import java.util.List;
 import java.util.Objects;
 
 /** Serializes typed structured content into the stable Meshingress wire envelope. */
 public final class StructuredContentMapper {
-    private static final List<String> ENVELOPE_FIELD_NAMES = List.of(
-            "kind", "schema", "version"
-    );
-
     private StructuredContentMapper() {}
 
     public static ObjectNode toJson(ObjectMapper objectMapper, StructuredContent content) {
@@ -24,13 +18,7 @@ public final class StructuredContentMapper {
         root.put("schema", content.schema());
         root.put("version", content.version());
 
-        JsonNode data = objectMapper.valueToTree(content);
-        if (data instanceof ObjectNode dataObject) {
-            dataObject.remove(ENVELOPE_FIELD_NAMES);
-            root.set("data", dataObject);
-        } else {
-            root.set("data", data);
-        }
+        root.set("data", content.data(objectMapper));
 
         return root;
     }

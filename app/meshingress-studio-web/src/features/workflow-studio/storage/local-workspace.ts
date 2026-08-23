@@ -1,3 +1,5 @@
+import { WORKFLOW_PROJECT_LAYOUT_V1, type WorkspaceLayoutPackage } from './workspace-layout'
+
 export type LocalWorkspaceNode = {
   name: string
   path: string
@@ -32,19 +34,28 @@ export interface FileSystemDirectoryHandleLike {
   kind: 'directory'
   name: string
   values(): AsyncIterable<FileSystemHandleLike>
+  getDirectoryHandle?: (name: string, options?: { create?: boolean }) => Promise<FileSystemDirectoryHandleLike>
+  getFileHandle?: (name: string, options?: { create?: boolean }) => Promise<FileSystemFileHandleLike>
   queryPermission?: (descriptor?: { mode?: 'read' | 'readwrite' }) => Promise<PermissionState>
   requestPermission?: (descriptor?: { mode?: 'read' | 'readwrite' }) => Promise<PermissionState>
 }
 
-interface FileSystemFileHandleLike {
+export interface FileSystemFileHandleLike {
   kind: 'file'
   name: string
+  getFile?: () => Promise<{ text: () => Promise<string> }>
+  createWritable?: () => Promise<FileSystemWritableFileStreamLike>
+}
+
+interface FileSystemWritableFileStreamLike {
+  write(data: string): Promise<void>
+  close(): Promise<void>
 }
 
 type FileSystemHandleLike = FileSystemDirectoryHandleLike | FileSystemFileHandleLike
 
 type DirectoryPickerWindow = Window & {
-  showDirectoryPicker?: (options?: { startIn?: FileSystemDirectoryHandleLike }) => Promise<FileSystemDirectoryHandleLike>
+  showDirectoryPicker?: (options?: { startIn?: FileSystemDirectoryHandleLike; mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandleLike>
 }
 
 const RECENT_WORKSPACES_KEY = 'meshingress.studio.local-workspace-recents.v1'
@@ -218,11 +229,11 @@ function chooseDirectoryWithInput(): Promise<DirectorySelection | null> {
   })
 }
 
-export async function chooseLocalDirectory(startIn?: FileSystemDirectoryHandleLike): Promise<DirectorySelection | null> {
+export async function chooseLocalDirectory(startIn?: FileSystemDirectoryHandleLike, mode: 'read' | 'readwrite' = 'read'): Promise<DirectorySelection | null> {
   const pickerWindow = window as DirectoryPickerWindow
   try {
     if (pickerWindow.showDirectoryPicker) {
-      const handle = await pickerWindow.showDirectoryPicker(startIn ? { startIn } : undefined)
+      const handle = await pickerWindow.showDirectoryPicker({ ...(startIn ? { startIn } : {}), mode })
       return { name: handle.name, root: await readDirectory(handle), handle }
     }
   } catch (error) {
@@ -230,6 +241,103 @@ export async function chooseLocalDirectory(startIn?: FileSystemDirectoryHandleLi
     throw error
   }
   return chooseDirectoryWithInput()
+}
+
+export function chooseLocalWorkspaceParent(): Promise<DirectorySelection | null> {
+  return chooseLocalDirectory(undefined, 'readwrite')
+}
+
+const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i
+const INVALID_WORKSPACE_NAME = /[<>:"/\\|?*]/
+
+export function validateWorkspaceName(value: string): string {
+  const name = value.trim()
+  const hasControlCharacter = Array.from(name).some((character) => (character.codePointAt(0) ?? 0) < 32)
+  if (!name || name === '.' || name === '..' || name.endsWith('.') || name.endsWith(' ') || hasControlCharacter || INVALID_WORKSPACE_NAME.test(name) || WINDOWS_RESERVED_NAMES.test(name)) {
+    throw new Error('Use a non-empty workspace name without path characters or reserved names.')
+  }
+  return name
+}
+
+export async function ensureDirectoryPermission(handle: FileSystemDirectoryHandleLike, mode: 'read' | 'readwrite'): Promise<boolean> {
+  if (!handle.queryPermission) return true
+  const permission = await handle.queryPermission({ mode })
+  if (permission === 'granted') return true
+  if (permission === 'denied' || !handle.requestPermission) return false
+  return (await handle.requestPermission({ mode })) === 'granted'
+}
+
+function isMissingDirectory(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'NotFoundError'
+}
+
+async function directoryExists(parent: FileSystemDirectoryHandleLike, name: string): Promise<boolean> {
+  try {
+    await parent.getDirectoryHandle!(name)
+    return true
+  } catch (error) {
+    if (isMissingDirectory(error)) return false
+    if (error instanceof DOMException && error.name === 'TypeMismatchError') return true
+    throw error
+  }
+}
+
+async function materializeDirectory(root: FileSystemDirectoryHandleLike, relativePath: string): Promise<FileSystemDirectoryHandleLike> {
+  let current = root
+  for (const segment of relativePath.split('/')) {
+    current = await current.getDirectoryHandle!(segment, { create: true })
+  }
+  return current
+}
+
+async function writeProjectFile(root: FileSystemDirectoryHandleLike, relativePath: string, contents: string): Promise<void> {
+  const segments = relativePath.split('/')
+  const fileName = segments.pop()
+  if (!fileName) throw new Error(`Invalid generated project path: ${relativePath}`)
+  const parent = segments.length ? await materializeDirectory(root, segments.join('/')) : root
+  const file = await parent.getFileHandle!(fileName, { create: true })
+  if (!file.createWritable) throw new Error('This browser cannot write project files through the selected folder.')
+  const writable = await file.createWritable()
+  await writable.write(contents)
+  await writable.close()
+}
+
+async function validateGeneratedLayout(root: FileSystemDirectoryHandleLike, layout: WorkspaceLayoutPackage): Promise<void> {
+  for (const path of layout.scaffold.directories) {
+    let current = root
+    for (const segment of path.split('/')) current = await current.getDirectoryHandle!(segment)
+  }
+  for (const path of Object.keys(layout.scaffold.files)) {
+    const segments = path.split('/')
+    const fileName = segments.pop()!
+    let current = root
+    for (const segment of segments) current = await current.getDirectoryHandle!(segment)
+    await current.getFileHandle!(fileName)
+  }
+}
+
+export async function createLocalWorkspaceProject(nameInput: string, parentSelection: DirectorySelection): Promise<DirectorySelection> {
+  const name = validateWorkspaceName(nameInput)
+  const parent = parentSelection.handle
+  if (!parent?.getDirectoryHandle || !parent.getFileHandle) {
+    throw new Error('New workspace creation requires a browser with writable File System Access support.')
+  }
+  if (!await ensureDirectoryPermission(parent, 'readwrite')) {
+    throw new Error('Write permission is required for the selected parent folder.')
+  }
+  if (await directoryExists(parent, name)) {
+    throw new Error(`A folder named ${name} already exists in the selected parent folder.`)
+  }
+
+  const projectRoot = await parent.getDirectoryHandle(name, { create: true })
+  for (const path of WORKFLOW_PROJECT_LAYOUT_V1.scaffold.directories) {
+    await materializeDirectory(projectRoot, path)
+  }
+  for (const [path, content] of Object.entries(WORKFLOW_PROJECT_LAYOUT_V1.scaffold.files)) {
+    await writeProjectFile(projectRoot, path, content(name))
+  }
+  await validateGeneratedLayout(projectRoot, WORKFLOW_PROJECT_LAYOUT_V1)
+  return { name: projectRoot.name, root: await readDirectory(projectRoot), handle: projectRoot }
 }
 
 function openDirectoryHandlesDatabase(): Promise<IDBDatabase | null> {
@@ -282,11 +390,7 @@ export async function hasStoredDirectoryHandle(id: string): Promise<boolean> {
 }
 
 async function canReadDirectory(handle: FileSystemDirectoryHandleLike): Promise<boolean> {
-  if (!handle.queryPermission) return true
-  const permission = await handle.queryPermission({ mode: 'read' })
-  if (permission === 'granted') return true
-  if (permission === 'denied' || !handle.requestPermission) return false
-  return (await handle.requestPermission({ mode: 'read' })) === 'granted'
+  return ensureDirectoryPermission(handle, 'read')
 }
 
 export async function readStoredDirectory(id: string): Promise<StoredDirectorySelection> {

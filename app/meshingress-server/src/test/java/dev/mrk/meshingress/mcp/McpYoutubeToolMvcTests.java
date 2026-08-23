@@ -39,7 +39,11 @@ class McpYoutubeToolMvcTests {
                 .andExpect(jsonPath("$.result.tools[*].name", not(hasItems(
                         "youtube.creator.video-upload",
                         "youtube.transcript.get"
-                ))));
+                ))))
+                .andExpect(jsonPath("$.result.tools[?(@.name == 'youtube.catalog.capabilities')].outputSchema.properties.data.properties.records.items.properties.function.type").value("string"))
+                .andExpect(jsonPath("$.result.tools[?(@.name == 'youtube.catalog.providers')].outputSchema.properties.data.properties.records.items.properties.id.type").value("string"))
+                .andExpect(jsonPath("$.result.tools[?(@.name == 'youtube.data.search')].outputSchema.properties.data.properties.resource.type").value("string"))
+                .andExpect(jsonPath("$.result.tools[?(@.name == 'youtube.data.videos-get')].outputSchema.properties.data.properties.response.type").value("object"));
     }
 
     @Test

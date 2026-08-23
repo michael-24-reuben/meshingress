@@ -26,7 +26,7 @@ import {
     UrlObjectTypeIcon,
 } from '../../../../components/icons/node-icons'
 import type { McpToolFunction } from '../../../../api/mcp'
-import { availableToolFunctions } from '../../available-tool-functions'
+import { availableToolFunctions } from '../../compilation/available-tool-functions'
 import type { WorkflowArgumentValue, WorkflowNode } from '../../types'
 import { ArgumentInput } from '../argument-inputs/ArgumentInput'
 import { argumentDescription, argumentTypeClass, isRequiredArgument, propertySchemaFor, type ArgumentSchema } from '../argument-inputs/contracts'

@@ -1862,6 +1862,7 @@ button.list-item {
     min-height: 0;
     display: grid;
     grid-template-rows: 38px minmax(0, 1fr) 0px minmax(15%, var(--drawer-height));
+    grid-template-columns: minmax(0, 1fr);
     background: var(--panel);
 }
 
@@ -2811,9 +2812,11 @@ button.list-item {
     height: 22px;
     padding: 0 8px;
     place-items: center start;
-    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+    /* border: 1px solid color-mix(in srgb, var(--border) 82%, transparent); */
     border-radius: 0;
-    background: color-mix(in srgb, var(--card) 92%, transparent);
+    /* background: color-mix(in srgb, var(--card) 92%, transparent); */
+    background: transparent;
+    border: none;
     color: var(--text);
     cursor: pointer;
     font: inherit;
@@ -2840,6 +2843,8 @@ button.list-item {
 .workflow-layout-cell:hover,
 .workflow-layout-cell:focus-visible,
 .workflow-layout-item.focused .workflow-layout-cell {
+    background: color-mix(in srgb, var(--card) 92%, transparent);
+    /* border: 1px solid color-mix(in srgb, var(--border) 82%, transparent); */
     border-color: var(--accent);
     color: var(--text);
     outline: none;
@@ -3863,7 +3868,7 @@ button.list-item {
 
 .runtime-table {
     width: 100%;
-    min-width: 650px;
+    min-width: 760px;
     border-collapse: collapse;
     font-size: .67rem;
 }
@@ -3891,6 +3896,10 @@ button.list-item {
     min-width: 135px;
 }
 
+.runtime-table td:nth-child(2) {
+    min-width: 72px;
+}
+
 .runtime-variable-identity {
     display: inline-flex;
     align-items: center;
@@ -3901,17 +3910,36 @@ button.list-item {
     white-space: nowrap;
 }
 
-.runtime-variable-identity code {
-    max-width: 180px;
-    overflow: hidden;
-    color: var(--muted);
-    font-size: .57rem;
-    text-overflow: ellipsis;
-}
-
 .runtime-variable-identity strong {
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.initiator-link {
+    max-width: 220px;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.initiator-link:hover,
+.initiator-link:focus-visible {
+    color: var(--text);
+}
+
+.initiator-link.selection-failed {
+    color: var(--danger);
 }
 
 .runtime-status {
@@ -4074,6 +4102,43 @@ button.list-item {
 
 .box-output-name {
     max-width: 100%;
+}
+
+.box-mode-selector {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--card-2);
+    flex: 0 0 auto;
+}
+
+.box-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+.box-mode-btn:hover {
+    color: var(--text);
+}
+
+.box-mode-btn.is-active {
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    font-weight: 700;
 }
 
 .box-getter {
@@ -4411,7 +4476,8 @@ aside.left-panel .panel-body.explorer-panel-body {
     min-width: 0;
 }
 
-.workspace-tree .list-item {
+.workspace-tree .list-item,
+.explorer-recents .tree-view-item {
     padding: 4px 5px;
     border: 0;
     font-size: .75rem;
@@ -4438,14 +4504,22 @@ aside.left-panel .panel-body.explorer-panel-body {
     display: block;
 }
 
-.workspace-tree .list-item span {
+.workspace-tree .list-item span,
+.explorer-recents .tree-view-item>span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.workspace-tree .list-item svg,
+.explorer-recents .tree-view-item svg {
+    flex: 0 0 16px;
+}
+
 .workspace-tree .list-item:hover,
-.workspace-tree .list-item:focus-visible {
+.workspace-tree .list-item:focus-visible,
+.explorer-recents .tree-view-item:hover,
+.explorer-recents .tree-view-item:focus-visible {
     background: var(--accent-bg);
     outline: none;
 }
@@ -4538,49 +4612,30 @@ aside.left-panel .panel-body.explorer-panel-body {
 }
 
 .explorer-recent-item {
-    display: grid;
-    grid-template-columns: 16px minmax(0, 1fr);
-    align-items: center;
-    gap: 7px;
-    width: 100%;
-    padding: 5px;
-    border: 0;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    text-align: left;
-}
-
-.explorer-recent-item:hover,
-.explorer-recent-item:focus-visible {
-    background: var(--accent-bg);
-    outline: none;
-}
-
-.explorer-recent-item>span:last-child {
-    display: grid;
     min-width: 0;
-    gap: 1px;
 }
 
-.explorer-recent-item strong,
 .explorer-recent-item small {
+    flex: 1 1 0;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.explorer-recent-item strong {
-    font-size: .68rem;
+.explorer-recent-item.is-missing-handle:hover,
+.explorer-recent-item.is-missing-handle:focus-visible {
+    /* cursor: not-allowed; */
+    background: transparent;
 }
 
-.explorer-recent-item.is-missing-handle>span:first-child,
-.explorer-recent-item.is-missing-handle strong {
-    color: var(--danger);
+.explorer-recent-item.is-missing-handle>svg,
+.explorer-recent-item.is-missing-handle>span {
+    color: var(--muted);
+    /* color: var(--danger); */
 }
 
-.explorer-recent-item.is-missing-handle strong {
+.explorer-recent-item.is-missing-handle>span {
     text-decoration-line: line-through;
 }
 
@@ -4699,6 +4754,13 @@ aside.left-panel .panel-body.explorer-panel-body {
 .workspace-directory-input:focus-within,
 .workspace-dialog-field>input:focus {
     border-color: var(--accent);
+}
+
+.workspace-dialog-error {
+    margin: -4px 0 0;
+    color: var(--danger);
+    font-size: .72rem;
+    line-height: 1.4;
 }
 
 .workspace-directory-picker {

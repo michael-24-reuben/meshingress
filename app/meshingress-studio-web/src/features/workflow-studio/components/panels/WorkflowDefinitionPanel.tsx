@@ -1,5 +1,5 @@
 import type { WorkflowEdge, WorkflowNode } from '../../types'
-import { workflowDefinition } from '../../definition'
+import { workflowDefinition } from '../../compilation/definition'
 import { JsonBox } from '../elements/JsonBox'
 
 export interface WorkflowDefinitionPanelProps {

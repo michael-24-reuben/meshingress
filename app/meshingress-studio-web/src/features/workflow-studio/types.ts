@@ -131,11 +131,29 @@ export interface WorkflowEdge {
 }
 
 export interface LogEntry {
+  id?: string
   time: string
   source: string
   message: string
   severity?: 'error'
 }
+
+export const createLogEntryId = (source: string, time: string, uuid: string = crypto.randomUUID()): string =>
+  `${uuid}-${time}-${source}`
+
+export const createLogEntry = (
+  source: string,
+  message: string,
+  severity?: LogEntry['severity'],
+  time: string = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+  uuid: string = crypto.randomUUID()
+): LogEntry => ({
+  id: createLogEntryId(source, time, uuid),
+  time,
+  source,
+  message,
+  severity,
+})
 
 export interface RegisteredTool {
   id: string
@@ -147,8 +165,47 @@ export interface RegisteredTool {
 export interface WorkflowRunResult {
   runId?: string
   status?: string
+  /** Compiled workflow payload values used for bindings; tool envelopes live in nodeResults. */
   results?: Record<string, unknown>
-  nodeOutcomes?: Array<{ requestId: string; failed: boolean; attempts: number; port: string; message?: string }>
+  nodeResults?: WorkflowNodeResult[]
+  failureMessage?: string
+}
+
+export interface WorkflowNodeOutcome {
+  requestId: string
+  failed: boolean
+  attempts: number
+  port: string
+  message?: string
+}
+
+/** The authoritative persisted record for one workflow node execution. */
+export interface WorkflowNodeResult {
+  nodeId: string
+  nodePath?: string | null
+  variable: string
+  outcome: WorkflowNodeOutcome
+  /** Epoch milliseconds captured by the workflow server around execution, not by browser event receipt. */
+  startedAt: number
+  completedAt: number
+  result?: unknown
+  /** Generated from the concrete typed StructuredContent contract, never from result data. */
+  outputSchema?: Record<string, unknown> | null
+  diagnostics?: WorkflowNodeDiagnostic[]
+}
+
+/** Non-fatal execution observation supplied by the workflow server. */
+export interface WorkflowNodeDiagnostic {
+  type: string
+  severity: string
+  message: string
+  details?: Record<string, unknown> | null
+}
+
+export interface WorkflowNodeStarted {
+  requestId: string
+  startedAt: number
+  sequence?: number
 }
 
 export interface RuntimeTraceEntry {
@@ -159,7 +216,6 @@ export interface RuntimeTraceEntry {
   status: NodeRunState
   startedAt?: number
   completedAt?: number
-  lane?: number
   attempts?: number
   port?: string
   message?: string
@@ -169,8 +225,11 @@ export interface RuntimeTraceEntry {
 
 export interface RuntimeTrace {
   runId?: string
+  /** Server-time origin for every node span. The initial browser value is replaced on the first lifecycle event. */
   startedAt: number
   completedAt?: number
+  /** Latest server clock value paired with the browser receipt time for live-duration display. */
+  serverTimeAnchor?: { at: number; receivedAt: number }
   entries: RuntimeTraceEntry[]
 }
 

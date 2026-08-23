@@ -22,10 +22,19 @@ export interface McpToolFunction {
     timeoutMs?: number
     availability?: McpAvailability
     returnType?: unknown
+    structuredOutput?: boolean
     [key: string]: unknown
   }
   outputSchema?: Record<string, unknown>
   returnType?: unknown
+}
+
+/**
+ * Resolves the output-consistency contract without mistaking a schema's mere presence for an explicit override.
+ */
+export function hasStructuredOutput(tool: McpToolFunction): boolean {
+  const explicit = tool.annotations?.structuredOutput
+  return typeof explicit === 'boolean' ? explicit : tool.outputSchema !== undefined
 }
 
 interface McpToolsListResponse {

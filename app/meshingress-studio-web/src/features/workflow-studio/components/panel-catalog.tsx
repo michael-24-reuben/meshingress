@@ -49,14 +49,81 @@ export type PanelSurface = 'left' | 'right' | 'drawer'
 export type PanelIcon = ComponentType<CodeSquareFilledIconProps>
 export type RailPlacement = { surface: PanelSurface; order: number }
 
-type SurfaceTabEntry = {
+import type { SurfaceTab } from './SurfaceFrame'
+
+export type SurfaceTabDescriptor<P = any> = {
+  title?: React.ReactNode | ((props: P) => React.ReactNode)
+  icon?: PanelIcon
+  badge?: React.ReactNode | ((props: P) => React.ReactNode)
+  disabled?: boolean | ((props: P) => boolean)
+  tooltip?: string | ((props: P) => string | undefined)
+}
+
+export type SurfaceTabRenderer<P = any> =
+  | React.ComponentType<{ props: P; active?: boolean }>
+  | ((props: P, active?: boolean) => React.ReactNode)
+
+export type SurfaceTabEntry = {
   [K in PanelViewContentKind]: {
     kind: K
+    tab?: SurfaceTabDescriptor<PanelViewSetContentParams[K]> | SurfaceTabRenderer<PanelViewSetContentParams[K]>
+    tabTitle?: string | React.ReactNode | ((props: PanelViewSetContentParams[K]) => React.ReactNode)
     tabIcon?: PanelIcon
-    tabTitle: string
+    tabBadge?: React.ReactNode | ((props: PanelViewSetContentParams[K]) => React.ReactNode)
+    tabDisabled?: boolean | ((props: PanelViewSetContentParams[K]) => boolean)
     tabContent: (props: PanelViewSetContentParams[K]) => React.ReactNode
   }
 }[PanelViewContentKind]
+
+export function resolveSurfaceTab<T extends string = string>(
+  tabEntry: SurfaceTabEntry,
+  props: any
+): SurfaceTab<T> {
+  const id = tabEntry.kind as T
+
+  if (tabEntry.tab) {
+    if (typeof tabEntry.tab === 'function') {
+      const tabTarget = tabEntry.tab as any
+      return {
+        id,
+        CustomHeader: (active: boolean) => {
+          if (tabTarget.prototype && (tabTarget.prototype as any)?.isReactComponent) {
+            const Comp = tabTarget
+            return <Comp props={props} active={active} />
+          }
+          const res = tabTarget(props, active)
+          if (res && typeof res === 'object' && ('title' in res || 'icon' in res)) {
+            const Icon = res.icon
+            return (
+              <>
+                {Icon && <span className="tab-icon"><Icon size={14} /></span>}
+                {res.title !== undefined && <span>{res.title}</span>}
+                {res.badge !== undefined && res.badge !== null && <span className="tab-badge">{res.badge}</span>}
+              </>
+            )
+          }
+          return res
+        },
+      }
+    } else {
+      const desc = tabEntry.tab as SurfaceTabDescriptor
+      const label = typeof desc.title === 'function' ? desc.title(props) : desc.title
+      const icon = desc.icon
+      const badge = typeof desc.badge === 'function' ? desc.badge(props) : desc.badge
+      const disabled = typeof desc.disabled === 'function' ? desc.disabled(props) : desc.disabled
+      const tooltip = typeof desc.tooltip === 'function' ? desc.tooltip(props) : desc.tooltip
+
+      return { id, label, icon, badge, disabled, tooltip }
+    }
+  }
+
+  const label = typeof tabEntry.tabTitle === 'function' ? tabEntry.tabTitle(props) : tabEntry.tabTitle
+  const icon = tabEntry.tabIcon
+  const badge = typeof tabEntry.tabBadge === 'function' ? tabEntry.tabBadge(props) : tabEntry.tabBadge
+  const disabled = typeof tabEntry.tabDisabled === 'function' ? tabEntry.tabDisabled(props) : tabEntry.tabDisabled
+
+  return { id, label, icon, badge, disabled }
+}
 
 type SurfaceBodyEntry = {
   [K in PanelViewContentKind]: {
@@ -97,31 +164,10 @@ export const studioRailPanels = [
   {
     type: 'panel',
     panel: {
-      label: 'Tools',
-      description: 'Browse attached tool functions.',
-      keywords: ['catalog', 'functions', 'mcp'],
-      placement: { surface: 'left', order: 0 },
-      railKey: 'tool-catalog',
-      railLabel: 'Tools',
-      railTitle: 'Tools',
-      icon: CubeIcon,
-      badge: undefined,
-      surfaceEntry: {
-        title: 'Tools',
-        body: {
-          kind: 'tool-catalog',
-          content: (props) => <ToolCatalogPanel {...props} />,
-        },
-      },
-    },
-  },
-  {
-    type: 'panel',
-    panel: {
       label: 'Explorer',
       description: 'Browse the selected local workspace.',
       keywords: ['workspace', 'folder', 'local', 'files'],
-      placement: { surface: 'left', order: 1 },
+      placement: { surface: 'left', order: 0 },
       railKey: 'workspace-explorer',
       railLabel: 'Explorer',
       railTitle: 'Explorer',
@@ -136,6 +182,27 @@ export const studioRailPanels = [
         bodyAttributes: {
           className: ['explorer-panel-body']
         }
+      },
+    },
+  },
+  {
+    type: 'panel',
+    panel: {
+      label: 'Tools',
+      description: 'Browse attached tool functions.',
+      keywords: ['catalog', 'functions', 'mcp'],
+      placement: { surface: 'left', order: 1 },
+      railKey: 'tool-catalog',
+      railLabel: 'Tools',
+      railTitle: 'Tools',
+      icon: CubeIcon,
+      badge: undefined,
+      surfaceEntry: {
+        title: 'Tools',
+        body: {
+          kind: 'tool-catalog',
+          content: (props) => <ToolCatalogPanel {...props} />,
+        },
       },
     },
   },

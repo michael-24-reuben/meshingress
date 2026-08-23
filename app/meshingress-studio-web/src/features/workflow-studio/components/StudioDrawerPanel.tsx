@@ -1,5 +1,5 @@
 import type { DrawerPanelViewContentKind, DrawerPanelViewContentParams, SurfaceEntry } from '../types'
-import { drawerStudioRailPanels } from './panel-catalog'
+import { drawerStudioRailPanels, resolveSurfaceTab } from './panel-catalog'
 import { SurfaceFrame } from './SurfaceFrame'
 import { MinusIcon } from '../../../components/icons/node-icons'
 import { Empty } from './elements/Empty'
@@ -32,7 +32,8 @@ export function StudioDrawerPanel({ drawer, params, onChange, onHide }: Workflow
   const surfaceEntry = panel.surfaceEntry as SurfaceEntry
   const bodyEntry = surfaceEntry.body
   const isTabs = Array.isArray(bodyEntry)
-  const tabs = isTabs ? bodyEntry.map((tab) => ({ id: tab.kind as DrawerPanelViewContentKind, label: tab.tabTitle, icon: tab.tabIcon })) : undefined
+  const drawerParams = params[drawer as keyof DrawerPanelViewContentParams] as any
+  const tabs = isTabs ? bodyEntry.map((tab) => resolveSurfaceTab<DrawerPanelViewContentKind>(tab, drawerParams)) : undefined
   const activeTabEntry = isTabs ? bodyEntry.find((tab) => tab.kind === drawer) : undefined
   const body = isTabs
     ? (activeTabEntry ? activeTabEntry.tabContent(params[drawer as keyof DrawerPanelViewContentParams] as any) : <Empty message="No drawer content is available." />)

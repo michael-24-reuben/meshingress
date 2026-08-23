@@ -2653,17 +2653,30 @@ components:
           type: boolean
         number:
           type: boolean
-        missingNode:
+        string:
           type: boolean
-        container:
+        int:
           type: boolean
-        valueNode:
+        textual:
           type: boolean
-        floatingPointNumber:
+          deprecated: true
+        long:
+          type: boolean
+        double:
+          type: boolean
+        boolean:
+          type: boolean
+        pojo:
+          type: boolean
+        short:
+          type: boolean
+        binary:
           type: boolean
         integralNumber:
           type: boolean
-        bigInteger:
+        valueNode:
+          type: boolean
+        container:
           type: boolean
         nodeType:
           type: string
@@ -2677,26 +2690,13 @@ components:
           - OBJECT
           - POJO
           - STRING
+        missingNode:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
         bigDecimal:
           type: boolean
-        string:
-          type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
-        int:
-          type: boolean
-        long:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        double:
-          type: boolean
-        binary:
-          type: boolean
-        boolean:
+        bigInteger:
           type: boolean
         embeddedValue:
           type: boolean
@@ -2738,6 +2738,17 @@ components:
             $ref: "#/components/schemas/JsonNode"
         output:
           type: string
+    Diagnostic:
+      type: object
+      properties:
+        type:
+          type: string
+        severity:
+          type: string
+        message:
+          type: string
+        details:
+          $ref: "#/components/schemas/JsonNode"
     NodeOutcome:
       type: object
       properties:
@@ -2752,6 +2763,31 @@ components:
           type: boolean
         message:
           type: string
+    NodeResult:
+      type: object
+      properties:
+        nodeId:
+          type: string
+        nodePath:
+          type: string
+        variable:
+          type: string
+        outcome:
+          $ref: "#/components/schemas/NodeOutcome"
+        startedAt:
+          type: integer
+          format: int64
+        completedAt:
+          type: integer
+          format: int64
+        result:
+          $ref: "#/components/schemas/JsonNode"
+        outputSchema:
+          $ref: "#/components/schemas/JsonNode"
+        diagnostics:
+          type: array
+          items:
+            $ref: "#/components/schemas/Diagnostic"
     WorkflowRun:
       type: object
       properties:
@@ -2766,10 +2802,10 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/JsonNode"
-        nodeOutcomes:
+        nodeResults:
           type: array
           items:
-            $ref: "#/components/schemas/NodeOutcome"
+            $ref: "#/components/schemas/NodeResult"
         failureMessage:
           type: string
     NativeLoginValidationRequest:

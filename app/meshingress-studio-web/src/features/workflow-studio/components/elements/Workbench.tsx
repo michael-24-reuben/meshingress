@@ -223,8 +223,10 @@ export interface WorkbenchProps {
   onEdgeDelete?: (edge: WorkflowEdge) => void
   onEdgeReconnect?: (edge: WorkflowEdge, targetId: string) => void
   onNodesChange: (change: (nodes: WorkflowNode[]) => WorkflowNode[]) => void
+  onToolFavorite: (node: WorkflowNode) => void
   onPendingToolNodeHandled: (requestId: string) => void
   onRun: () => void
+  onSelectLayoutNodeChange: (selectNode: ((nodeId: string) => void) | null) => void
   onSelectNode: (id: string) => void
   onStatus: (message: string) => void
   onToggleReattachOnEmptyRelease: () => void
@@ -249,8 +251,10 @@ export function Workbench({
   onEdgeDelete,
   onEdgeReconnect,
   onNodesChange,
+  onToolFavorite,
   onPendingToolNodeHandled,
   onRun,
+  onSelectLayoutNodeChange,
   onSelectNode,
   onStatus,
   onToggleReattachOnEmptyRelease,
@@ -355,8 +359,10 @@ export function Workbench({
               onEdgeDelete={handleEdgeDelete}
               onEdgeReconnect={handleEdgeReconnect}
               onNodesChange={onNodesChange}
+              onToolFavorite={onToolFavorite}
               onPendingToolNodeHandled={onPendingToolNodeHandled}
               onRun={onRun}
+              onSelectLayoutNodeChange={onSelectLayoutNodeChange}
               onSelect={onSelectNode}
               onStatus={onStatus}
               onToggleReattachOnEmptyRelease={onToggleReattachOnEmptyRelease}
@@ -385,8 +391,10 @@ export function Workbench({
       handleEdgeDelete,
       handleEdgeReconnect,
       onNodesChange,
+      onToolFavorite,
       onPendingToolNodeHandled,
       onRun,
+      onSelectLayoutNodeChange,
       onSelectNode,
       onStatus,
       onToggleReattachOnEmptyRelease,

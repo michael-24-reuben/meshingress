@@ -154,7 +154,7 @@ public class PowerShellCliTool {
                     finishedAt,
                     tracks,
                     arguments.shouldIncludeScriptInStructuredContent() ? arguments.script() : null,
-                    null
+                    "PowerShell script " + (isError ? "failed" : "completed") + "."
             );
 
             // end timer then calculate duration

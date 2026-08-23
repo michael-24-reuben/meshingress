@@ -2,6 +2,7 @@ package dev.mrk.meshingress.workflow;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
+import dev.mrk.meshingress.dispatch.StructuredContentSchemaGenerator;
 import dev.mrk.meshingress.api.result.ResultContent;
 import dev.mrk.meshingress.mcp.tools.ToolExecutor;
 import org.springframework.stereotype.Service;
@@ -52,7 +53,7 @@ public class WorkflowRuntime {
         String runId = "run_" + UUID.randomUUID();
         WorkflowRunListener effectiveListener = listener == null ? WorkflowRunListener.noop() : listener;
         Map<String, JsonNode> results = new LinkedHashMap<>();
-        List<WorkflowRun.NodeOutcome> outcomes = new ArrayList<>();
+        List<WorkflowRun.NodeResult> nodeResults = new ArrayList<>();
         Map<String, Set<String>> arrivals = new HashMap<>();
         Set<String> completed = new HashSet<>();
         ArrayDeque<String> ready = new ArrayDeque<>();
@@ -71,20 +72,33 @@ public class WorkflowRuntime {
                 continue;
             }
             WorkflowNode node = compiled.nodesByRequestId().get(requestId);
-            effectiveListener.onNodeStarted(requestId);
+            long startedAt = System.currentTimeMillis();
+            effectiveListener.onNodeStarted(new WorkflowRun.NodeStarted(requestId, startedAt));
             NodeExecution execution = executeNode(node, triggerValue, results, parentContext, runId);
+            long completedAt = Math.max(startedAt, System.currentTimeMillis());
             WorkflowRun.NodeOutcome outcome = new WorkflowRun.NodeOutcome(requestId, execution.port(), execution.attempts(), execution.failed(), execution.message());
-            outcomes.add(outcome);
-            effectiveListener.onNodeCompleted(outcome);
+            if (!execution.failed()) {
+                results.put(node.result().as(), execution.value());
+            }
+            WorkflowRun.NodeResult nodeResult = new WorkflowRun.NodeResult(
+                    requestId,
+                    nodePath(node),
+                    node.result().as(),
+                    outcome,
+                    startedAt,
+                    completedAt,
+                    execution.transportResult(),
+                    execution.outputSchema(),
+                    execution.diagnostics()
+            );
+            nodeResults.add(nodeResult);
+            effectiveListener.onNodeCompleted(nodeResult);
 
             if (execution.failed() && compiled.outgoingByRequestId().get(requestId).stream()
                     .noneMatch(edge -> edge.from().port().equals(execution.port()))) {
-                WorkflowRun failedRun = failed(runId, results, outcomes, execution.message());
+                WorkflowRun failedRun = failed(runId, results, nodeResults, execution.message());
                 effectiveListener.onRunCompleted(failedRun);
                 return failedRun;
-            }
-            if (!execution.failed()) {
-                results.put(node.result().as(), execution.value());
             }
             for (WorkflowEdge edge : compiled.outgoingByRequestId().get(requestId)) {
                 if (!edge.from().port().equals(execution.port())) {
@@ -102,7 +116,7 @@ public class WorkflowRuntime {
                 }
             }
         }
-        WorkflowRun completedRun = new WorkflowRun(runId, WorkflowRun.Status.COMPLETED, results, outcomes, null);
+        WorkflowRun completedRun = new WorkflowRun(runId, WorkflowRun.Status.COMPLETED, results, nodeResults, null);
         effectiveListener.onRunCompleted(completedRun);
         return completedRun;
     }
@@ -110,10 +124,10 @@ public class WorkflowRuntime {
     private WorkflowRun failed(
             String runId,
             Map<String, JsonNode> results,
-            List<WorkflowRun.NodeOutcome> outcomes,
+            List<WorkflowRun.NodeResult> nodeResults,
             String message
     ) {
-        return new WorkflowRun(runId, WorkflowRun.Status.FAILED, results, outcomes, message);
+        return new WorkflowRun(runId, WorkflowRun.Status.FAILED, results, nodeResults, message);
     }
 
     private NodeExecution executeNode(
@@ -127,9 +141,18 @@ public class WorkflowRuntime {
         Exception lastFailure = null;
         for (int attempt = 1; attempt <= failurePolicy.maxAttempts(); attempt++) {
             try {
-                JsonNode value = executeValue(node, triggerValue, results, parentContext, runId, attempt);
-                validateResultType(node.result(), value, node.requestId());
-                return new NodeExecution(value, node.result().routing().selectPort(value), attempt, false, null);
+                NodeValue value = executeValue(node, triggerValue, results, parentContext, runId, attempt);
+                validateResultType(node.result(), value.value(), node.requestId());
+                return new NodeExecution(
+                        value.value(),
+                        value.transportResult(),
+                        value.outputSchema(),
+                        value.diagnostics(),
+                        node.result().routing().selectPort(value.value()),
+                        attempt,
+                        false,
+                        null
+                );
             } catch (Exception exception) {
                 lastFailure = exception;
             }
@@ -139,10 +162,10 @@ public class WorkflowRuntime {
         error.put("message", lastFailure == null ? "Workflow node failed" : lastFailure.getMessage());
         error.put("attempts", failurePolicy.maxAttempts());
         results.put(failurePolicy.errorResultName(), error);
-        return new NodeExecution(error, failurePolicy.errorPort(), failurePolicy.maxAttempts(), true, error.path("message").asString());
+        return new NodeExecution(error, error, null, List.of(), failurePolicy.errorPort(), failurePolicy.maxAttempts(), true, error.path("message").asString());
     }
 
-    private JsonNode executeValue(
+    private NodeValue executeValue(
             WorkflowNode node,
             JsonNode triggerValue,
             Map<String, JsonNode> results,
@@ -151,12 +174,13 @@ public class WorkflowRuntime {
             int attempt
     ) {
         if (node instanceof WorkflowNode.ManualTrigger) {
-            return triggerValue == null ? NullNode.getInstance() : triggerValue.deepCopy();
+            JsonNode value = triggerValue == null ? NullNode.getInstance() : triggerValue.deepCopy();
+            return NodeValue.of(value);
         }
         if (node instanceof WorkflowNode.ToolCall toolCall) {
             ObjectNode arguments = objectMapper.createObjectNode();
             toolCall.arguments().forEach((name, input) -> arguments.set(name, input.resolve(results)));
-            McpCallContext context = (parentContext == null ? new McpCallContext(null, null, "", "") : parentContext)
+            McpCallContext context = (parentContext == null ? new McpCallContext(null, null, "", runId) : parentContext)
                     .deriveWorkflowChild(runId, node.requestId(), attempt);
             DispatchExecutionResult result = toolExecutor.execute(toolCall.functionName(), arguments, context);
             if (result.isError()) {
@@ -165,20 +189,20 @@ public class WorkflowRuntime {
             return toolResultValue(result);
         }
         if (node instanceof WorkflowNode.Compose compose) {
-            return resolveObject(compose.fields(), results);
+            return NodeValue.of(resolveObject(compose.fields(), results));
         }
         if (node instanceof WorkflowNode.ExpressionTrue expression) {
             JsonNode value = expression.expression().resolve(results);
             if (!value.isBoolean()) {
                 throw new WorkflowValidationException("expression.true input must resolve to a boolean");
             }
-            return value;
+            return NodeValue.of(value);
         }
         if (node instanceof WorkflowNode.Join join) {
-            return resolveObject(join.fields(), results);
+            return NodeValue.of(resolveObject(join.fields(), results));
         }
         if (node instanceof WorkflowNode.Merge) {
-            return NullNode.getInstance();
+            return NodeValue.of(NullNode.getInstance());
         }
         throw new WorkflowValidationException("Unsupported workflow node: " + node.getClass().getSimpleName());
     }
@@ -189,20 +213,45 @@ public class WorkflowRuntime {
         return value;
     }
 
-    private JsonNode toolResultValue(DispatchExecutionResult result) {
-        if (result.structuredContent().isPresent()) {
-            return result.structuredContent().orElseThrow().deepCopy();
+    private NodeValue toolResultValue(DispatchExecutionResult result) {
+        JsonNode serialized = result.toJson(objectMapper);
+        JsonNode structuredContent = serialized.get("structuredContent");
+        if (structuredContent != null && !structuredContent.isNull()) {
+            JsonNode outputSchema = result.typedStructuredContent()
+                    .flatMap(content -> StructuredContentSchemaGenerator.outputSchemaFor(objectMapper, content))
+                    .orElse(null);
+            return new NodeValue(
+                    structuredContentData(structuredContent),
+                    structuredContent.deepCopy(),
+                    outputSchema,
+                    diagnostics(serialized)
+            );
         }
         List<ResultContent> content = result.content();
         if (content.isEmpty()) {
-            return NullNode.getInstance();
+            return NodeValue.of(NullNode.getInstance());
         }
         if (content.size() == 1) {
-            return content.getFirst().value().deepCopy();
+            return NodeValue.of(content.getFirst().value().deepCopy());
         }
         tools.jackson.databind.node.ArrayNode values = objectMapper.createArrayNode();
         content.forEach(item -> values.add(item.value()));
-        return values;
+        return NodeValue.of(values);
+    }
+
+    private JsonNode structuredContentData(JsonNode structuredContent) {
+        if (structuredContent.isObject()
+                && structuredContent.path("kind").isTextual()
+                && structuredContent.path("schema").isTextual()
+                && structuredContent.path("version").isIntegralNumber()
+                && structuredContent.has("data")) {
+            return structuredContent.get("data").deepCopy();
+        }
+        return structuredContent.deepCopy();
+    }
+
+    private String nodePath(WorkflowNode node) {
+        return node instanceof WorkflowNode.ToolCall toolCall ? toolCall.functionName() : null;
     }
 
     private String toolFailureMessage(DispatchExecutionResult result) {
@@ -212,6 +261,26 @@ public class WorkflowRuntime {
             return message;
         }
         return result.content().isEmpty() ? "Tool node returned an error" : result.content().getFirst().value().asString("Tool node returned an error");
+    }
+
+    private List<WorkflowRun.Diagnostic> diagnostics(JsonNode serialized) {
+        JsonNode validation = serialized.at("/_meta/meshingress/outputSchema");
+        if (!validation.isObject()) {
+            return List.of();
+        }
+        if (validation.path("validated").asBoolean(false) && validation.path("valid").asBoolean(true)) {
+            return List.of();
+        }
+        String type = validation.path("validated").asBoolean(false)
+                ? "output.schema.violation"
+                : "output.schema.unavailable";
+        String message = validation.path("reason").asText("");
+        if (message.isBlank()) {
+            message = type.equals("output.schema.violation")
+                    ? "Structured content does not match the declared output schema."
+                    : "The declared output schema could not be evaluated.";
+        }
+        return List.of(new WorkflowRun.Diagnostic(type, "warning", message, validation));
     }
 
     private void validateResultType(WorkflowResultDeclaration declaration, JsonNode value, String requestId) {
@@ -228,6 +297,21 @@ public class WorkflowRuntime {
         }
     }
 
-    private record NodeExecution(JsonNode value, String port, int attempts, boolean failed, String message) {
+    private record NodeValue(JsonNode value, JsonNode transportResult, JsonNode outputSchema, List<WorkflowRun.Diagnostic> diagnostics) {
+        private static NodeValue of(JsonNode value) {
+            return new NodeValue(value, value, null, List.of());
+        }
+    }
+
+    private record NodeExecution(
+            JsonNode value,
+            JsonNode transportResult,
+            JsonNode outputSchema,
+            List<WorkflowRun.Diagnostic> diagnostics,
+            String port,
+            int attempts,
+            boolean failed,
+            String message
+    ) {
     }
 }

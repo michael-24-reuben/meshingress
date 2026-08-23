@@ -1328,7 +1328,7 @@ export const ToolReceipt = ReceiptCubeIcon
 export function PanelSearchIcon(props: CodeSquareFilledIconProps): ReactElement {
   return (
     <IconFrame viewBox="0 0 24 24" {...props}>
-      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
         <rect width="7" height="18" x="3" y="3" rx="1" />
         <rect width="7" height="7" x="14" y="3" rx="1" />
         <circle cx="16.75" cy="16.75" r="2.25" />

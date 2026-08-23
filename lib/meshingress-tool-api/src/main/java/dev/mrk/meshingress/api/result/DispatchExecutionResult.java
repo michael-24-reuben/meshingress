@@ -2,6 +2,7 @@ package dev.mrk.meshingress.api.result;
 
 import dev.mrk.meshingress.dispatch.StructuredContent;
 import dev.mrk.meshingress.dispatch.StructuredContentMapper;
+import dev.mrk.meshingress.dispatch.GeneratedJsonContent;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Unmodifiable;
 import org.jspecify.annotations.NonNull;
@@ -68,17 +69,12 @@ public final class DispatchExecutionResult {
     }
 
     /**
-     * Legacy escape hatch for tools that still provide arbitrary JSON.
-     * Prefer setStructuredContent(StructuredContent).
+     * Wraps parsed JSON in the standard structured-content envelope without declaring a stable
+     * payload schema. Use this for normal tool results whose data is JSON but not a named
+     * {@link StructuredContent} contract.
      */
-    @Deprecated(forRemoval = false)
-    public DispatchExecutionResult setStructuredContent(JsonNode structuredContent) {
-        this.rawStructuredContent = Objects.requireNonNull(
-                structuredContent,
-                "structuredContent must not be null"
-        );
-        this.structuredContent = null;
-        return this;
+    public DispatchExecutionResult setStructuredContent(JsonNode data) {
+        return setStructuredContent(new GeneratedJsonContent(data));
     }
 
     public @Nullable String contentKind() {
@@ -255,7 +251,10 @@ public final class DispatchExecutionResult {
             return this;
         }
 
-        @Deprecated(forRemoval = false)
+        /**
+         * Wraps parsed JSON as generated structured content. The emitted value is always the
+         * standard envelope and the original JSON becomes {@code structuredContent.data}.
+         */
         public Builder structuredContent(JsonNode structuredContent) {
             result.setStructuredContent(structuredContent);
             return this;

@@ -1,5 +1,9 @@
 package dev.mrk.meshingress.dispatch;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
+
 import java.util.Objects;
 
 /**
@@ -44,5 +48,24 @@ public abstract class StructuredContent {
 
     public final StructuredContentKind contentKind() {
         return kind;
+    }
+
+    /**
+     * Produces the value placed beneath the structured-content envelope's {@code data} member.
+     * <p>
+     * Ordinary typed content is serialized from its public properties. Content whose payload is
+     * already JSON may override this method so that the payload itself, rather than a wrapper
+     * object containing it, becomes {@code data}.
+     */
+    public JsonNode data(ObjectMapper objectMapper) {
+        Objects.requireNonNull(objectMapper, "objectMapper must not be null");
+
+        JsonNode data = objectMapper.valueToTree(this);
+        if (data instanceof ObjectNode dataObject) {
+            dataObject.remove("kind");
+            dataObject.remove("schema");
+            dataObject.remove("version");
+        }
+        return data;
     }
 }

@@ -30,6 +30,9 @@ public record McpFunctionDescriptor(
         }
         tool.put("description", description == null ? "" : description);
         tool.set("inputSchema", inputSchema == null ? objectMapper.createObjectNode() : inputSchema);
+        if (outputSchema != null) {
+            tool.set("outputSchema", outputSchema);
+        }
         if (annotations != null && annotations.isObject()) {
             tool.set("annotations", annotations);
         }

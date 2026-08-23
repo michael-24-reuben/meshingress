@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import type { RuntimeTrace, RuntimeTraceEntry, WorkflowNode } from '../../types'
 import { Empty } from '../elements/Empty'
+import { InitiatorLink } from '../elements/links/InitiatorLink'
 import { DeleteIcon, FilterIcon, SettingsIcon, StopIcon } from '../../../../components/icons/node-icons'
 
 export interface RuntimeTracePanelProps {
   trace: RuntimeTrace | null
   running: boolean
   onClear: () => void
+  onSelectNode: (nodeId: string) => boolean
   nodes: WorkflowNode[]
 }
 
-export function RuntimeTracePanel({ trace, running, onClear, nodes }: RuntimeTracePanelProps) {
+export function RuntimeTracePanel({ trace, running, onClear, onSelectNode, nodes }: RuntimeTracePanelProps) {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [tool, setTool] = useState('all')
@@ -25,7 +27,8 @@ export function RuntimeTracePanel({ trace, running, onClear, nodes }: RuntimeTra
   const requestCount = entries.filter((entry) => entry.kind === 'tool').length
   const variableCount = entries.filter((entry) => entry.type !== undefined).length
   const capturedBytes = entries.reduce((total, entry) => total + (entry.size ?? 0), 0)
-  const duration = trace ? (trace.completedAt ?? Date.now()) - trace.startedAt : 0
+  const now = trace ? serverTimelineNow(trace) : 0
+  const duration = trace ? now - trace.startedAt : 0
 
   return (
     <div className="runtime-panel">
@@ -71,15 +74,15 @@ export function RuntimeTracePanel({ trace, running, onClear, nodes }: RuntimeTra
       )}
       {trace ? (
         <>
-          <RuntimeTimeline entries={filteredEntries} nodes={nodes} now={trace.completedAt ?? Date.now()} showCompleted={showCompleted} startedAt={trace.startedAt} />
+          <RuntimeTimeline entries={filteredEntries} nodes={nodes} now={now} showCompleted={showCompleted} startedAt={trace.startedAt} />
           <div className="runtime-table-wrap">
             <table className="runtime-table">
               <thead>
-                <tr><th>Variable</th><th>Status</th><th>Type</th><th>Initiator</th><th>Size</th><th>Time</th></tr>
+                <tr><th>Variable</th><th>Node ID</th><th>Status</th><th>Type</th><th>Initiator</th><th>Size</th><th>Time</th></tr>
               </thead>
               <tbody>
                 {filteredEntries.map((entry) => (
-                  <RuntimeTraceRow entry={entry} key={entry.requestId} now={trace.completedAt ?? Date.now()} />
+                  <RuntimeTraceRow entry={entry} key={entry.requestId} now={now} onSelectNode={onSelectNode} />
                 ))}
               </tbody>
             </table>
@@ -99,10 +102,19 @@ export function RuntimeTracePanel({ trace, running, onClear, nodes }: RuntimeTra
   )
 }
 
+function serverTimelineNow(trace: RuntimeTrace): number {
+  if (trace.completedAt !== undefined) return trace.completedAt
+  const anchor = trace.serverTimeAnchor
+  if (!anchor) return trace.startedAt
+  return anchor.at + Math.max(0, Date.now() - anchor.receivedAt)
+}
+
 function RuntimeTimeline({ entries, nodes, startedAt, now, showCompleted }: { entries: RuntimeTraceEntry[]; nodes: WorkflowNode[]; startedAt: number; now: number; showCompleted: boolean }) {
   const timedEntries = entries.filter((entry) => entry.startedAt !== undefined && (showCompleted || entry.status === 'running'))
   const total = Math.max(1, ...timedEntries.map((entry) => (entry.completedAt ?? now) - startedAt), now - startedAt)
-  const lanes = [...new Set(timedEntries.map((entry) => entry.lane ?? 0))].toSorted((left, right) => left - right)
+  // WorkflowRuntime currently has one serial execution worker. Do not invent lanes
+  // from arrival order or timing; introduce a server-provided worker ID if that changes.
+  const lanes = timedEntries.length ? [0] : []
   const markers = [0, .25, .5, .75, 1]
   return (
     <section aria-label="Runtime timeline in milliseconds" className="runtime-timeline">
@@ -115,7 +127,7 @@ function RuntimeTimeline({ entries, nodes, startedAt, now, showCompleted }: { en
         <div className="runtime-timeline-lanes">
           {lanes.map((lane) => (
             <div className="runtime-timeline-lane" key={lane}>
-              {timedEntries.filter((entry) => (entry.lane ?? 0) === lane).map((entry) => {
+              {timedEntries.map((entry) => {
                 const left = (((entry.startedAt ?? startedAt) - startedAt) / total) * 100
                 const width = Math.max(1.2, (((entry.completedAt ?? now) - (entry.startedAt ?? now)) / total) * 100)
                 const node = nodes.find((candidate) => candidate.id === entry.requestId)
@@ -141,7 +153,7 @@ function RuntimeTimeline({ entries, nodes, startedAt, now, showCompleted }: { en
   )
 }
 
-function RuntimeTraceRow({ entry, now }: { entry: RuntimeTraceEntry; now: number }) {
+function RuntimeTraceRow({ entry, now, onSelectNode }: { entry: RuntimeTraceEntry; now: number; onSelectNode: (nodeId: string) => boolean }) {
   const elapsed = entry.startedAt === undefined ? undefined : (entry.completedAt ?? now) - entry.startedAt
   const status = entry.status === 'idle' ? 'Queued' : entry.status === 'success' ? 'Success' : entry.status === 'error' ? 'Error' : 'Running'
   return (
@@ -149,12 +161,12 @@ function RuntimeTraceRow({ entry, now }: { entry: RuntimeTraceEntry; now: number
       <td>
         <span className="runtime-variable-identity">
           <strong>{entry.variable}</strong>
-          <code>{entry.requestId}</code>
         </span>
       </td>
+      <td><code>{entry.requestId}</code></td>
       <td><span className={`runtime-status ${entry.status}`}>{status}</span></td>
       <td>{entry.type ?? '—'}</td>
-      <td title={entry.initiator}>{entry.initiator}</td>
+      <td><InitiatorLink nodeId={entry.requestId} onSelectNode={onSelectNode} path={entry.initiator} /></td>
       <td>{entry.size === undefined ? '—' : formatBytes(entry.size)}</td>
       <td>{elapsed === undefined ? '—' : formatDuration(elapsed)}</td>
     </tr>

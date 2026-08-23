@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Close, CriticalIcon, CubeIcon, CubeFilledIcon, WarningIcon, WorkflowNodeIcon, PathIcon, CopyIcon, FavoriteIcon, DeleteIcon, type NodeIconDescriptor } from '../../../components/icons/node-icons'
-import type { McpToolFunction } from '../../../api/mcp'
+import { hasStructuredOutput, type McpToolFunction } from '../../../api/mcp'
 import { CanvasActions } from './CanvasActions'
 import { clamp } from '../canvas/grid'
 import { constrainNodePosition, findNodeSpawnPosition } from '../canvas/node-spawner'
@@ -15,8 +15,10 @@ interface WorkflowCanvasProps {
     edges: WorkflowEdge[];
     selectedNodeId: string;
     nodeRunStates: Record<string, NodeRunState>;
+    onSelectLayoutNodeChange?: (selectNode: ((nodeId: string) => void) | null) => void;
     onSelect: (id: string) => void;
     onNodesChange: (change: (nodes: WorkflowNode[]) => WorkflowNode[]) => void;
+    onToolFavorite: (node: WorkflowNode) => void;
     onEdgeReconnect: (edge: WorkflowEdge, targetId: string) => void
     onEdgeCreate: (sourceId: string, targetId: string) => void
     onEdgeDelete?: (edge: WorkflowEdge) => void
@@ -35,6 +37,7 @@ interface WorkflowCanvasProps {
 
 const INPUT_PORT_SNAP_RADIUS = GRID_SIZE
 const LAYOUT_REVEAL_DURATION_MS = 280
+const LAYOUT_FOCUS_RESET_DELAY_MS = 450
 type LayoutPoint = { x: number; y: number }
 type WorkflowNodeCommand = 'copy' | 'cut' | 'paste' | 'duplicate' | 'delete'
 
@@ -75,7 +78,7 @@ function layoutRoadPath(start: LayoutPoint, end: LayoutPoint, laneX: number) {
     return roundedPath(points, 4)
 }
 
-export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeRunStates, onSelect, onNodesChange, onEdgeReconnect, onEdgeCreate, onEdgeDelete, reattachOnEmptyRelease = false, onToggleReattachOnEmptyRelease, toolFunctions, presentations, running, onRun, onValidate, onStatus, pendingToolNode, onToolInsert, onPendingToolNodeHandled }: WorkflowCanvasProps) {
+export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeRunStates, onSelectLayoutNodeChange, onSelect, onNodesChange, onToolFavorite, onEdgeReconnect, onEdgeCreate, onEdgeDelete, reattachOnEmptyRelease = false, onToggleReattachOnEmptyRelease, toolFunctions, presentations, running, onRun, onValidate, onStatus, pendingToolNode, onToolInsert, onPendingToolNodeHandled }: WorkflowCanvasProps) {
     const [transform, setTransform] = useState({ x: 36, y: 24, zoom: 0.86 })
     const [worldSize, setWorldSize] = useState(CANVAS_SIZE)
     const [reconnecting, setReconnecting] = useState<{ sourceId: string; edge?: WorkflowEdge; head: { x: number; y: number }; targetId: string | null } | null>(null)
@@ -191,6 +194,10 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
             y: verticalPlacement === null ? current.y : bounds.height * verticalPlacement - (node.y + NODE_HEIGHT / 2) * current.zoom,
         })
     }, [beginLayoutReveal, nodes, onSelect])
+    useEffect(() => {
+        onSelectLayoutNodeChange?.(selectLayoutNode)
+        return () => onSelectLayoutNodeChange?.(null)
+    }, [onSelectLayoutNodeChange, selectLayoutNode])
     const claimPointer = useCallback((event: React.PointerEvent<Element>): boolean => {
         if (!event.isPrimary || activePointer.current !== null) return false
         activePointer.current = event.pointerId
@@ -436,10 +443,8 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
     }, [handleDuplicateNode])
 
     const handleFavoriteNode = useCallback((nodeToFav: WorkflowNode) => {
-        const isFav = !nodeToFav.isFavorite
-        onNodesChange((current) => current.map((n) => n.id === nodeToFav.id ? { ...n, isFavorite: isFav } : n))
-        onStatus(isFav ? `Favorited ${nodeToFav.title}` : `Removed ${nodeToFav.title} from favorites`)
-    }, [onNodesChange, onStatus])
+        onToolFavorite(nodeToFav)
+    }, [onToolFavorite])
 
     const handleNodeCommand = useCallback((command: WorkflowNodeCommand) => {
         if (command === 'paste') {
@@ -523,14 +528,58 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
     return <div {...canvasProps} onDragOver={onDragOver} onDrop={onDrop} onLostPointerCapture={onLostPointerCapture} onPointerCancel={endPan} onPointerDown={onPointerDown}
         onPointerMove={onPointerMove} onPointerUp={endPan} onWheel={onWheel} ref={canvasRef}
         style={{ backgroundSize: `${GRID_SIZE * transform.zoom}px ${GRID_SIZE * transform.zoom}px`, backgroundPosition: `${transform.x}px ${transform.y}px` }}>
-        <div className="canvas-stage" style={{ width: worldSize.width, height: worldSize.height, transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.zoom})` }}>
-            <svg aria-hidden="true" id="edge-layer" style={{ width: worldSize.width, height: worldSize.height }}>{routes.map(({ edge, path }) => {
-                const isReconnecting = reconnecting?.edge === edge
-                return <path className={`edge${edge.target === selectedNodeId ? ' active' : ''}${isReconnecting ? ' reconnecting' : ''}`}
-                    d={isReconnecting ? reconnectPreviewPath(nodes, edge, reconnecting.head) : path} key={`${edge.source}-${edge.target}`} onPointerDown={(event) => beginReconnect(edge, event)} />
-            })}{reconnecting && !reconnecting.edge && <path className="edge reconnecting" d={reconnectPreviewPath(nodes, { source: reconnecting.sourceId, target: '' }, reconnecting.head)} key="connection-preview" />}</svg>
-            {nodes.map((node) => <WorkflowNode connectedEdge={edges.find((edge) => edge.target === node.id && nodes.some((n) => n.id === edge.source))} documentationAvailable={toolFunctions.some((tool) => tool.name === `${node.toolId}.${node.functionName}`)} isReconnectTarget={reconnecting?.targetId === node.id} key={node.id} node={node} presentation={presentations.forNode(node)} runState={nodeRunStates[node.id] ?? 'idle'} selected={node.id === selectedNodeId} zoom={transform.zoom} onDrag={updatePosition}
-                onConnectStart={beginConnection} onCopy={handleCopyNode} onDuplicate={handleDuplicateNode} onDelete={handleDeleteNode} onDocumentationOpen={() => setDocumentationOpen(true)} onFavorite={handleFavoriteNode} onInteractionEnd={releasePointer} onInteractionStart={claimPointer} onReconnectStart={beginReconnect} outgoingEdge={edges.find((edge) => edge.source === node.id && nodes.some((n) => n.id === edge.target))} onSelect={onSelect} />)}</div>
+        <div
+            className="canvas-stage"
+            style={{
+                width: worldSize.width,
+                height: worldSize.height,
+                transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.zoom})`
+            }}>
+            <svg
+                aria-hidden="true"
+                id="edge-layer"
+                style={{ width: worldSize.width, height: worldSize.height }}>
+                {routes.map(({ edge, path }) => {
+                    const isReconnecting = reconnecting?.edge === edge
+                    return <path
+                        className={`edge${edge.target === selectedNodeId ? ' active' : ''}${isReconnecting ? ' reconnecting' : ''}`}
+                        d={isReconnecting ? reconnectPreviewPath(nodes, edge, reconnecting.head) : path}
+                        key={`${edge.source}-${edge.target}`}
+                        onPointerDown={(event) => beginReconnect(edge, event)} />
+                })}
+                {reconnecting && !reconnecting.edge &&
+                    <path
+                        className="edge reconnecting"
+                        d={reconnectPreviewPath(nodes, { source: reconnecting.sourceId, target: '' }, reconnecting.head)}
+                        key="connection-preview" />
+                }
+            </svg>
+            {nodes.map((node) => (
+                <WorkflowNode
+                    connectedEdge={edges.find((edge) => edge.target === node.id && nodes.some((n) => n.id === edge.source))}
+                    documentationAvailable={toolFunctions.some((tool) => tool.name === `${node.toolId}.${node.functionName}`)}
+                    isReconnectTarget={reconnecting?.targetId === node.id}
+                    key={node.id}
+                    node={node}
+                    presentation={presentations.forNode(node)}
+                    runState={nodeRunStates[node.id] ?? 'idle'}
+                    selected={node.id === selectedNodeId}
+                    zoom={transform.zoom}
+                    onDrag={updatePosition}
+                    onConnectStart={beginConnection}
+                    onCopy={handleCopyNode}
+                    onDuplicate={handleDuplicateNode}
+                    onDelete={handleDeleteNode}
+                    onDocumentationOpen={() => setDocumentationOpen(true)}
+                    onFavorite={handleFavoriteNode}
+                    onInteractionEnd={releasePointer}
+                    onInteractionStart={claimPointer}
+                    onReconnectStart={beginReconnect}
+                    outgoingEdge={edges.find((edge) => edge.source === node.id && nodes.some((n) => n.id === edge.target))}
+                    onSelect={onSelect}
+                />
+            ))}
+        </div>
         <WorkflowLayoutMap edges={edges} focusedNodeId={layoutFocusNodeId ?? selectedNodeId} nodes={layoutNodes} onFocusChange={setLayoutFocusNodeId} onSelect={selectLayoutNode} toolFunctions={toolFunctions} />
         <CanvasActions onRun={onRun} onStatus={onStatus} onToggleReattachOnEmptyRelease={onToggleReattachOnEmptyRelease} onValidate={onValidate} reattachOnEmptyRelease={reattachOnEmptyRelease} running={running} />
         <SelectedNodeData node={selectedNode} tool={selectedTool} />
@@ -540,10 +589,45 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
 
 function WorkflowLayoutMap({ nodes, edges, focusedNodeId, onFocusChange, onSelect, toolFunctions }: { nodes: WorkflowNode[]; edges: WorkflowEdge[]; focusedNodeId: string | null; onFocusChange: (nodeId: string | null) => void; onSelect: (nodeId: string) => void; toolFunctions: McpToolFunction[] }) {
     const gridRef = useRef<HTMLDivElement>(null)
+    const hoverResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [layoutPorts, setLayoutPorts] = useState<Record<string, LayoutPoint>>({})
     const [layoutHeight, setLayoutHeight] = useState(0)
     const reachableNodeIds = reachableWorkflowNodeIds(nodes, edges)
     const connectedNodeIds = new Set(edges.flatMap((edge) => [edge.source, edge.target]))
+
+    const clearHoverResetTimer = useCallback(() => {
+        if (hoverResetTimer.current !== null) {
+            clearTimeout(hoverResetTimer.current)
+            hoverResetTimer.current = null
+        }
+    }, [])
+
+    useEffect(() => () => {
+        if (hoverResetTimer.current !== null) {
+            clearTimeout(hoverResetTimer.current)
+        }
+    }, [])
+
+    const handleFocus = useCallback((nodeId: string) => {
+        clearHoverResetTimer()
+        onFocusChange(nodeId)
+    }, [clearHoverResetTimer, onFocusChange])
+
+    const handlePointerLeave = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        if (!event.currentTarget.contains(document.activeElement)) {
+            clearHoverResetTimer()
+            hoverResetTimer.current = setTimeout(() => {
+                hoverResetTimer.current = null
+                onFocusChange(null)
+            }, LAYOUT_FOCUS_RESET_DELAY_MS)
+        }
+    }, [clearHoverResetTimer, onFocusChange])
+
+    const handleBlur = useCallback(() => {
+        clearHoverResetTimer()
+        onFocusChange(null)
+    }, [clearHoverResetTimer, onFocusChange])
+
     useLayoutEffect(() => {
         const grid = gridRef.current
         if (!grid) return undefined
@@ -584,11 +668,11 @@ function WorkflowLayoutMap({ nodes, edges, focusedNodeId, onFocusChange, onSelec
             {trafficRoads.length > 0 &&
                 <svg aria-hidden="true" className="workflow-layout-roads" height={layoutHeight} width="160">
                     <defs>
-                        <marker id="workflow-layout-incoming-start-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="0" refY="2">
-                            <path d="M 0 0 L 4 2 L 0 4 z" fill="var(--success)" />
+                        <marker id="workflow-layout-incoming-start-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="1" refY="3" viewBox="0 0 6 6">
+                            <path d="M 1 0.7 L 4.98 3 L 1 5.3 Z" fill="var(--success)" stroke="var(--success)" strokeLinejoin="round" strokeWidth="0.8" />
                         </marker>
-                        <marker id="workflow-layout-outgoing-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3.5" refY="2">
-                            <path d="M 0 0 L 4 2 L 0 4 z" fill="var(--accent)" />
+                        <marker id="workflow-layout-outgoing-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="4.98" refY="3" viewBox="0 0 6 6">
+                            <path d="M 1 0.7 L 4.98 3 L 1 5.3 Z" fill="var(--accent)" stroke="var(--accent)" strokeLinejoin="round" strokeWidth="0.8" />
                         </marker>
                     </defs>
                     {trafficRoads.map((road) => (
@@ -604,11 +688,12 @@ function WorkflowLayoutMap({ nodes, edges, focusedNodeId, onFocusChange, onSelec
                 const unavailable = node.kind === 'tool' && !toolFunctions.some((tool) => tool.name === `${node.toolId}.${node.functionName}`)
                 const status = unavailable ? 'critical' : redundant ? 'warning' : undefined
                 const toolName = node.kind === 'trigger' ? node.title : `${node.toolId} / ${node.functionName}`
-                return <div className={`workflow-layout-item${focused ? ' focused' : ''}${redundant ? ' redundant' : ''}`} data-layout-node-id={node.id} key={node.id} onPointerEnter={() => onFocusChange(node.id)} onPointerLeave={(event) => {
-                    if (!event.currentTarget.contains(document.activeElement)) onFocusChange(null)
-                }}>
+                return <div className={`workflow-layout-item${focused ? ' focused' : ''}${redundant ? ' redundant' : ''}`} data-layout-node-id={node.id} key={node.id} onPointerEnter={() => handleFocus(node.id)} onPointerLeave={handlePointerLeave}>
                     <span aria-hidden="true" className={`workflow-layout-level${status ? ` ${status}` : ''}`}>{status === 'critical' ? <CriticalIcon fill="var(--danger)" iconColor="var(--card)" size={16} /> : status === 'warning' ? <WarningIcon size={16} /> : null}</span>
-                    <button aria-label={`Show connections for ${node.id}${redundant ? ', redundant' : ''}${unavailable ? ', tool function is not available' : ''}`} className="workflow-layout-cell" onBlur={() => onFocusChange(null)} onClick={() => onSelect(node.id)} onFocus={() => onFocusChange(node.id)} type="button">
+                    <button aria-label={`Show connections for ${node.id}${redundant ? ', redundant' : ''}${unavailable ? ', tool function is not available' : ''}`} className="workflow-layout-cell" onBlur={handleBlur} onClick={() => {
+                        clearHoverResetTimer()
+                        onSelect(node.id)
+                    }} onFocus={() => handleFocus(node.id)} type="button">
                         <span aria-hidden="true" className="workflow-layout-status" />
                         <code>{node.id}</code>
                     </button>
@@ -685,9 +770,9 @@ const WorkflowNode = memo(function WorkflowNode({ node, presentation, selected, 
                     <CopyIcon size={12} />
                     <span>Copy</span>
                 </button>
-                <button className={`node-context-option${node.isFavorite ? ' is-favorite active' : ''}`} onClick={(event) => { event.stopPropagation(); onFavorite(node) }} title={node.isFavorite ? 'Unfavorite node' : 'Favorite node'} type="button">
+                <button className={`node-context-option${node.isFavorite ? ' is-favorite active' : ''}`} onClick={(event) => { event.stopPropagation(); onFavorite(node) }} title={node.isFavorite ? 'Remove saved tool' : 'Save tool'} type="button">
                     <FavoriteIcon isFavorite={node.isFavorite} size={12} />
-                    <span>Favorite</span>
+                    <span>Saved</span>
                 </button>
                 <button className="node-context-option is-delete" onClick={(event) => { event.stopPropagation(); onDelete(node) }} title="Delete node (Delete)" type="button">
                     <DeleteIcon size={12} />
@@ -729,9 +814,11 @@ function SelectedNodeData({ node, tool }: { node?: WorkflowNode; tool?: McpToolF
     if (!node) return null
     const availability = tool?.annotations?.availability
     const returnType = tool?.returnType ?? tool?.annotations?.returnType ?? tool?.outputSchema
+    const structuredOutput = tool ? hasStructuredOutput(tool) : undefined
     const details = [
         ...Object.entries(node.annotations).filter(([, value]) => value !== undefined).map(([key, value]) => [formatDataKey(key), formatDataValue(value)] as const),
         ...(availability === undefined ? [] : [['Availability', formatDataValue(availability)] as const]),
+        ...(structuredOutput === undefined ? [] : [['Structured output', structuredOutput ? (tool?.outputSchema ? 'Declared schema' : 'Observed schema policy') : 'Disabled'] as const]),
         ...(returnType === undefined ? [] : [['Return type', formatReturnType(returnType)] as const]),
     ]
     return <aside aria-label={`Selected node data for ${node.title}`} className="selected-node-data" onPointerDown={(event) => event.stopPropagation()} onWheel={(event) => event.stopPropagation()}>
@@ -779,6 +866,15 @@ function ToolReference({ tool, onClose }: { tool?: McpToolFunction; onClose: () 
     const schema = tool.inputSchema
     const properties = schema && isRecord(schema.properties) ? Object.entries(schema.properties) : []
     const required = schema && Array.isArray(schema.required) ? new Set(schema.required.filter((value): value is string => typeof value === 'string')) : new Set<string>()
+    const outputSchema = tool.outputSchema
+    const outputDataSchema = outputSchema && isRecord(outputSchema.properties) && isRecord(outputSchema.properties.data)
+        ? outputSchema.properties.data
+        : undefined
+    const outputProperties = outputDataSchema && isRecord(outputDataSchema.properties) ? Object.entries(outputDataSchema.properties) : []
+    const outputRequired = outputDataSchema && Array.isArray(outputDataSchema.required)
+        ? new Set(outputDataSchema.required.filter((value): value is string => typeof value === 'string'))
+        : new Set<string>()
+    const structuredOutput = hasStructuredOutput(tool)
     const scopes = tool.annotations?.scopes ?? []
     return <aside aria-label={`Tool reference for ${tool.name}`} className="tool-reference" onPointerDown={(event) => event.stopPropagation()} onWheel={(event) => event.stopPropagation()}>
         <header className="tool-reference-bar">
@@ -797,6 +893,12 @@ function ToolReference({ tool, onClose }: { tool?: McpToolFunction; onClose: () 
                     : <p className="tool-reference-empty">This tool does not accept input arguments.</p>}
                 {schema?.additionalProperties === false && <p className="tool-reference-contract">Only the documented arguments are accepted.</p>}
             </section>
+            {structuredOutput && <section className="tool-reference-section">
+                <h3>Output</h3>
+                {outputProperties.length ? <div className="tool-reference-inputs">{outputProperties.map(([name, value]) => <ToolInput key={name} name={name} required={outputRequired.has(name)} schema={isRecord(value) ? value : {}} />)}</div>
+                    : outputSchema ? <p className="tool-reference-empty">The tool declares a structured output schema.</p>
+                        : <p className="tool-reference-empty">Studio will establish an observed output schema from a valid result.</p>}
+            </section>}
             {(scopes.length > 0 || tool.annotations?.timeoutMs !== undefined) && <section className="tool-reference-section">
                 <h3>Execution policy</h3>
                 {scopes.length > 0 && <div className="tool-reference-scopes">{scopes.map((scope) => <code key={scope}>{scope}</code>)}</div>}

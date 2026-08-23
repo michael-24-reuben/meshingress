@@ -32,18 +32,34 @@ class WorkflowWebSocketHandlerTests {
     @Test
     void streamsStartedNodeAndCompletedEventsForTheSubmittedStudioDefinition() throws Exception {
         WorkflowRuntime runtime = mock(WorkflowRuntime.class);
+        JsonNode structuredResult = JsonNodeFactory.instance.objectNode();
+        ((tools.jackson.databind.node.ObjectNode) structuredResult)
+                .put("kind", "generated.json.object")
+                .put("schema", "meshingress.generated.json.object.v1")
+                .put("version", 1)
+                .putObject("data").put("message", "Hello");
         WorkflowRun completedRun = new WorkflowRun(
                 "run_live",
                 WorkflowRun.Status.COMPLETED,
                 Map.of("greeting", JsonNodeFactory.instance.objectNode().put("text", "Hello")),
-                List.of(new WorkflowRun.NodeOutcome("r-002", "default", 1, false, null)),
+                List.of(new WorkflowRun.NodeResult(
+                        "r-002",
+                        "helloworld.greeting.greet",
+                        "greeting",
+                        new WorkflowRun.NodeOutcome("r-002", "default", 1, false, null),
+                        1_000L,
+                        1_125L,
+                        structuredResult,
+                        null,
+                        List.of()
+                )),
                 null
         );
         doAnswer(invocation -> {
             WorkflowRunListener listener = invocation.getArgument(3);
             listener.onRunStarted("run_live");
-            listener.onNodeStarted("r-002");
-            listener.onNodeCompleted(completedRun.nodeOutcomes().getFirst());
+            listener.onNodeStarted(new WorkflowRun.NodeStarted("r-002", 1_000L));
+            listener.onNodeCompleted(completedRun.nodeResults().getFirst());
             listener.onRunCompleted(completedRun);
             return completedRun;
         }).when(runtime).run(any(), any(), any(), any());
@@ -81,18 +97,28 @@ class WorkflowWebSocketHandlerTests {
         assertEquals("workflow.started", started.path("type").asString());
         assertEquals("studio-request", started.path("requestId").asString());
         assertEquals("run_live", started.path("runId").asString());
+        assertEquals(1, started.path("sequence").asInt());
 
         JsonNode nodeStarted = objectMapper.readTree(messages.getAllValues().get(1).getPayload());
         assertEquals("workflow.node.started", nodeStarted.path("type").asString());
         assertEquals("r-002", nodeStarted.path("nodeRequestId").asString());
+        assertEquals(1_000L, nodeStarted.path("startedAt").asLong());
+        assertEquals(2, nodeStarted.path("sequence").asInt());
 
         JsonNode nodeCompleted = objectMapper.readTree(messages.getAllValues().get(2).getPayload());
         assertEquals("workflow.node.completed", nodeCompleted.path("type").asString());
-        assertEquals("r-002", nodeCompleted.path("outcome").path("requestId").asString());
+        assertEquals("r-002", nodeCompleted.path("node").path("nodeId").asString());
+        assertEquals("helloworld.greeting.greet", nodeCompleted.path("node").path("nodePath").asString());
+        assertEquals("Hello", nodeCompleted.path("node").path("result").path("data").path("message").asString());
+        assertEquals(1_000L, nodeCompleted.path("node").path("startedAt").asLong());
+        assertEquals(1_125L, nodeCompleted.path("completedAt").asLong());
+        assertEquals(3, nodeCompleted.path("sequence").asInt());
 
         JsonNode completed = objectMapper.readTree(messages.getAllValues().get(3).getPayload());
         assertEquals("workflow.completed", completed.path("type").asString());
         assertEquals("COMPLETED", completed.path("run").path("status").asString());
+        assertEquals("r-002", completed.path("run").path("nodeResults").path(0).path("nodeId").asString());
+        assertEquals(4, completed.path("sequence").asInt());
     }
 
     @Test

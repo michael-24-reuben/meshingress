@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.workflow;
 
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
+import dev.mrk.meshingress.dispatch.process.ProcessExecutionContent;
 import dev.mrk.meshingress.mcp.tools.ToolExecutor;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
@@ -21,7 +22,9 @@ class WorkflowRuntimeTests {
     void routesStringResultToItsMatchingCaseAndBindsTheNamedResult() {
         ToolExecutor executor = (functionName, arguments, context) -> {
             assertThat(functionName).isEqualTo("vehicle.lookup");
-            assertThat(context.requestId()).startsWith("run_").contains(":req-vehicle:attempt_1");
+            assertThat(context.lineage().workflowRunId()).startsWith("run_");
+            assertThat(context.lineage().workflowNodeId()).isEqualTo("req-vehicle");
+            assertThat(context.lineage().workflowAttempt()).isEqualTo(1);
             return DispatchExecutionResult.builder().text("gray toyota").build();
         };
         WorkflowRuntime runtime = new WorkflowRuntime(compiler, executor, objectMapper);
@@ -59,7 +62,7 @@ class WorkflowRuntimeTests {
         assertThat(run.status()).isEqualTo(WorkflowRun.Status.COMPLETED);
         assertThat(run.results().get("vehicle").asString()).isEqualTo("gray toyota");
         assertThat(run.results().get("report").path("vehicle").asString()).isEqualTo("gray toyota");
-        assertThat(run.nodeOutcomes()).extracting(WorkflowRun.NodeOutcome::port)
+        assertThat(run.nodeResults()).extracting(nodeResult -> nodeResult.outcome().port())
                 .containsExactly("default", "grayToyota", "default");
     }
 
@@ -93,7 +96,7 @@ class WorkflowRuntimeTests {
         assertThat(run.status()).isEqualTo(WorkflowRun.Status.COMPLETED);
         assertThat(run.results().get("combined").path("system").asString()).isEqualTo("system");
         assertThat(run.results().get("combined").path("weather").asString()).isEqualTo("weather");
-        assertThat(run.nodeOutcomes()).extracting(WorkflowRun.NodeOutcome::requestId)
+        assertThat(run.nodeResults()).extracting(WorkflowRun.NodeResult::nodeId)
                 .contains("req-join");
     }
 
@@ -128,9 +131,74 @@ class WorkflowRuntimeTests {
         assertThat(run.status()).isEqualTo(WorkflowRun.Status.COMPLETED);
         assertThat(run.results().get("toolFailure").path("attempts").asInt()).isEqualTo(2);
         assertThat(run.results().get("handled").path("message").asString()).isEqualTo("tool is unavailable");
-        assertThat(run.nodeOutcomes()).filteredOn(WorkflowRun.NodeOutcome::failed)
+        assertThat(run.nodeResults()).filteredOn(nodeResult -> nodeResult.outcome().failed())
                 .singleElement()
-                .satisfies(outcome -> assertThat(outcome.port()).isEqualTo("error"));
+                .satisfies(nodeResult -> assertThat(nodeResult.outcome().port()).isEqualTo("error"));
+    }
+
+    @Test
+    void routesStructuredToolPayloadDataWhileRetainingTheEnvelopeInTheNodeRecord() {
+        ToolExecutor executor = (functionName, arguments, context) -> {
+            var payload = objectMapper.createObjectNode();
+            payload.put("source", "toonverse");
+            return DispatchExecutionResult.builder().structuredContent(payload).build();
+        };
+        WorkflowRuntime runtime = new WorkflowRuntime(compiler, executor, objectMapper);
+        WorkflowDefinition definition = new WorkflowDefinition("structured-tool", List.of(
+                new WorkflowNode.ManualTrigger("r-001", nullResult("trigger")),
+                new WorkflowNode.ToolCall("r-002", "toonverse.search", Map.of(), objectResult("search"), WorkflowFailurePolicy.failWorkflow()),
+                new WorkflowNode.Compose("r-003", Map.of("search", new WorkflowInput.ResultReference("search", "")), objectResult("compiled"), WorkflowFailurePolicy.failWorkflow())
+        ), List.of(
+                edge("r-001", "default", "r-002"),
+                edge("r-002", "default", "r-003")
+        ));
+
+        WorkflowRun run = runtime.run(definition, null, null);
+
+        assertThat(run.results().get("search").path("source").asString()).isEqualTo("toonverse");
+        assertThat(run.results().get("compiled").path("search").path("source").asString()).isEqualTo("toonverse");
+        assertThat(run.nodeResults()).filteredOn(nodeResult -> nodeResult.nodeId().equals("r-002"))
+                .singleElement()
+                .satisfies(nodeResult -> {
+                    assertThat(nodeResult.nodePath()).isEqualTo("toonverse.search");
+                    assertThat(nodeResult.variable()).isEqualTo("search");
+                    assertThat(nodeResult.result().path("kind").asString()).isEqualTo("generated.json.object");
+                    assertThat(nodeResult.result().path("data").path("source").asString()).isEqualTo("toonverse");
+                    assertThat(nodeResult.outputSchema()).isNull();
+                    assertThat(nodeResult.diagnostics()).isEmpty();
+                    assertThat(nodeResult.startedAt()).isPositive();
+                    assertThat(nodeResult.completedAt()).isGreaterThanOrEqualTo(nodeResult.startedAt());
+                });
+    }
+
+    @Test
+    void projectsTheTypedStructuredContentClassAsTheNodeOutputSchema() {
+        ToolExecutor executor = (functionName, arguments, context) -> {
+            ProcessExecutionContent content = new ProcessExecutionContent();
+            content.setStatus("completed");
+            content.setExitCode(0);
+            return DispatchExecutionResult.builder().structuredContent(content).build();
+        };
+        WorkflowRuntime runtime = new WorkflowRuntime(compiler, executor, objectMapper);
+        WorkflowDefinition definition = new WorkflowDefinition("typed-structured-tool", List.of(
+                new WorkflowNode.ManualTrigger("r-001", nullResult("trigger")),
+                new WorkflowNode.ToolCall("r-002", "cli.powershell.execute", Map.of(), objectResult("execution"), WorkflowFailurePolicy.failWorkflow())
+        ), List.of(edge("r-001", "default", "r-002")));
+
+        WorkflowRun run = runtime.run(definition, null, null);
+
+        assertThat(run.nodeResults()).filteredOn(nodeResult -> nodeResult.nodeId().equals("r-002"))
+                .singleElement()
+                .satisfies(nodeResult -> {
+                    assertThat(nodeResult.outputSchema()).isNotNull();
+                    assertThat(nodeResult.outputSchema().path("$schema").asString())
+                            .isEqualTo("https://json-schema.org/draft/2020-12/schema");
+                    assertThat(nodeResult.outputSchema().at("/properties/kind/const").asString())
+                            .isEqualTo("process.execution");
+                    assertThat(nodeResult.outputSchema().at("/properties/data/properties/exitCode/type").asString())
+                            .isEqualTo("integer");
+                    assertThat(nodeResult.diagnostics()).isEmpty();
+                });
     }
 
     @Test

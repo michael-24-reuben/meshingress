@@ -5,9 +5,9 @@ public interface WorkflowRunListener {
 
     void onRunStarted(String runId);
 
-    void onNodeStarted(String requestId);
+    void onNodeStarted(WorkflowRun.NodeStarted nodeStarted);
 
-    void onNodeCompleted(WorkflowRun.NodeOutcome outcome);
+    void onNodeCompleted(WorkflowRun.NodeResult nodeResult);
 
     void onRunCompleted(WorkflowRun run);
 
@@ -23,11 +23,11 @@ public interface WorkflowRunListener {
         }
 
         @Override
-        public void onNodeStarted(String requestId) {
+        public void onNodeStarted(WorkflowRun.NodeStarted nodeStarted) {
         }
 
         @Override
-        public void onNodeCompleted(WorkflowRun.NodeOutcome outcome) {
+        public void onNodeCompleted(WorkflowRun.NodeResult nodeResult) {
         }
 
         @Override

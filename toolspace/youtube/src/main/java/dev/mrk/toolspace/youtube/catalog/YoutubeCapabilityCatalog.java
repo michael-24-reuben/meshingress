@@ -3,8 +3,8 @@ package dev.mrk.toolspace.youtube.catalog;
 import java.util.List;
 
 /**
- * The first delivery is deliberately declarative. It reserves reviewable MCP names without
- * pretending that API keys, OAuth grants, transcript access, or media downloads are available.
+ * Catalogs the callable YouTube MCP surface and reserved follow-up capabilities without
+ * presenting future OAuth, transcript, creator, or media work as implemented.
  */
 public final class YoutubeCapabilityCatalog {
     private static final String AVAILABLE = "available";
@@ -14,10 +14,10 @@ public final class YoutubeCapabilityCatalog {
         return List.of(
                 capability("youtube.catalog.capabilities", "List YouTube capabilities", "foundation", "none", AVAILABLE, "Returns this catalog."),
                 capability("youtube.catalog.providers", "List YouTube providers", "foundation", "none", AVAILABLE, "Returns provider boundaries and delivery state."),
-                capability("youtube.data.search", "Search YouTube", "official-data-api", "API key or OAuth by requested fields", PLANNED, "Search videos, channels, playlists, and live content."),
-                capability("youtube.data.videos-get", "Get videos", "official-data-api", "API key or OAuth by requested fields", PLANNED, "Read video metadata, status, statistics, and live details."),
-                capability("youtube.data.channels-get", "Get channels", "official-data-api", "API key or OAuth by requested fields", PLANNED, "Read channel metadata, uploads playlist, statistics, and branding."),
-                capability("youtube.data.playlists-get", "Get playlists", "official-data-api", "API key or OAuth by requested fields", PLANNED, "Read playlist metadata."),
+                capability("youtube.data.search", "Search YouTube", "official-data-api", "API key", AVAILABLE, "Search public videos, channels, or playlists through the configured official Data API client."),
+                capability("youtube.data.videos-get", "Get videos", "official-data-api", "API key", AVAILABLE, "Read public video metadata, status, statistics, and live details."),
+                capability("youtube.data.channels-get", "Get channels", "official-data-api", "API key", AVAILABLE, "Read public channel metadata, uploads playlist, statistics, and branding."),
+                capability("youtube.data.playlists-get", "Get playlists", "official-data-api", "API key", AVAILABLE, "Read public playlist metadata."),
                 capability("youtube.data.playlist-items-list", "List playlist items", "official-data-api", "API key or OAuth by requested fields", PLANNED, "Read ordered playlist contents."),
                 capability("youtube.data.comments-list", "List comments", "official-data-api", "API key or OAuth by requested fields", PLANNED, "Read comment threads and replies where available."),
                 capability("youtube.data.captions-list", "List captions", "official-data-api", "OAuth", PLANNED, "List caption tracks that the authorized account may access."),
@@ -45,7 +45,7 @@ public final class YoutubeCapabilityCatalog {
     public List<YoutubeProvider> providers() {
         return List.of(
                 provider("foundation", "YouTube foundation", "in-process catalog", "none", AVAILABLE, "Catalog and provider contracts only; makes no external calls."),
-                provider("official-data-api", "YouTube Data API", "official Google API", "API key or OAuth", PLANNED, "Future read, creator, comment, caption, subscription, and live integrations."),
+                provider("official-data-api", "YouTube Data API", "official Google API", "API key for current public reads", AVAILABLE, "Current public search, video, channel, and playlist reads use the configured API key. OAuth-gated reads and creator operations remain planned."),
                 provider("official-analytics-api", "YouTube Analytics API", "official Google API", "OAuth", PLANNED, "Future targeted channel or content-owner reporting."),
                 provider("official-reporting-api", "YouTube Reporting API", "official Google API", "OAuth", PLANNED, "Future bulk report lifecycle and retrieval."),
                 provider("dedicated-transcript-provider", "Transcript provider", "selected dedicated provider", "provider-specific", PLANNED, "Provider selection and policy review are deferred; the official Data API is not treated as transcript text access."),

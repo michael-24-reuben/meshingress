@@ -1,22 +1,16 @@
 import { apiRequest } from './client'
 import { RuntimeConfiguration } from '../runtime/RuntimeConfiguration'
-import type { WorkflowRunResult } from '../features/workflow-studio/types'
-import type { WorkflowDefinitionPayload } from '../features/workflow-studio/definition'
+import type { WorkflowNodeOutcome, WorkflowNodeResult, WorkflowNodeStarted, WorkflowRunResult } from '../features/workflow-studio/types'
+export type { WorkflowNodeOutcome, WorkflowNodeResult, WorkflowNodeStarted } from '../features/workflow-studio/types'
+import type { WorkflowDefinitionPayload } from '../features/workflow-studio/compilation/definition'
 
 const workflowRunPath = '/api/v1/workflows/run'
 
 export interface WorkflowRunCallbacks {
   onRunStarted: (runId: string) => void
-  onNodeStarted: (requestId: string) => void
-  onNodeCompleted: (outcome: WorkflowNodeOutcome) => void
-}
-
-export interface WorkflowNodeOutcome {
-  requestId: string
-  failed: boolean
-  attempts: number
-  port: string
-  message?: string
+  onNodeStarted: (node: WorkflowNodeStarted) => void
+  onNodeCompleted: (node: WorkflowNodeResult) => void
+  onLifecycleGap?: (expectedSequence: number, receivedSequence: number) => void
 }
 
 export class WorkflowLiveTransportError extends Error {
@@ -46,6 +40,7 @@ export function runWorkflowLive(definition: WorkflowDefinitionPayload, callbacks
   return new Promise((resolve, reject) => {
     let settled = false
     let started = false
+    let nextLifecycleSequence = 1
     let socket: WebSocket
     try {
       socket = new WebSocket(workflowWebSocketUrl())
@@ -67,17 +62,23 @@ export function runWorkflowLive(definition: WorkflowDefinitionPayload, callbacks
     socket.addEventListener('message', (event) => {
       const payload = parseEvent(event.data)
       if (!payload || payload.requestId !== requestId) return
+      if (typeof payload.sequence === 'number') {
+        if (payload.sequence !== nextLifecycleSequence) {
+          callbacks.onLifecycleGap?.(nextLifecycleSequence, payload.sequence)
+        }
+        nextLifecycleSequence = payload.sequence + 1
+      }
       if (payload.type === 'workflow.started' && typeof payload.runId === 'string') {
         started = true
         callbacks.onRunStarted(payload.runId)
         return
       }
-      if (payload.type === 'workflow.node.started' && typeof payload.nodeRequestId === 'string') {
-        callbacks.onNodeStarted(payload.nodeRequestId)
+      if (payload.type === 'workflow.node.started' && isWorkflowNodeStarted(payload)) {
+        callbacks.onNodeStarted({ requestId: payload.nodeRequestId, startedAt: payload.startedAt, sequence: payload.sequence as number | undefined })
         return
       }
-      if (payload.type === 'workflow.node.completed' && isNodeOutcome(payload.outcome)) {
-        callbacks.onNodeCompleted(payload.outcome)
+      if (payload.type === 'workflow.node.completed' && isWorkflowNodeResult(payload.node)) {
+        callbacks.onNodeCompleted(payload.node)
         return
       }
       if (payload.type === 'workflow.completed' && isWorkflowRunResult(payload.run)) {
@@ -121,6 +122,23 @@ function isNodeOutcome(value: unknown): value is WorkflowNodeOutcome {
     && typeof outcome.attempts === 'number'
     && typeof outcome.port === 'string'
     && (outcome.message === undefined || typeof outcome.message === 'string')
+}
+
+function isWorkflowNodeResult(value: unknown): value is WorkflowNodeResult {
+  if (value === null || typeof value !== 'object') return false
+  const node = value as Record<string, unknown>
+  return typeof node.nodeId === 'string'
+    && (node.nodePath === undefined || node.nodePath === null || typeof node.nodePath === 'string')
+    && typeof node.variable === 'string'
+    && typeof node.startedAt === 'number'
+    && typeof node.completedAt === 'number'
+    && node.completedAt >= node.startedAt
+    && isNodeOutcome(node.outcome)
+}
+
+function isWorkflowNodeStarted(value: Record<string, unknown>): value is Record<string, unknown> & { nodeRequestId: string, startedAt: number } {
+  return typeof value.nodeRequestId === 'string'
+    && typeof value.startedAt === 'number'
 }
 
 function isWorkflowRunResult(value: unknown): value is WorkflowRunResult {

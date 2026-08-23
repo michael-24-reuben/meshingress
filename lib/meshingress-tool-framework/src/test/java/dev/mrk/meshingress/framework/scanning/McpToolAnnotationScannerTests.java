@@ -183,6 +183,35 @@ class McpToolAnnotationScannerTests {
         assertEquals(-45.0, properties.path("geo").path("x-mcp-minLatitude").asDouble());
     }
 
+    @Test
+    void compilesInterfaceOutputTypesIntoPublishedMcpOutputSchemas() {
+        AnnotatedMcpTool tool = scanner.scan(OutputSchemaAnnotatedTool.class);
+        ObjectNode interfaceFunction = function(tool, "interface-result").descriptor().toMcpJson(new ObjectMapper());
+        ObjectNode variantsFunction = function(tool, "variants").descriptor().toMcpJson(new ObjectMapper());
+        ObjectNode observedFunction = function(tool, "observed").descriptor().toMcpJson(new ObjectMapper());
+
+        JsonNode interfaceData = interfaceFunction.path("outputSchema").path("properties").path("data");
+        assertEquals("object", interfaceFunction.path("outputSchema").path("type").asString());
+        assertEquals("object", interfaceData.path("type").asString());
+        assertEquals("string", interfaceData.path("properties").path("id").path("type").asString());
+        assertEquals("array", interfaceData.path("properties").path("items").path("type").asString());
+        assertEquals("string", interfaceData.path("properties").path("items").path("items").path("properties").path("title").path("type").asString());
+        assertEquals("boolean", interfaceData.path("properties").path("complete").path("type").asString());
+        assertEquals(false, interfaceFunction.path("annotations").has("structuredOutput"));
+
+        assertEquals(2, variantsFunction.path("outputSchema").path("properties").path("data").path("oneOf").size());
+        assertEquals(false, variantsFunction.path("annotations").path("structuredOutput").asBoolean());
+        assertEquals(true, observedFunction.path("annotations").path("structuredOutput").asBoolean());
+        assertEquals(true, observedFunction.path("outputSchema").isMissingNode());
+    }
+
+    private static dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpFunction function(AnnotatedMcpTool tool, String name) {
+        return tool.functions().stream()
+                .filter(function -> function.name().equals(name))
+                .findFirst()
+                .orElseThrow();
+    }
+
     @McpTool(
             value = "helloworld",
             title = "Hello World",
@@ -307,6 +336,44 @@ class McpToolAnnotationScannerTests {
         ObjectNode call(RemainingConstrainedArgs arguments) {
             return null;
         }
+    }
+
+    @McpTool(value = "output")
+    static class OutputSchemaAnnotatedTool {
+
+        @McpFunction(value = "interface-result", outputTypes = SearchOutput.class)
+        ObjectNode interfaceResult() {
+            return null;
+        }
+
+        @McpFunction(
+                value = "variants",
+                outputTypes = {SearchOutput.class, DeferredSearchOutput.class},
+                structuredOutput = McpFunction.StructuredOutput.DISABLED
+        )
+        ObjectNode variants() {
+            return null;
+        }
+
+        @McpFunction(value = "observed", structuredOutput = McpFunction.StructuredOutput.ENABLED)
+        ObjectNode observed() {
+            return null;
+        }
+    }
+
+    interface SearchOutput {
+        String id();
+
+        List<SearchItem> items();
+
+        boolean isComplete();
+    }
+
+    record SearchItem(String title) {
+    }
+
+    interface DeferredSearchOutput {
+        String requestId();
     }
 
     @McpTool(value = "dotted.tool")

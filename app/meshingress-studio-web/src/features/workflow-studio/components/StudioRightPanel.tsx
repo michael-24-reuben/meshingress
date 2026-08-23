@@ -1,5 +1,5 @@
 import type { RightPanelViewContentKind, RightPanelViewContentParams, SurfaceEntry, WorkflowNode } from '../types'
-import { rightStudioRailPanels } from './panel-catalog'
+import { rightStudioRailPanels, resolveSurfaceTab } from './panel-catalog'
 import { SurfaceFrame } from './SurfaceFrame'
 import { MinusIcon } from '../../../components/icons/node-icons'
 import { Empty } from './elements/Empty'
@@ -52,12 +52,9 @@ export function StudioRightPanel({
     const surfaceEntry = panel.surfaceEntry as SurfaceEntry
     const bodyEntry = surfaceEntry.body
     const isTabs = Array.isArray(bodyEntry)
+    const rawProps = params[rightPanelBody as keyof RightPanelViewContentParams] as any
     const tabs = isTabs
-        ? bodyEntry.map((tab) => ({
-            id: tab.kind as RightPanelViewContentKind,
-            label: tab.tabTitle,
-            icon: tab.tabIcon,
-        }))
+        ? bodyEntry.map((tab) => resolveSurfaceTab<RightPanelViewContentKind>(tab, rawProps))
         : undefined
     const activeTabEntry = isTabs ? bodyEntry.find((tab) => tab.kind === rightPanelBody) : undefined
 
@@ -69,8 +66,6 @@ export function StudioRightPanel({
         : typeof surfaceEntry.title === 'function'
             ? surfaceEntry.title({ selectedNode, presentations, onNodeChange })
             : surfaceEntry.title
-
-    const rawProps = params[rightPanelBody as keyof RightPanelViewContentParams] as any
 
     const body = isNodeViewWithoutSelection
         ? <Empty message="No content is available." />

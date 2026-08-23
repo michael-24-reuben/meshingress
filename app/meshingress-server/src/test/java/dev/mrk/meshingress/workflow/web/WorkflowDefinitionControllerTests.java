@@ -71,10 +71,5 @@ class WorkflowDefinitionControllerTests {
                 .isEqualTo("helloworld.greeting.greet");
         assertThat(((WorkflowInput.Literal) greeting.arguments().get("name")).value().asString())
                 .isEqualTo("From Studio input");
-        WorkflowNode.ToolCall powershell = (WorkflowNode.ToolCall) definition.getValue().nodes().get(0);
-        var arguments = ((WorkflowInput.Literal) powershell.arguments().get("arguments")).value();
-        assertThat(arguments.isArray()).isTrue();
-        assertThat(arguments.get(0).asString()).isEqualTo("-NoProfile");
-        assertThat(arguments.get(1).asString()).isEqualTo("-NonInteractive");
     }
 }

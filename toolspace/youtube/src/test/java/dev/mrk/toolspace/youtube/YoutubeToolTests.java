@@ -17,14 +17,15 @@ class YoutubeToolTests {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void capabilitiesExposeStableFutureFunctionsWithoutAdvertisingThemAsAvailable() {
+    void capabilitiesDistinguishCallableFunctionsFromPlannedFollowUps() {
         var result = catalogTool().capabilities(null);
 
         assertThat(result.isError()).isFalse();
         assertThat(result.structuredContent().orElseThrow().path("kind").asString()).isEqualTo("data.records");
         assertThat(result.toJson(objectMapper).at("/structuredContent/data/records/2/function").asString()).isEqualTo("youtube.data.search");
-        assertThat(result.toJson(objectMapper).at("/structuredContent/data/records/2/status").asString()).isEqualTo("planned");
+        assertThat(result.toJson(objectMapper).at("/structuredContent/data/records/2/status").asString()).isEqualTo("available");
         assertThat(result.toJson(objectMapper).at("/structuredContent/data/records/0/status").asString()).isEqualTo("available");
+        assertThat(result.toJson(objectMapper).at("/structuredContent/data/records/6/status").asString()).isEqualTo("planned");
     }
 
     @Test
@@ -33,6 +34,7 @@ class YoutubeToolTests {
 
         assertThat(result.isError()).isFalse();
         assertThat(result.toJson(objectMapper).toString()).contains("dedicated-transcript-provider", "media.ytdlp");
+        assertThat(result.toJson(objectMapper).at("/structuredContent/data/records/1/status").asString()).isEqualTo("available");
     }
 
     @Test

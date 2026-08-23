@@ -5,6 +5,7 @@ import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.function.McpFunctionDescriptor;
 import dev.mrk.meshingress.config.MeshingressProperties;
+import dev.mrk.meshingress.mcp.OutputSchemaValidator;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -29,13 +30,15 @@ public class DefaultToolExecutor implements ToolExecutor {
     private final ObjectMapper objectMapper;
     private final ToolAccessService toolAccessService;
     private final ProfileLimitService profileLimits;
+    private final OutputSchemaValidator outputSchemaValidator;
 
-    public DefaultToolExecutor(ToolRegistry toolRegistry, MeshingressProperties properties, ObjectMapper objectMapper, ToolAccessService toolAccessService, ProfileLimitService profileLimits) {
+    public DefaultToolExecutor(ToolRegistry toolRegistry, MeshingressProperties properties, ObjectMapper objectMapper, ToolAccessService toolAccessService, ProfileLimitService profileLimits, OutputSchemaValidator outputSchemaValidator) {
         this.toolRegistry = toolRegistry;
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.toolAccessService = toolAccessService;
         this.profileLimits = profileLimits;
+        this.outputSchemaValidator = outputSchemaValidator;
     }
 
     @Override
@@ -55,6 +58,7 @@ public class DefaultToolExecutor implements ToolExecutor {
         logCall(functionName, arguments, context);
         try (ProfileLimitService.Reservation ignored = profileLimits.reserveToolExecution(context, functionName)) {
             DispatchExecutionResult result = handler.call(arguments, context);
+            outputSchemaValidator.validate(result, function);
             enrichToolIdentity(result, tool, function);
             logResult(functionName, result, context);
             return result;

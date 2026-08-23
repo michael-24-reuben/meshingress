@@ -1,12 +1,16 @@
-import type { ElementAttributeInput, ElementAttributesNormalized, SurfaceEntry } from '../types'
+import type { SurfaceEntry } from '../types'
 import { formatElementAttributes } from '../utilities'
 
 type SurfaceTarget = 'left' | 'right' | 'drawer'
 
-interface SurfaceTab<T extends string = string> {
+export interface SurfaceTab<T extends string = string> {
   id: T
-  label: string
+  label?: React.ReactNode
   icon?: React.ComponentType<{ size?: number }>
+  badge?: React.ReactNode
+  disabled?: boolean
+  tooltip?: string
+  CustomHeader?: React.ComponentType<{ active: boolean }> | ((active: boolean) => React.ReactNode)
 }
 
 export interface SurfaceContent<T extends string = string> {
@@ -25,22 +29,48 @@ export interface SurfaceContent<T extends string = string> {
 function SurfaceTabs<T extends string>({ content }: { content: SurfaceContent<T> }) {
   if (!content.tabs?.length) return null
 
-  return <div className="tabs">
-    {content.tabs.map((tab) => {
-      const Icon = tab.icon
-      return (
-        <button
-          className={`tab${content.activeTab === tab.id ? ' active' : ''}`}
-          key={tab.id}
-          onClick={() => content.onTabChange?.(tab.id)}
-          type="button"
-        >
-          {Icon && <span className="tab-icon"><Icon size={14} /></span>}
-          <span>{tab.label}</span>
-        </button>
-      )
-    })}
-  </div>
+  return (
+    <div className="tabs">
+      {content.tabs.map((tab) => {
+        const isActive = content.activeTab === tab.id
+        const Icon = tab.icon
+        const CustomHeader = tab.CustomHeader
+
+        let headerContent: React.ReactNode = null
+        if (CustomHeader) {
+          if (typeof CustomHeader === 'function' && !(CustomHeader.prototype && (CustomHeader.prototype as any)?.isReactComponent)) {
+            headerContent = (CustomHeader as (active: boolean) => React.ReactNode)(isActive)
+          } else {
+            const HeaderComp = CustomHeader as React.ComponentType<{ active: boolean }>
+            headerContent = <HeaderComp active={isActive} />
+          }
+        } else {
+          headerContent = (
+            <>
+              {Icon && <span className="tab-icon"><Icon size={14} /></span>}
+              {tab.label !== undefined && <span>{tab.label}</span>}
+              {tab.badge !== undefined && tab.badge !== null && (
+                <span className="tab-badge">{tab.badge}</span>
+              )}
+            </>
+          )
+        }
+
+        return (
+          <button
+            className={`tab${isActive ? ' active' : ''}${tab.disabled ? ' disabled' : ''}`}
+            key={tab.id}
+            disabled={tab.disabled}
+            title={tab.tooltip}
+            onClick={() => !tab.disabled && content.onTabChange?.(tab.id)}
+            type="button"
+          >
+            {headerContent}
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 export function SurfaceFrame<T extends string>({ content }: { content: SurfaceContent<T> }) {

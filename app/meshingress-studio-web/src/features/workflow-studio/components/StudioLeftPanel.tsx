@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { LeftPanelViewContentKind, LeftPanelViewContentParams, SurfaceEntry } from '../types'
-import { leftStudioRailPanels } from './panel-catalog'
+import { leftStudioRailPanels, resolveSurfaceTab } from './panel-catalog'
 import { SurfaceFrame } from './SurfaceFrame'
 import { Empty } from './elements/Empty'
 import { HideAction, LeftPanelActions, useTreeExpand, type SortOption } from './actions'
@@ -39,8 +39,6 @@ export function StudioLeftPanel({ view, params, onChange, onHide, onStatus = () 
     const surfaceEntry = panel.surfaceEntry as SurfaceEntry
     const bodyEntry = surfaceEntry.body
     const isTabs = Array.isArray(bodyEntry)
-    const tabs = isTabs ? bodyEntry.map((tab) => ({ id: tab.kind as LeftPanelViewContentKind, label: tab.tabTitle, icon: tab.tabIcon })) : undefined
-    const activeTabEntry = isTabs ? bodyEntry.find((tab) => tab.kind === view) : undefined
 
     const rawProps = params[view as keyof LeftPanelViewContentParams] as any
     const mergedProps = {
@@ -49,6 +47,9 @@ export function StudioLeftPanel({ view, params, onChange, onHide, onStatus = () 
         expandAllState,
         expandKey,
     }
+
+    const tabs = isTabs ? bodyEntry.map((tab) => resolveSurfaceTab<LeftPanelViewContentKind>(tab, mergedProps)) : undefined
+    const activeTabEntry = isTabs ? bodyEntry.find((tab) => tab.kind === view) : undefined
 
     const bodyContent = isTabs
         ? (activeTabEntry ? activeTabEntry.tabContent(mergedProps) : <Empty message="No content is available." />)

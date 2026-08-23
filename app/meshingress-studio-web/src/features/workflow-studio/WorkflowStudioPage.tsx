@@ -5,10 +5,12 @@ import { setStudioAccessToken } from '../../api/client'
 import { readGoogleIdentity } from '../../auth/google-identity'
 import { RuntimeConfiguration } from '../../runtime/RuntimeConfiguration'
 import { listToolModules, type ToolModuleSummary } from '../../api/tool-modules'
-import { runWorkflowHttp, runWorkflowLive, WorkflowLiveTransportError, type WorkflowNodeOutcome } from '../../api/workflow'
-import { initialEdges, initialNodes, workflowName } from './sample-workflow'
-import { workflowDefinition } from './definition'
+import { runWorkflowHttp, runWorkflowLive, WorkflowLiveTransportError, type WorkflowNodeOutcome, type WorkflowNodeResult } from '../../api/workflow'
+import { initialEdges, initialNodes, workflowName } from './compilation/sample-workflow'
+import { workflowDefinition } from './compilation/definition'
 import { createToolPresentationIndex } from './node-presentation'
+import { ToolResultStore } from './storage/tool-result-store'
+import { matchesSavedTool, readSavedTools, sameSavedTool, writeSavedTools, type SavedToolReference } from './storage/saved-tools'
 import { ActivityRail } from './components/elements/layout/ActivityRail'
 import { StudioLeftPanel } from './components/StudioLeftPanel'
 import { PanelSearchDialog } from './components/PanelSearchDialog'
@@ -20,8 +22,8 @@ import { WorkspaceDialog } from './components/WorkspaceDialog'
 import { Workbench } from './components/elements/Workbench'
 import { getPanelContentKind, getPanelForContentKind, getSurfaceContentKinds, type PanelSurface, type PanelViewContentKind, type PanelViewSetContentParams, type StudioPanel } from './components/panel-catalog'
 import type { DrawerPanelViewContentKind, DrawerPanelViewContentParams, LeftPanelViewContentKind, LeftPanelViewContentParams, LogEntry, NodeRunState, RegisteredTool, RightPanelViewContentKind, RightPanelViewContentParams, RuntimeTrace, WorkflowNode, WorkflowRunResult } from './types'
-import { DEFAULT_STUDIO_PROPERTIES } from './types'
-import { chooseLocalDirectory, chooseStoredDirectory, hasStoredDirectoryHandle, indexWorkspaceBackground, readRecentWorkspaceEntries, readStoredDirectory, storeDirectoryHandle, upsertRecentEntry, writeRecentWorkspaceEntries, type DirectorySelection, type LocalWorkspace, type LocalWorkspaceNode, type RecentWorkspaceEntry } from './local-workspace'
+import { createLogEntry, DEFAULT_STUDIO_PROPERTIES } from './types'
+import { chooseLocalDirectory, chooseLocalWorkspaceParent, chooseStoredDirectory, createLocalWorkspaceProject, hasStoredDirectoryHandle, indexWorkspaceBackground, readRecentWorkspaceEntries, readStoredDirectory, storeDirectoryHandle, upsertRecentEntry, writeRecentWorkspaceEntries, type DirectorySelection, type LocalWorkspace, type LocalWorkspaceNode, type RecentWorkspaceEntry } from './storage/local-workspace'
 import './workflow-studio.css'
 import { StudioDrawerPanel } from './components/StudioDrawerPanel'
 
@@ -38,6 +40,13 @@ function registeredTools(functions: McpToolFunction[]): RegisteredTool[] {
     .toSorted((left, right) => left.title.localeCompare(right.title))
 }
 
+function savedToolForRegisteredTool(tool: RegisteredTool): SavedToolReference {
+  return {
+    toolId: tool.id,
+    ...(tool.moduleToolId ? { moduleToolId: tool.moduleToolId } : {}),
+  }
+}
+
 function newRuntimeTrace(nodes: WorkflowNode[]): RuntimeTrace {
   return {
     startedAt: Date.now(),
@@ -51,11 +60,9 @@ function newRuntimeTrace(nodes: WorkflowNode[]): RuntimeTrace {
   }
 }
 
-function firstOpenLane(trace: RuntimeTrace): number {
-  const occupied = new Set(trace.entries.filter((entry) => entry.status === 'running').flatMap((entry) => entry.lane === undefined ? [] : [entry.lane]))
-  let lane = 0
-  while (occupied.has(lane)) lane += 1
-  return lane
+function traceStartedAt(entries: RuntimeTrace['entries'], fallback: number): number {
+  const starts = entries.flatMap((entry) => entry.startedAt === undefined ? [] : [entry.startedAt])
+  return starts.length === 0 ? fallback : Math.min(...starts)
 }
 
 function valueDetails(value: unknown): Pick<RuntimeTrace['entries'][number], 'size' | 'type'> {
@@ -103,11 +110,24 @@ export function WorkflowStudioPage() {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [lastRun, setLastRun] = useState<WorkflowRunResult | null>(null)
   const [runtimeTrace, setRuntimeTrace] = useState<RuntimeTrace | null>(null)
+  const selectLayoutNodeRef = useRef<((nodeId: string) => void) | null>(null)
+  const runResultStoreRef = useRef<ToolResultStore | null>(null)
+  const persistedNodeResultIdsRef = useRef(new Set<string>())
   const [runStates, setRunStates] = useState<Record<string, NodeRunState>>({})
   const [running, setRunning] = useState(false)
   const [profile, setProfile] = useState<StudioProfile | null>(null)
   const [authenticationRevision, setAuthenticationRevision] = useState(0)
   const [studioProperties, setStudioProperties] = useState(DEFAULT_STUDIO_PROPERTIES)
+  const setLayoutNodeSelection = useCallback((selectNode: ((nodeId: string) => void) | null) => {
+    selectLayoutNodeRef.current = selectNode
+  }, [])
+  const selectRuntimeNode = useCallback((nodeId: string) => {
+    if (!nodes.some((node) => node.id === nodeId)) return false
+    const selectLayoutNode = selectLayoutNodeRef.current
+    if (selectLayoutNode) selectLayoutNode(nodeId)
+    else setSelectedNodeId(nodeId)
+    return true
+  }, [nodes])
   const toggleReattachOnEmptyRelease = () => setStudioProperties((current) => {
     const nextVal = !current.canvas.reattachOnEmptyRelease
     addLog('Editor', `Edge release mode set to ${nextVal ? 'reattach back' : 'remove path (default)'}.`)
@@ -134,17 +154,19 @@ export function WorkflowStudioPage() {
   const [toolsState, setToolsState] = useState<'refreshing' | 'loading' | 'ready' | 'error'>('loading')
   const [isPanelSearchOpen, setIsPanelSearchOpen] = useState(false)
   const [workspace, setWorkspace] = useState<LocalWorkspace | null>(null)
+  const [savedTools, setSavedTools] = useState<readonly SavedToolReference[]>([])
+  const [savedToolsState, setSavedToolsState] = useState<'idle' | 'loading' | 'writing' | 'ready' | 'error'>('idle')
   const [workspaceHistory, setWorkspaceHistory] = useState<Record<string, LocalWorkspace>>({})
   const [recents, setRecents] = useState<RecentWorkspaceEntry[]>(readRecentWorkspaceEntries)
   const [recentItemsWithoutHandle, setRecentItemsWithoutHandle] = useState<ReadonlySet<string>>(() => new Set())
+  const [revealedWorkspaceFilePath, setRevealedWorkspaceFilePath] = useState<string | null>(null)
   const [isWorkspaceDialogOpen, setIsWorkspaceDialogOpen] = useState(false)
+  const savedToolsLoadRevision = useRef(0)
+  const activeWorkspaceId = useRef<string | null>(null)
   const presentations = useMemo(() => createToolPresentationIndex(toolFunctions, toolModules), [toolFunctions, toolModules])
   const bookmarkedTools = useMemo(() => {
-    const favoriteToolIds = new Set(nodes
-      .filter((node) => node.kind === 'tool' && node.isFavorite)
-      .map((node) => `${node.toolId}.${node.functionName}`))
-    return tools.filter((tool) => favoriteToolIds.has(tool.id))
-  }, [nodes, tools])
+    return tools.filter((tool) => savedTools.some((savedTool) => matchesSavedTool(savedTool, savedToolForRegisteredTool(tool))))
+  }, [savedTools, tools])
   const selectedNode = nodes.find((node) => node.id === selectedNodeId)
   const nativeValidation = nativeValidationTransport()
   useEffect(() => {
@@ -189,7 +211,7 @@ export function WorkflowStudioPage() {
     })
     return () => { cancelled = true }
   }, [recents])
-  const addLog = (source: string, message: string, severity?: LogEntry['severity']) => setLogs((current) => [{ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), source, message, severity }, ...current])
+  const addLog = (source: string, message: string, severity?: LogEntry['severity']) => setLogs((current) => [createLogEntry(source, message, severity), ...current])
   const setMessage = (text: string) => addLog('Editor', text)
 
   const acceptGoogleCredential = (credential: string) => {
@@ -230,11 +252,71 @@ export function WorkflowStudioPage() {
       return next
     })
   }
+  const savedToolForNode = (node: WorkflowNode): SavedToolReference => ({
+    toolId: `${node.toolId}.${node.functionName}`,
+    ...(node.moduleToolId ? { moduleToolId: node.moduleToolId } : {}),
+  })
+  const applySavedTools = (saved: readonly SavedToolReference[]) => {
+    setSavedTools(saved)
+    setNodes((current) => current.map((node) => node.kind !== 'tool'
+      ? node
+      : { ...node, isFavorite: saved.some((savedTool) => matchesSavedTool(savedTool, savedToolForNode(node))) }))
+  }
+  const loadSavedTools = (targetWorkspace: LocalWorkspace) => {
+    const revision = ++savedToolsLoadRevision.current
+    activeWorkspaceId.current = targetWorkspace.id
+    applySavedTools([])
+    if (!targetWorkspace.root.handle) {
+      setSavedToolsState('idle')
+      return
+    }
+    setSavedToolsState('loading')
+    void readSavedTools(targetWorkspace.root.handle)
+      .then((saved) => {
+        if (savedToolsLoadRevision.current !== revision) return
+        applySavedTools(saved)
+        setSavedToolsState('ready')
+      })
+      .catch((error: unknown) => {
+        if (savedToolsLoadRevision.current !== revision) return
+        setSavedToolsState('error')
+        setMessage(error instanceof Error ? `Could not load Saved tools: ${error.message}` : 'Could not load Saved tools.')
+      })
+  }
+  const toggleSavedTool = (node: WorkflowNode) => {
+    if (node.kind !== 'tool') return
+    if (!workspace?.root.handle) {
+      setMessage('Open a writable local workspace to save tools.')
+      return
+    }
+    if (savedToolsState === 'loading' || savedToolsState === 'writing') {
+      setMessage(savedToolsState === 'loading' ? 'Saved tools are still loading for this workspace.' : 'Saved tools are updating for this workspace.')
+      return
+    }
+    const tool = savedToolForNode(node)
+    const isSaved = savedTools.some((savedTool) => sameSavedTool(savedTool, tool))
+    const next = isSaved
+      ? savedTools.filter((savedTool) => !sameSavedTool(savedTool, tool))
+      : [...savedTools, tool]
+    const targetWorkspaceId = workspace.id
+    setSavedToolsState('writing')
+    void writeSavedTools(workspace.root.handle, next)
+      .then(() => {
+        if (activeWorkspaceId.current !== targetWorkspaceId) return
+        applySavedTools(next)
+        setSavedToolsState('ready')
+        setMessage(isSaved ? `Removed ${node.title} from Saved tools.` : `Saved ${node.title} to this workspace.`)
+      })
+      .catch((error: unknown) => {
+        setMessage(error instanceof Error ? `Could not save tool: ${error.message}` : 'Could not save tool.')
+      })
+  }
   const activateWorkspace = (name: string, selection: DirectorySelection) => {
     const earliestMatchingRecent = recents.findLast((entry) => entry.kind === 'workspace' && entry.label === name && entry.path === selection.name)
     const workspaceId = earliestMatchingRecent?.workspaceId ?? crypto.randomUUID()
     const nextWorkspace: LocalWorkspace = { id: workspaceId, name, pathLabel: selection.name, root: selection.root }
     setWorkspace(nextWorkspace)
+    loadSavedTools(nextWorkspace)
     setWorkspaceHistory((current) => ({ ...current, [nextWorkspace.id]: nextWorkspace }))
     if (!earliestMatchingRecent) {
       rememberRecent({ id: `workspace:${nextWorkspace.id}`, kind: 'workspace', label: name, path: selection.name, workspaceId: nextWorkspace.id })
@@ -258,10 +340,11 @@ export function WorkflowStudioPage() {
       setMessage('Could not open the local workspace.')
     }
   }
-  const createWorkspace = (name: string, selection: DirectorySelection) => {
-    activateWorkspace(name, selection)
+  const createWorkspace = async (name: string, parentSelection: DirectorySelection) => {
+    const projectSelection = await createLocalWorkspaceProject(name, parentSelection)
+    activateWorkspace(projectSelection.name, projectSelection)
     setIsWorkspaceDialogOpen(false)
-    setMessage(`Configured local workspace ${name}. No files were created.`)
+    setMessage(`Created and opened local workspace ${projectSelection.name}.`)
   }
   const selectWorkspaceFile = (file: LocalWorkspaceNode) => {
     if (!workspace) return
@@ -271,6 +354,7 @@ export function WorkflowStudioPage() {
   const restoreWorkspace = (id: string, name: string, selection: DirectorySelection) => {
     const restoredWorkspace: LocalWorkspace = { id, name, pathLabel: selection.name, root: selection.root }
     setWorkspace(restoredWorkspace)
+    loadSavedTools(restoredWorkspace)
     setWorkspaceHistory((current) => ({ ...current, [restoredWorkspace.id]: restoredWorkspace }))
     setLeftPanel('workspace-explorer')
     setIsLeftPanelVisible(true)
@@ -284,6 +368,10 @@ export function WorkflowStudioPage() {
       setMessage(recents.length ? 'Recent local workspaces and files are shown in Explorer.' : 'No local workspace history yet.')
       return
     }
+    const revealRecentFile = () => {
+      if (recent.kind === 'file') setRevealedWorkspaceFilePath(recent.path)
+    }
+    if (recent.kind !== 'file') setRevealedWorkspaceFilePath(null)
     if (recent.kind === 'file') {
       setLeftPanel('workspace-explorer')
       setIsLeftPanelVisible(true)
@@ -294,6 +382,7 @@ export function WorkflowStudioPage() {
       setWorkspace(rememberedWorkspace)
       setLeftPanel('workspace-explorer')
       setIsLeftPanelVisible(true)
+      revealRecentFile()
       setMessage(`Reopened ${rememberedWorkspace.name} from this browser session.`)
       return
     }
@@ -301,6 +390,7 @@ export function WorkflowStudioPage() {
       const selection = await chooseLocalDirectory()
       if (!selection) return
       activateWorkspace(recent.label, selection)
+      revealRecentFile()
       setMessage(`Opened ${recent.label} from the folder picker.`)
       return
     }
@@ -308,12 +398,14 @@ export function WorkflowStudioPage() {
     const workspaceRecent = recents.find((entry) => entry.kind === 'workspace' && entry.workspaceId === recent.workspaceId)
     if (stored.selection) {
       const restoredWorkspace = restoreWorkspace(recent.workspaceId, workspaceRecent?.label ?? stored.selection.name, stored.selection)
+      revealRecentFile()
       setMessage(`Reopened ${restoredWorkspace.name} from its saved local folder.`)
       return
     }
     const selection = await chooseStoredDirectory(recent.workspaceId)
     if (!selection) return
     activateWorkspace(workspaceRecent?.label ?? recent.label, selection)
+    revealRecentFile()
     const source = stored.reason === 'permission-denied' ? 'the saved folder' : 'the folder picker'
     setMessage(`Opened ${workspaceRecent?.label ?? recent.label} from ${source}.`)
   }
@@ -457,41 +549,138 @@ export function WorkflowStudioPage() {
     ? `Failed after ${outcome.attempts} attempt(s): ${outcome.message ?? 'unknown error'}`
     : `Completed through ${outcome.port} on attempt ${outcome.attempts}.`
 
-  const finishRun = (result: WorkflowRunResult, includeOutcomeLogs: boolean) => {
+  const cacheRunOutputSchemas = async (result: WorkflowRunResult) => {
+    const workspaceRoot = workspace?.root.handle
+    if (!workspaceRoot) return
+
+    let stored = 0
+    const processedTools = new Set<string>()
+    for (const node of nodes) {
+      if (node.kind !== 'tool') continue
+      const tool = toolFunctions.find((candidate) => candidate.name === `${node.toolId}.${node.functionName}`)
+      if (!tool?.outputSchema || processedTools.has(tool.name)) continue
+      processedTools.add(tool.name)
+      if (await ToolResultStore.cacheToolOutputSchema(workspaceRoot, tool, tool.outputSchema) === 'stored') stored += 1
+    }
+    for (const nodeResult of result.nodeResults ?? []) {
+      const node = nodes.find((candidate) => candidate.id === nodeResult.nodeId && candidate.kind === 'tool')
+      if (!node) continue
+      const tool = toolFunctions.find((candidate) => candidate.name === `${node.toolId}.${node.functionName}`)
+      if (!tool || tool.outputSchema || processedTools.has(tool.name)) continue
+      if (nodeResult.outputSchema) {
+        // This comes from a typed StructuredContent class, not from the response payload.
+        processedTools.add(tool.name)
+        if (await ToolResultStore.cacheToolOutputSchema(workspaceRoot, tool, nodeResult.outputSchema) === 'stored') stored += 1
+        continue
+      }
+      if (nodeResult.outcome.failed || nodeResult.diagnostics?.some((diagnostic) => diagnostic.type === 'output.schema.violation')) continue
+      const data = structuredContentData(nodeResult.result)
+      if (data === undefined) continue
+      processedTools.add(tool.name)
+      if (await ToolResultStore.cacheToolOutputSchema(workspaceRoot, tool, ToolResultStore.jsonToSchema(data)) === 'stored') stored += 1
+    }
+    if (stored) {
+      addLog('Schema cache', `Stored ${stored} tool output schema${stored === 1 ? '' : 's'} locally.`)
+    }
+  }
+
+  function structuredContentData(value: unknown): unknown | undefined {
+    if (!isRecord(value)
+      || typeof value.kind !== 'string'
+      || typeof value.schema !== 'string'
+      || typeof value.version !== 'number'
+      || !Object.hasOwn(value, 'data')) {
+      return undefined
+    }
+    return value.data
+  }
+
+  const storeToolNodeResult = async (nodeResult: WorkflowNodeResult): Promise<boolean> => {
+    const node = nodes.find((candidate) => candidate.id === nodeResult.nodeId)
+    if (node?.kind !== 'tool' || !nodeResult.nodePath || persistedNodeResultIdsRef.current.has(nodeResult.nodeId)) return false
+    const store = runResultStoreRef.current
+    if (!store) return false
+    persistedNodeResultIdsRef.current.add(nodeResult.nodeId)
+    const record = await store.store(nodeResult.nodeId, nodeResult.nodePath, nodeResult)
+    if (record.status !== 'stored') {
+      persistedNodeResultIdsRef.current.delete(nodeResult.nodeId)
+      return false
+    }
+    return true
+  }
+
+  const storeRunToolResults = async (result: WorkflowRunResult) => {
+    let stored = 0
+    for (const nodeResult of result.nodeResults ?? []) {
+      if (await storeToolNodeResult(nodeResult)) stored += 1
+    }
+    if (stored > 0) {
+      const store = runResultStoreRef.current
+      addLog('Result store', `Stored ${stored} tool execution result${stored === 1 ? '' : 's'} locally${store ? ` in ${store.getRunDirectoryPath()}` : ''}.`)
+    }
+  }
+
+  const finishRun = async (result: WorkflowRunResult, includeOutcomeLogs: boolean) => {
     setLastRun(result)
-    const completedAt = Date.now()
-    setRuntimeTrace((current) => current && {
-      ...current,
-      completedAt,
-      runId: result.runId ?? current.runId,
-      entries: current.entries.map((entry) => {
-        const outcome = result.nodeOutcomes?.find((candidate) => candidate.requestId === entry.requestId)
-        const value = result.results?.[entry.variable]
+    setRuntimeTrace((current) => {
+      if (!current) return current
+      const entries: RuntimeTrace['entries'] = current.entries.map((entry) => {
+        const nodeResult = result.nodeResults?.find((candidate) => candidate.nodeId === entry.requestId)
+        const outcome = nodeResult?.outcome
         return outcome
           ? {
             ...entry,
-            status: outcome.failed ? 'error' : 'success',
+            status: (outcome.failed ? 'error' : 'success') as NodeRunState,
+            startedAt: nodeResult.startedAt,
+            completedAt: nodeResult.completedAt,
             attempts: outcome.attempts,
             port: outcome.port,
             message: outcome.message,
-            ...(outcome.failed || value === undefined ? {} : valueDetails(value)),
+            ...(outcome.failed || nodeResult.result === undefined ? {} : valueDetails(nodeResult.result)),
           }
           : entry
-      }),
+      })
+      const completedAt = result.nodeResults?.reduce<number | undefined>((latest, nodeResult) => Math.max(latest ?? nodeResult.completedAt, nodeResult.completedAt), undefined)
+        ?? current.serverTimeAnchor?.at
+        ?? traceStartedAt(entries, current.startedAt)
+      return {
+        ...current,
+        startedAt: traceStartedAt(entries, current.startedAt),
+        completedAt,
+        serverTimeAnchor: { at: completedAt, receivedAt: Date.now() },
+        runId: result.runId ?? current.runId,
+        entries,
+      }
     })
     const nextStates: Record<string, NodeRunState> = {}
-    result.nodeOutcomes?.forEach((outcome) => {
+    result.nodeResults?.forEach((nodeResult) => {
+      const outcome = nodeResult.outcome
       nextStates[outcome.requestId] = outcome.failed ? 'error' : 'success'
       if (includeOutcomeLogs) {
-        const node = nodes.find((candidate) => candidate.id === outcome.requestId)
+        const node = nodes.find((candidate) => candidate.id === nodeResult.nodeId)
         addLog(node?.title ?? outcome.requestId, describeOutcome(outcome), outcome.failed ? 'error' : undefined)
       }
     })
     setRunStates(nextStates)
+    try {
+      await cacheRunOutputSchemas(result)
+    } catch (error) {
+      addLog('Schema cache', error instanceof Error ? `Could not update the local schema cache: ${error.message}` : 'Could not update the local schema cache.', 'error')
+    }
+    try {
+      await storeRunToolResults(result)
+    } catch (error) {
+      addLog('Result store', error instanceof Error ? `Could not store tool run results: ${error.message}` : 'Could not store tool run results.', 'error')
+    }
   }
   const run = async () => {
     if (running || !validate()) return
     const definition = workflowDefinition(nodes, edges)
+    runResultStoreRef.current = new ToolResultStore({
+      workspaceRoot: workspace?.root.handle,
+      workflowName: workflowFileName,
+    })
+    persistedNodeResultIdsRef.current = new Set()
     setRunning(true)
     setLogs([])
     setLastRun(null)
@@ -506,46 +695,72 @@ export function WorkflowStudioPage() {
             setRuntimeTrace((current) => current ? { ...current, runId } : current)
             addLog('Runtime', `Live workflow run ${runId} started.`)
           },
-          onNodeStarted: (requestId) => {
+          onNodeStarted: ({ requestId, startedAt }) => {
             const node = nodes.find((candidate) => candidate.id === requestId)
-            const startedAt = Date.now()
-            setRuntimeTrace((current) => current ? {
-              ...current,
-              entries: current.entries.map((entry) => entry.requestId === requestId
-                ? { ...entry, status: 'running', startedAt, lane: firstOpenLane(current) }
-                : entry),
-            } : current)
+            setRuntimeTrace((current) => {
+              if (!current) return current
+              const entries: RuntimeTrace['entries'] = current.entries.map((entry) => entry.requestId === requestId
+                ? { ...entry, status: 'running' as const, startedAt }
+                : entry)
+              return {
+                ...current,
+                startedAt: traceStartedAt(entries, current.startedAt),
+                serverTimeAnchor: { at: startedAt, receivedAt: Date.now() },
+                entries,
+              }
+            })
             setRunStates((current) => ({ ...current, [requestId]: 'running' }))
             addLog(node?.title ?? requestId, 'Running.')
           },
-          onNodeCompleted: (outcome) => {
+          onNodeCompleted: (nodeResult) => {
+            const outcome = nodeResult.outcome
             const node = nodes.find((candidate) => candidate.id === outcome.requestId)
-            const completedAt = Date.now()
-            setRuntimeTrace((current) => current ? {
-              ...current,
-              entries: current.entries.map((entry) => entry.requestId === outcome.requestId
-                ? { ...entry, status: outcome.failed ? 'error' : 'success', completedAt, attempts: outcome.attempts, port: outcome.port, message: outcome.message }
-                : entry),
-            } : current)
+            setRuntimeTrace((current) => {
+              if (!current) return current
+              const entries: RuntimeTrace['entries'] = current.entries.map((entry) => entry.requestId === outcome.requestId
+                ? { ...entry, status: (outcome.failed ? 'error' : 'success') as NodeRunState, startedAt: nodeResult.startedAt, completedAt: nodeResult.completedAt, attempts: outcome.attempts, port: outcome.port, message: outcome.message }
+                : entry)
+              return {
+                ...current,
+                startedAt: traceStartedAt(entries, current.startedAt),
+                serverTimeAnchor: { at: nodeResult.completedAt, receivedAt: Date.now() },
+                entries,
+              }
+            })
             setRunStates((current) => ({ ...current, [outcome.requestId]: outcome.failed ? 'error' : 'success' }))
             addLog(node?.title ?? outcome.requestId, describeOutcome(outcome), outcome.failed ? 'error' : undefined)
+            void storeToolNodeResult(nodeResult).then((stored) => {
+              if (stored) {
+                const store = runResultStoreRef.current
+                addLog('Result store', `Stored ${nodeResult.nodeId} locally${store ? ` in ${store.getRunDirectoryPath()}` : ''}.`)
+              }
+            }).catch((error: unknown) => {
+              persistedNodeResultIdsRef.current.delete(nodeResult.nodeId)
+              addLog('Result store', error instanceof Error ? `Could not store ${nodeResult.nodeId}: ${error.message}` : `Could not store ${nodeResult.nodeId}.`, 'error')
+            })
+          },
+          onLifecycleGap: (expectedSequence, receivedSequence) => {
+            addLog('Runtime', `Live lifecycle event sequence gap: expected ${expectedSequence}, received ${receivedSequence}.`)
           },
         })
-        finishRun(result, false)
+        await finishRun(result, false)
       } catch (error) {
         if (!(error instanceof WorkflowLiveTransportError) || !error.canFallbackToHttp) throw error
         addLog('Runtime', 'Live channel unavailable before the run started; using the HTTP fallback.')
-        finishRun(await runWorkflowHttp(definition), true)
+        await finishRun(await runWorkflowHttp(definition), true)
       }
     } catch (error) {
       setRunStates((current) => Object.fromEntries(nodes.map((node) => [node.id, current[node.id] === 'success' ? 'success' : 'error'])))
       const message = error instanceof Error ? error.message : 'Unknown runtime error'
       addLog('Runtime', message, 'error')
-      setRuntimeTrace((current) => current ? {
-        ...current,
-        completedAt: Date.now(),
-        entries: current.entries.map((entry) => entry.status === 'running' ? { ...entry, status: 'error', completedAt: Date.now(), message } : entry),
-      } : current)
+      setRuntimeTrace((current) => {
+        if (!current) return current
+        const completedAt = current.serverTimeAnchor?.at ?? current.startedAt
+        const entries = current.entries.map((entry) => entry.status === 'running'
+          ? { ...entry, status: 'error' as const, completedAt, message }
+          : entry)
+        return { ...current, completedAt, entries }
+      })
     } finally {
       setRunning(false)
     }
@@ -592,7 +807,7 @@ export function WorkflowStudioPage() {
   function studioPanelParams(): PanelViewSetContentParams {
     return {
       'tool-catalog': { tools, toolsState, presentations, onToolAdd: (toolName) => setPendingToolNode({ toolName, requestId: crypto.randomUUID() }), onRefreshTools: refreshTools },
-      'workspace-explorer': { workspace, recents, recentItemsWithoutHandle, onFileSelect: selectWorkspaceFile, onOpenWorkspace: () => void openWorkspace(), onOpenRecent: (recent) => void openRecent(recent) },
+      'workspace-explorer': { workspace, recents, recentItemsWithoutHandle, revealFilePath: revealedWorkspaceFilePath, onFileSelect: selectWorkspaceFile, onOpenWorkspace: () => void openWorkspace(), onOpenRecent: (recent) => void openRecent(recent) },
       'workflow-files': {},
       'starred-tools': { bookmarkedTools, toolsState, presentations, onToolAdd: (toolName) => setPendingToolNode({ toolName, requestId: crypto.randomUUID() }) },
       'starred-workflows': {},
@@ -602,7 +817,7 @@ export function WorkflowStudioPage() {
       'workflow-tools': { nodes, onSelectNode: setSelectedNodeId },
       'workflow-variables': { lastRun, nodes, onGetAs: (output) => void copyOutputReference(output), presentations },
       'workflow-activity': { logs },
-      'workflow-runtime': { nodes, onClear: () => setRuntimeTrace(null), running, trace: runtimeTrace },
+      'workflow-runtime': { nodes, onClear: () => setRuntimeTrace(null), onSelectNode: selectRuntimeNode, running, trace: runtimeTrace },
     }
   }
 
@@ -686,8 +901,10 @@ export function WorkflowStudioPage() {
             onEdgeDelete={(edgeToDelete) => setEdges((current) => current.filter((edge) => !(edge.source === edgeToDelete.source && edge.target === edgeToDelete.target)))}
             onEdgeReconnect={(edge, targetId) => setEdges((current) => { const index = current.findIndex((candidate) => candidate.source === edge.source && candidate.target === edge.target); if (index < 0) return current; return current.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, target: targetId } : candidate) })}
             onNodesChange={setNodes}
+            onToolFavorite={toggleSavedTool}
             onPendingToolNodeHandled={(requestId) => setPendingToolNode((current) => current?.requestId === requestId ? null : current)}
             onRun={run}
+            onSelectLayoutNodeChange={setLayoutNodeSelection}
             onSelectNode={setSelectedNodeId}
             onStatus={setMessage}
             onToggleReattachOnEmptyRelease={toggleReattachOnEmptyRelease}
@@ -761,7 +978,11 @@ export function WorkflowStudioPage() {
         </div>
       </footer>
       {isPanelSearchOpen && <PanelSearchDialog onClose={() => setIsPanelSearchOpen(false)} onSelect={(panel) => { openPanel(panel, true); setIsPanelSearchOpen(false) }} />}
-      {isWorkspaceDialogOpen && <WorkspaceDialog onChooseDirectory={chooseLocalDirectory} onClose={() => setIsWorkspaceDialogOpen(false)} onCreate={createWorkspace} />}
+      {isWorkspaceDialogOpen && <WorkspaceDialog onChooseDirectory={chooseLocalWorkspaceParent} onClose={() => setIsWorkspaceDialogOpen(false)} onCreate={createWorkspace} />}
     </div>
   )
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

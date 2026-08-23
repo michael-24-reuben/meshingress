@@ -32,6 +32,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -105,6 +106,7 @@ public class McpToolAnnotationScanner {
             @NonNull McpFunction function,
             String functionName,
             ObjectNode inputSchema,
+            @Nullable ObjectNode outputSchema,
             ObjectNode annotations,
             McpFunctionAvailability availability
     ) {
@@ -122,7 +124,7 @@ public class McpToolAnnotationScanner {
                 availability.visibility(),
                 handlerKey,
                 inputSchema,
-                null,
+                outputSchema,
                 annotations,
                 tool.dynamic()
         );
@@ -153,12 +155,15 @@ public class McpToolAnnotationScanner {
             McpFunctionAvailabilityState availabilityState = evalFunctionAvailability(tool, toolClass, method, name, functionMapping, availabilityMessages);
             McpFunctionAvailability functionAvailabilityPolicy = newMcpFunctionAvailability(tool, function, functionMapping, availabilityState);
             ObjectNode inputSchema = inputSchemaFor(method, function.description());
+            ObjectNode outputSchema = outputSchemaFor(function.outputTypes());
             ObjectNode functionAnnotations = functionAnnotations(toolClass, method, functionMapping);
+            addStructuredOutputAnnotation(function, functionAnnotations);
             McpFunctionDescriptor descriptor = newMcpFunctionDescriptor(
                     tool,
                     function,
                     name,
                     inputSchema,
+                    outputSchema,
                     functionAnnotations,
                     functionAvailabilityPolicy
             );
@@ -616,6 +621,160 @@ public class McpToolAnnotationScanner {
             }
         }
         return schema;
+    }
+
+    private @Nullable ObjectNode outputSchemaFor(Class<?>[] outputTypes) {
+        if (outputTypes == null || outputTypes.length == 0) {
+            return null;
+        }
+
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        schema.put("additionalProperties", false);
+        ObjectNode properties = schema.putObject("properties");
+        properties.putObject("kind").put("type", "string");
+        properties.putObject("schema").put("type", "string");
+        properties.putObject("version").put("type", "integer");
+
+        ObjectNode dataSchema;
+        if (outputTypes.length == 1) {
+            dataSchema = outputSchemaForType(outputTypes[0], new LinkedHashSet<>());
+        } else {
+            dataSchema = objectMapper.createObjectNode();
+            ArrayNode variants = dataSchema.putArray("oneOf");
+            for (Class<?> outputType : outputTypes) {
+                variants.add(outputSchemaForType(outputType, new LinkedHashSet<>()));
+            }
+        }
+        properties.set("data", dataSchema);
+
+        ArrayNode required = schema.putArray("required");
+        required.add("kind");
+        required.add("schema");
+        required.add("version");
+        required.add("data");
+        return schema;
+    }
+
+    private ObjectNode outputSchemaForType(Type genericType, Set<Class<?>> ancestors) {
+        Class<?> type = rawType(genericType);
+        ObjectNode schema = objectMapper.createObjectNode();
+        if (type.equals(String.class) || type.equals(Character.class) || type.equals(Character.TYPE)) {
+            schema.put("type", "string");
+        } else if (type.equals(Integer.class) || type.equals(Integer.TYPE)
+                || type.equals(Long.class) || type.equals(Long.TYPE)
+                || type.equals(Short.class) || type.equals(Short.TYPE)
+                || type.equals(Byte.class) || type.equals(Byte.TYPE)) {
+            schema.put("type", "integer");
+        } else if (Number.class.isAssignableFrom(type)
+                || type.equals(Double.TYPE)
+                || type.equals(Float.TYPE)) {
+            schema.put("type", "number");
+        } else if (type.equals(Boolean.class) || type.equals(Boolean.TYPE)) {
+            schema.put("type", "boolean");
+        } else if (type.isEnum()) {
+            schema.put("type", "string");
+            ArrayNode values = schema.putArray("enum");
+            for (Object constant : type.getEnumConstants()) {
+                values.add(((Enum<?>) constant).name());
+            }
+        } else if (type.isArray() || Collection.class.isAssignableFrom(type)) {
+            schema.put("type", "array");
+            Type itemType = itemType(genericType, type);
+            if (itemType != null) {
+                schema.set("items", outputSchemaForType(itemType, ancestors));
+            }
+        } else if (Map.class.isAssignableFrom(type)) {
+            schema.put("type", "object");
+            Type valueType = mapValueType(genericType);
+            if (valueType != null) {
+                schema.set("additionalProperties", outputSchemaForType(valueType, ancestors));
+            }
+        } else if (JsonNode.class.isAssignableFrom(type)) {
+            schema.put("type", "object");
+        } else {
+            schema = outputObjectSchemaFor(type, ancestors);
+        }
+        return schema;
+    }
+
+    private ObjectNode outputObjectSchemaFor(Class<?> type, Set<Class<?>> ancestors) {
+        ObjectNode schema = objectMapper.createObjectNode();
+        schema.put("type", "object");
+        if (!ancestors.add(type)) {
+            return schema;
+        }
+
+        try {
+            ObjectNode properties = schema.putObject("properties");
+            ArrayNode required = schema.putArray("required");
+            if (type.isRecord()) {
+                for (RecordComponent component : type.getRecordComponents()) {
+                    properties.set(component.getName(), outputSchemaForType(component.getGenericType(), ancestors));
+                    required.add(component.getName());
+                }
+            } else if (type.isInterface()) {
+                for (Method accessor : type.getMethods()) {
+                    if (!isOutputInterfaceAccessor(accessor)) {
+                        continue;
+                    }
+                    String propertyName = outputPropertyName(accessor);
+                    properties.set(propertyName, outputSchemaForType(accessor.getGenericReturnType(), ancestors));
+                    required.add(propertyName);
+                }
+            } else {
+                for (Field field : type.getDeclaredFields()) {
+                    if (Modifier.isStatic(field.getModifiers()) || field.isSynthetic()) {
+                        continue;
+                    }
+                    properties.set(field.getName(), outputSchemaForType(field.getGenericType(), ancestors));
+                    required.add(field.getName());
+                }
+            }
+            if (required.isEmpty()) {
+                schema.remove("required");
+            }
+            return schema;
+        } finally {
+            ancestors.remove(type);
+        }
+    }
+
+    private static boolean isOutputInterfaceAccessor(Method method) {
+        return Modifier.isAbstract(method.getModifiers())
+                && method.getParameterCount() == 0
+                && method.getReturnType() != Void.TYPE
+                && method.getDeclaringClass() != Object.class
+                && !method.isBridge()
+                && !method.isSynthetic();
+    }
+
+    private static String outputPropertyName(Method accessor) {
+        String name = accessor.getName();
+        if (name.startsWith("get") && name.length() > 3) {
+            return Introspector.decapitalize(name.substring(3));
+        }
+        if (name.startsWith("is") && name.length() > 2
+                && (accessor.getReturnType().equals(Boolean.class) || accessor.getReturnType().equals(Boolean.TYPE))) {
+            return Introspector.decapitalize(name.substring(2));
+        }
+        return name;
+    }
+
+    private static @Nullable Type mapValueType(Type genericType) {
+        if (genericType instanceof ParameterizedType parameterizedType
+                && parameterizedType.getActualTypeArguments().length == 2) {
+            return parameterizedType.getActualTypeArguments()[1];
+        }
+        return null;
+    }
+
+    private static void addStructuredOutputAnnotation(McpFunction function, ObjectNode annotations) {
+        if (function.structuredOutput() == McpFunction.StructuredOutput.ENABLED) {
+            annotations.put("structuredOutput", true);
+        } else if (function.structuredOutput() == McpFunction.StructuredOutput.DISABLED) {
+            annotations.put("structuredOutput", false);
+        }
     }
 
     private Class<?> rawType(Type type) {

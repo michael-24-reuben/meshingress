@@ -1,4 +1,4 @@
-import type { WorkflowArgumentValue, WorkflowEdge, WorkflowNode } from './types'
+import type { WorkflowArgumentValue, WorkflowEdge, WorkflowNode } from '../types'
 
 export interface WorkflowDefinitionPayload {
   id: string
