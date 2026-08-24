@@ -144,6 +144,7 @@ export function WorkflowStudioPage() {
     rightPanelBody: DEFAULT_STUDIO_PROPERTIES.panels.rightPanelBody.defaultWidth,
   })
   const [drawerHeight, setDrawerHeight] = useState(DEFAULT_STUDIO_PROPERTIES.drawer.defaultHeight)
+  const [gridOverlay, setGridOverlay] = useState<HTMLDivElement | null>(null)
   const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true)
   const [isRightPanelBodyVisible, setIsRightPanelBodyVisible] = useState(true)
   const [isDrawerVisible, setIsDrawerVisible] = useState(true)
@@ -786,7 +787,7 @@ export function WorkflowStudioPage() {
   }
   const resizeDrawer = (event: React.PointerEvent<HTMLDivElement>) => {
     const target = event.currentTarget
-    const center = target.parentElement
+    const center = target.closest<HTMLElement>('.center')
     if (!center) return
     const start = event.clientY
     const original = drawerHeight
@@ -894,52 +895,57 @@ export function WorkflowStudioPage() {
         }
 
         <main className={`center${isDrawerVisible ? '' : ' drawer-hidden'}`} style={{ '--drawer-height': `${drawerHeight}%` } as CSSProperties}>
-          <Workbench
-            edges={edges}
-            nodes={nodes}
-            onEdgeCreate={(sourceId, targetId) => setEdges((current) => [...current.filter((edge) => edge.source !== sourceId), { source: sourceId, target: targetId }])}
-            onEdgeDelete={(edgeToDelete) => setEdges((current) => current.filter((edge) => !(edge.source === edgeToDelete.source && edge.target === edgeToDelete.target)))}
-            onEdgeReconnect={(edge, targetId) => setEdges((current) => { const index = current.findIndex((candidate) => candidate.source === edge.source && candidate.target === edge.target); if (index < 0) return current; return current.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, target: targetId } : candidate) })}
-            onNodesChange={setNodes}
-            onToolFavorite={toggleSavedTool}
-            onPendingToolNodeHandled={(requestId) => setPendingToolNode((current) => current?.requestId === requestId ? null : current)}
-            onRun={run}
-            onSelectLayoutNodeChange={setLayoutNodeSelection}
-            onSelectNode={setSelectedNodeId}
-            onStatus={setMessage}
-            onToggleReattachOnEmptyRelease={toggleReattachOnEmptyRelease}
-            onToolInsert={addToolNode}
-            onValidate={validate}
-            pendingToolNode={pendingToolNode}
-            presentations={presentations}
-            reattachOnEmptyRelease={studioProperties.canvas.reattachOnEmptyRelease}
-            runStates={runStates}
-            running={running}
-            selectedNodeId={selectedNodeId}
-            toolFunctions={toolFunctions}
-            workflowFileName={workflowFileName}
-          />
+          <div className="canvas-panel">
+            <Workbench
+              edges={edges}
+              nodes={nodes}
+              onEdgeCreate={(sourceId, targetId) => setEdges((current) => [...current.filter((edge) => edge.source !== sourceId), { source: sourceId, target: targetId }])}
+              onEdgeDelete={(edgeToDelete) => setEdges((current) => current.filter((edge) => !(edge.source === edgeToDelete.source && edge.target === edgeToDelete.target)))}
+              onEdgeReconnect={(edge, targetId) => setEdges((current) => { const index = current.findIndex((candidate) => candidate.source === edge.source && candidate.target === edge.target); if (index < 0) return current; return current.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, target: targetId } : candidate) })}
+              onNodesChange={setNodes}
+              onToolFavorite={toggleSavedTool}
+              onPendingToolNodeHandled={(requestId) => setPendingToolNode((current) => current?.requestId === requestId ? null : current)}
+              onRun={run}
+              onSelectLayoutNodeChange={setLayoutNodeSelection}
+              onSelectNode={setSelectedNodeId}
+              onStatus={setMessage}
+              onToggleReattachOnEmptyRelease={toggleReattachOnEmptyRelease}
+              onToolInsert={addToolNode}
+              onValidate={validate}
+              pendingToolNode={pendingToolNode}
+              presentations={presentations}
+              reattachOnEmptyRelease={studioProperties.canvas.reattachOnEmptyRelease}
+              runStates={runStates}
+              running={running}
+              selectedNodeId={selectedNodeId}
+              toolFunctions={toolFunctions}
+              workflowFileName={workflowFileName}
+              overlayHost={gridOverlay}
+            />
+          </div>
 
-          {isDrawerVisible &&
-            <div
-              aria-label="Resize workflow drawer"
-              aria-orientation="horizontal"
-              aria-valuemax={DEFAULT_STUDIO_PROPERTIES.drawer.maxHeight}
-              aria-valuemin={DEFAULT_STUDIO_PROPERTIES.drawer.minHeight}
-              aria-valuenow={Math.round(drawerHeight)}
-              className="pane-resizer"
-              onPointerDown={resizeDrawer}
-              role="separator"
-            />
-          }
-          {isDrawerVisible && (
-            <StudioDrawerPanel
-              drawer={drawerView}
-              onChange={setDrawer}
-              onHide={() => { setIsDrawerVisible(false); setMessage('Workflow drawer hidden.') }}
-              params={getStudioPanelSetParams('drawer')}
-            />
-          )}
+          <div className="grid-overlay" ref={setGridOverlay}>
+            {isDrawerVisible && (
+              <div className="drawer-panel">
+                <div
+                  aria-label="Resize workflow drawer"
+                  aria-orientation="horizontal"
+                  aria-valuemax={DEFAULT_STUDIO_PROPERTIES.drawer.maxHeight}
+                  aria-valuemin={DEFAULT_STUDIO_PROPERTIES.drawer.minHeight}
+                  aria-valuenow={Math.round(drawerHeight)}
+                  className="pane-resizer"
+                  onPointerDown={resizeDrawer}
+                  role="separator"
+                />
+                <StudioDrawerPanel
+                  drawer={drawerView}
+                  onChange={setDrawer}
+                  onHide={() => { setIsDrawerVisible(false); setMessage('Workflow drawer hidden.') }}
+                  params={getStudioPanelSetParams('drawer')}
+                />
+              </div>
+            )}
+          </div>
         </main>
 
         {isRightPanelBodyVisible &&

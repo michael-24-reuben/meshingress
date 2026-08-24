@@ -209,6 +209,7 @@ const TabPane = memo(function TabPane({
 export interface WorkbenchProps {
   workflowFileName: string
   tabPaneAttributes?: ElementAttributeInput
+  overlayHost?: HTMLElement | null
   edges: WorkflowEdge[]
   nodes: WorkflowNode[]
   runStates: Record<string, NodeRunState>
@@ -237,6 +238,7 @@ export interface WorkbenchProps {
 export function Workbench({
   workflowFileName,
   tabPaneAttributes,
+  overlayHost,
   edges,
   nodes,
   runStates,
@@ -352,6 +354,7 @@ export function Workbench({
           content: (attributes: ElementAttributeInput | undefined) => (
             <WorkflowCanvas
               attributes={attributes}
+              overlayHost={overlayHost}
               edges={edges}
               nodeRunStates={runStates}
               nodes={nodes}
@@ -381,6 +384,7 @@ export function Workbench({
     [
       workflowTabKey,
       workflowFileName,
+      overlayHost,
       handleActiveTab,
       handleTabRemove,
       closedTabKeys,

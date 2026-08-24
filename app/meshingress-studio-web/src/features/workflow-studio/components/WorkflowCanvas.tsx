@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Close, CriticalIcon, CubeIcon, CubeFilledIcon, WarningIcon, WorkflowNodeIcon, PathIcon, CopyIcon, FavoriteIcon, DeleteIcon, type NodeIconDescriptor } from '../../../components/icons/node-icons'
 import { hasStructuredOutput, type McpToolFunction } from '../../../api/mcp'
 import { CanvasActions } from './CanvasActions'
@@ -11,6 +12,7 @@ import type { ToolPresentationIndex } from '../node-presentation'
 
 interface WorkflowCanvasProps {
     attributes?: ElementAttributeInput
+    overlayHost?: HTMLElement | null
     nodes: WorkflowNode[];
     edges: WorkflowEdge[];
     selectedNodeId: string;
@@ -78,7 +80,7 @@ function layoutRoadPath(start: LayoutPoint, end: LayoutPoint, laneX: number) {
     return roundedPath(points, 4)
 }
 
-export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeRunStates, onSelectLayoutNodeChange, onSelect, onNodesChange, onToolFavorite, onEdgeReconnect, onEdgeCreate, onEdgeDelete, reattachOnEmptyRelease = false, onToggleReattachOnEmptyRelease, toolFunctions, presentations, running, onRun, onValidate, onStatus, pendingToolNode, onToolInsert, onPendingToolNodeHandled }: WorkflowCanvasProps) {
+export function WorkflowCanvas({ attributes, overlayHost, nodes, edges, selectedNodeId, nodeRunStates, onSelectLayoutNodeChange, onSelect, onNodesChange, onToolFavorite, onEdgeReconnect, onEdgeCreate, onEdgeDelete, reattachOnEmptyRelease = false, onToggleReattachOnEmptyRelease, toolFunctions, presentations, running, onRun, onValidate, onStatus, pendingToolNode, onToolInsert, onPendingToolNodeHandled }: WorkflowCanvasProps) {
     const [transform, setTransform] = useState({ x: 36, y: 24, zoom: 0.86 })
     const [worldSize, setWorldSize] = useState(CANVAS_SIZE)
     const [reconnecting, setReconnecting] = useState<{ sourceId: string; edge?: WorkflowEdge; head: { x: number; y: number }; targetId: string | null } | null>(null)
@@ -86,6 +88,7 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
     const [layoutFocusNodeId, setLayoutFocusNodeId] = useState<string | null>(null)
     const [layoutRevealing, setLayoutRevealing] = useState(false)
     const canvasRef = useRef<HTMLDivElement>(null)
+    const canvasWidgetPanelRef = useRef<HTMLDivElement>(null)
     const transformRef = useRef(transform)
     const layoutRevealTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
     const activePointer = useRef<number | null>(null)
@@ -176,12 +179,16 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
         if (!node || !canvas) return
 
         const bounds = canvas.getBoundingClientRect()
+        const widgetBounds = canvasWidgetPanelRef.current?.getBoundingClientRect()
+        const visibleHeight = widgetBounds
+            ? Math.max(0, Math.min(bounds.height, widgetBounds.bottom - bounds.top))
+            : bounds.height
         const current = transformRef.current
         const viewport = {
             left: -current.x / current.zoom,
             top: -current.y / current.zoom,
             right: (bounds.width - current.x) / current.zoom,
-            bottom: (bounds.height - current.y) / current.zoom,
+            bottom: (visibleHeight - current.y) / current.zoom,
         }
         const horizontalPlacement = node.x < viewport.left ? 0.25 : node.x + NODE_WIDTH > viewport.right ? 0.75 : null
         const verticalPlacement = node.y < viewport.top ? 0.25 : node.y + NODE_HEIGHT > viewport.bottom ? 0.75 : null
@@ -191,7 +198,7 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
         setTransform({
             ...current,
             x: horizontalPlacement === null ? current.x : bounds.width * horizontalPlacement - (node.x + NODE_WIDTH / 2) * current.zoom,
-            y: verticalPlacement === null ? current.y : bounds.height * verticalPlacement - (node.y + NODE_HEIGHT / 2) * current.zoom,
+            y: verticalPlacement === null ? current.y : visibleHeight * verticalPlacement - (node.y + NODE_HEIGHT / 2) * current.zoom,
         })
     }, [beginLayoutReveal, nodes, onSelect])
     useEffect(() => {
@@ -525,6 +532,13 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
         tabIndex: 0,
     }, attributes)
 
+    const canvasWidgets = <div className="canvas-widget-panel" ref={canvasWidgetPanelRef}>
+        <WorkflowLayoutMap edges={edges} focusedNodeId={layoutFocusNodeId ?? selectedNodeId} nodes={layoutNodes} onFocusChange={setLayoutFocusNodeId} onSelect={selectLayoutNode} toolFunctions={toolFunctions} />
+        <CanvasActions onRun={onRun} onStatus={onStatus} onToggleReattachOnEmptyRelease={onToggleReattachOnEmptyRelease} onValidate={onValidate} reattachOnEmptyRelease={reattachOnEmptyRelease} running={running} />
+        <SelectedNodeData node={selectedNode} tool={selectedTool} />
+        {documentationOpen && <ToolReference tool={selectedTool} onClose={() => setDocumentationOpen(false)} />}
+    </div>
+
     return <div {...canvasProps} onDragOver={onDragOver} onDrop={onDrop} onLostPointerCapture={onLostPointerCapture} onPointerCancel={endPan} onPointerDown={onPointerDown}
         onPointerMove={onPointerMove} onPointerUp={endPan} onWheel={onWheel} ref={canvasRef}
         style={{ backgroundSize: `${GRID_SIZE * transform.zoom}px ${GRID_SIZE * transform.zoom}px`, backgroundPosition: `${transform.x}px ${transform.y}px` }}>
@@ -580,10 +594,7 @@ export function WorkflowCanvas({ attributes, nodes, edges, selectedNodeId, nodeR
                 />
             ))}
         </div>
-        <WorkflowLayoutMap edges={edges} focusedNodeId={layoutFocusNodeId ?? selectedNodeId} nodes={layoutNodes} onFocusChange={setLayoutFocusNodeId} onSelect={selectLayoutNode} toolFunctions={toolFunctions} />
-        <CanvasActions onRun={onRun} onStatus={onStatus} onToggleReattachOnEmptyRelease={onToggleReattachOnEmptyRelease} onValidate={onValidate} reattachOnEmptyRelease={reattachOnEmptyRelease} running={running} />
-        <SelectedNodeData node={selectedNode} tool={selectedTool} />
-        {documentationOpen && <ToolReference tool={selectedTool} onClose={() => setDocumentationOpen(false)} />}
+        {overlayHost && createPortal(canvasWidgets, overlayHost)}
     </div>
 }
 
