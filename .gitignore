@@ -1,7 +1,7 @@
 HELP.md
 temp/
 /repository/**
-tools/
+/tools/
 # Keep source documentation and coverage beneath Java packages named "tools" trackable.
 !lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/
 !lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/availability/
@@ -13,12 +13,12 @@ tools/
 
 
 .mvn/wrapper/maven-wrapper.jar
+target/
 !**/src/main/**/target/
 !**/src/test/**/target/
+build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-/app/**/target/
-/lib/**/target/
 
 *.class
 
@@ -52,7 +52,6 @@ architect/**/captures/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
 
 ### VS Code ###
 .vscode/

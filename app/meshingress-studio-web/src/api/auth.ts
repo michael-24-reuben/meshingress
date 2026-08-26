@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import { generateUuid } from '../utils/uuid'
 
 interface NativeLoginValidationResponse {
   accepted: boolean
@@ -12,7 +13,7 @@ export async function validateNativeLogin(username: string, password: string): P
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Request-Id': crypto.randomUUID(),
+      'X-Request-Id': generateUuid(),
     },
     body: JSON.stringify({ username, password }),
   })

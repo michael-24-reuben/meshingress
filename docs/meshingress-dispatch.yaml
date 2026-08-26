@@ -4,7 +4,7 @@ info:
   version: v0
   description: Reflection-scraped MCP dispatch methods discovered from @McpDispatchMapping classes.
 servers:
-- url: http://100.121.15.11:4737
+- url: http://192.168.1.159:4737
   description: Generated server url
 tags:
 - name: Internal MCP

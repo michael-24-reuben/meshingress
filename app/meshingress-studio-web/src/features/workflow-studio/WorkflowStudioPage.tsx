@@ -23,6 +23,7 @@ import { Workbench } from './components/elements/Workbench'
 import { getPanelContentKind, getPanelForContentKind, getSurfaceContentKinds, type PanelSurface, type PanelViewContentKind, type PanelViewSetContentParams, type StudioPanel } from './components/panel-catalog'
 import type { DrawerPanelViewContentKind, DrawerPanelViewContentParams, LeftPanelViewContentKind, LeftPanelViewContentParams, LogEntry, NodeRunState, RegisteredTool, RightPanelViewContentKind, RightPanelViewContentParams, RuntimeTrace, WorkflowNode, WorkflowRunResult } from './types'
 import { createLogEntry, DEFAULT_STUDIO_PROPERTIES } from './types'
+import { generateUuid } from '../../utils/uuid'
 import { chooseLocalDirectory, chooseLocalWorkspaceParent, chooseStoredDirectory, createLocalWorkspaceProject, hasStoredDirectoryHandle, indexWorkspaceBackground, readRecentWorkspaceEntries, readStoredDirectory, storeDirectoryHandle, upsertRecentEntry, writeRecentWorkspaceEntries, type DirectorySelection, type LocalWorkspace, type LocalWorkspaceNode, type RecentWorkspaceEntry } from './storage/local-workspace'
 import './workflow-studio.css'
 import { StudioDrawerPanel } from './components/StudioDrawerPanel'
@@ -101,6 +102,7 @@ function nativeValidationTransport() {
 
 
 export function WorkflowStudioPage() {
+  const [googleClientId, setGoogleClientId] = useState(() => RuntimeConfiguration.current.googleClientId)
   const [nodes, setNodes] = useState(initialNodes)
   const [edges, setEdges] = useState(initialEdges)
   const [leftPanelView, setLeftPanel] = useState<LeftPanelViewContentKind>('tool-catalog')
@@ -118,6 +120,9 @@ export function WorkflowStudioPage() {
   const [profile, setProfile] = useState<StudioProfile | null>(null)
   const [authenticationRevision, setAuthenticationRevision] = useState(0)
   const [studioProperties, setStudioProperties] = useState(DEFAULT_STUDIO_PROPERTIES)
+  useEffect(() => RuntimeConfiguration.subscribe((configuration) => {
+    setGoogleClientId(configuration.googleClientId)
+  }), [])
   const setLayoutNodeSelection = useCallback((selectNode: ((nodeId: string) => void) | null) => {
     selectLayoutNodeRef.current = selectNode
   }, [])
@@ -314,7 +319,7 @@ export function WorkflowStudioPage() {
   }
   const activateWorkspace = (name: string, selection: DirectorySelection) => {
     const earliestMatchingRecent = recents.findLast((entry) => entry.kind === 'workspace' && entry.label === name && entry.path === selection.name)
-    const workspaceId = earliestMatchingRecent?.workspaceId ?? crypto.randomUUID()
+    const workspaceId = earliestMatchingRecent?.workspaceId ?? generateUuid()
     const nextWorkspace: LocalWorkspace = { id: workspaceId, name, pathLabel: selection.name, root: selection.root }
     setWorkspace(nextWorkspace)
     loadSavedTools(nextWorkspace)
@@ -807,10 +812,10 @@ export function WorkflowStudioPage() {
 
   function studioPanelParams(): PanelViewSetContentParams {
     return {
-      'tool-catalog': { tools, toolsState, presentations, onToolAdd: (toolName) => setPendingToolNode({ toolName, requestId: crypto.randomUUID() }), onRefreshTools: refreshTools },
+      'tool-catalog': { tools, toolsState, presentations, onToolAdd: (toolName) => setPendingToolNode({ toolName, requestId: generateUuid() }), onRefreshTools: refreshTools },
       'workspace-explorer': { workspace, recents, recentItemsWithoutHandle, revealFilePath: revealedWorkspaceFilePath, onFileSelect: selectWorkspaceFile, onOpenWorkspace: () => void openWorkspace(), onOpenRecent: (recent) => void openRecent(recent) },
       'workflow-files': {},
-      'starred-tools': { bookmarkedTools, toolsState, presentations, onToolAdd: (toolName) => setPendingToolNode({ toolName, requestId: crypto.randomUUID() }) },
+      'starred-tools': { bookmarkedTools, toolsState, presentations, onToolAdd: (toolName) => setPendingToolNode({ toolName, requestId: generateUuid() }) },
       'starred-workflows': {},
       'node-editor': { node: selectedNode!, toolFunctions, onNodeChange: (id, changes) => setNodes((current) => current.map((node) => node.id === id ? { ...node, ...changes } : node)) },
       'node-payload': { node: selectedNode! },
@@ -841,7 +846,7 @@ export function WorkflowStudioPage() {
   return (
     <div className="studio-shell" style={{ '--left-panel-width': isLeftPanelVisible ? `${widths.leftPanel}px` : '0px', '--right-panel-body-width': isRightPanelBodyVisible ? `${widths.rightPanelBody}px` : '0px' } as CSSProperties}>
       <TopBar
-        googleClientId={RuntimeConfiguration.current.googleClientId}
+        googleClientId={googleClientId}
         onGoogleCredential={acceptGoogleCredential}
         onGoogleError={(message) => addLog('Authentication', message, 'error')}
         onNativeValidate={async (username, password) => {

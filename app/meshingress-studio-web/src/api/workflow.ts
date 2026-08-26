@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import { generateUuid } from '../utils/uuid'
 import { RuntimeConfiguration } from '../runtime/RuntimeConfiguration'
 import type { WorkflowNodeOutcome, WorkflowNodeResult, WorkflowNodeStarted, WorkflowRunResult } from '../features/workflow-studio/types'
 export type { WorkflowNodeOutcome, WorkflowNodeResult, WorkflowNodeStarted } from '../features/workflow-studio/types'
@@ -28,15 +29,15 @@ export async function runWorkflowHttp(definition: WorkflowDefinitionPayload): Pr
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Mcp-Session-Id': crypto.randomUUID(),
-      'X-Request-Id': crypto.randomUUID(),
+      'Mcp-Session-Id': generateUuid(),
+      'X-Request-Id': generateUuid(),
     },
     body: JSON.stringify(definition),
   })
 }
 
 export function runWorkflowLive(definition: WorkflowDefinitionPayload, callbacks: WorkflowRunCallbacks): Promise<WorkflowRunResult> {
-  const requestId = crypto.randomUUID()
+  const requestId = generateUuid()
   return new Promise((resolve, reject) => {
     let settled = false
     let started = false

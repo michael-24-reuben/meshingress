@@ -9,12 +9,38 @@ and workflow definitions/runtime contracts in the server API.
 
 ## Run locally
 
+The project includes an automated launch pipeline that runs pre-flight validation, cleans previous build artifacts, performs a fresh compilation (`tsc -b` and `vite build`), validates generated bundle assets, and launches the development server.
+
+### Using the Launch Executables
+
+**PowerShell (Windows):**
 ```powershell
-npm install
-npm run dev
+.\launch.ps1
 ```
 
-The development server normally starts at `http://localhost:5173`.
+**Command Prompt / Batch:**
+```cmd
+launch.cmd
+```
+
+**NPM Scripts:**
+```powershell
+npm run launch
+```
+
+The development server starts at `http://localhost:5173`.
+
+### Launcher Options & Flags
+
+| Command / Flag | Description |
+| :--- | :--- |
+| `.\launch.ps1` | Full pipeline: Validate ➔ Clean ➔ Fresh Compile ➔ Validate Artifacts ➔ Run `npm run dev` |
+| `.\launch.ps1 --build-only` | Run validate, clean, fresh compile, and artifact verification, then exit |
+| `.\launch.ps1 --clean-only` | Clean `dist/`, `.vite`, and `.tsbuildinfo` caches and exit (or `npm run clean`) |
+| `.\launch.ps1 --skip-build` | Skip clean and compile, launch dev server immediately |
+| `.\launch.ps1 --port <port>` | Set custom Vite dev server port (e.g., `--port 3000`) |
+| `.\launch.ps1 --host` | Expose development server on the local network |
+| `.\launch.ps1 --help` | Display all available launcher options |
 
 ## Runtime configuration
 

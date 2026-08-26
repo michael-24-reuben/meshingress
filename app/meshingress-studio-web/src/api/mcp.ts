@@ -1,4 +1,5 @@
 import { apiRequest } from './client'
+import { generateUuid } from '../utils/uuid'
 
 export interface McpAvailabilityCondition {
   type: string
@@ -47,12 +48,12 @@ export async function listMcpTools(): Promise<McpToolFunction[]> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Mcp-Session-Id': crypto.randomUUID(),
-      'X-Request-Id': crypto.randomUUID(),
+      'Mcp-Session-Id': generateUuid(),
+      'X-Request-Id': generateUuid(),
     },
     body: JSON.stringify({
       jsonrpc: '2.0',
-      id: crypto.randomUUID(),
+      id: generateUuid(),
       method: 'tools/list',
       params: {},
     }),

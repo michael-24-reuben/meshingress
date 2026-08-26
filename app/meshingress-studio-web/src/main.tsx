@@ -1,3 +1,4 @@
+import './utils/uuid'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
@@ -12,6 +13,10 @@ async function bootstrap() {
       <App />
     </StrictMode>,
   )
+
+  requestAnimationFrame(() => {
+    void RuntimeConfiguration.loadGoogleClientIdInBackground()
+  })
 }
 
 void bootstrap()

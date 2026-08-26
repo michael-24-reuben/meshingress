@@ -1,0 +1,12 @@
+dev\mrk\toolspace\openinklibrary\BookSourceRegistryTests.class
+dev\mrk\toolspace\openinklibrary\OpenInkLibraryAutoConfigurationTests.class
+dev\mrk\toolspace\openinklibrary\BookSourceRegistryTests$StubSource.class
+dev\mrk\toolspace\openinklibrary\ToonverseToolTests.class
+dev\mrk\toolspace\openinklibrary\ToonverseToolTests$RecordingStorage.class
+dev\mrk\toolspace\openinklibrary\ToonverseToolTests$DelegatingStorage.class
+dev\mrk\toolspace\openinklibrary\ToonverseMapperTests.class
+dev\mrk\toolspace\openinklibrary\ImageBookToolTests.class
+dev\mrk\toolspace\openinklibrary\ImageBookToolTests$FixedSource.class
+dev\mrk\toolspace\openinklibrary\source\toonverse\ToonverseToolStorageDiagnosticsTests.class
+dev\mrk\toolspace\openinklibrary\ToonverseClientTests.class
+dev\mrk\toolspace\openinklibrary\OpenInkLibraryManifestTests.class

@@ -10,9 +10,11 @@ interface RuntimeConfigurationDocument {
 
 const fallbackApiBaseUrl = (import.meta.env.VITE_MESHINGRESS_API_BASE_URL ?? 'http://localhost:4737').replace(/\/$/, '')
 const fallbackWorkflowWebSocketPath = '/api/v1/workflows/ws'
+type RuntimeConfigurationListener = (configuration: RuntimeConfiguration) => void
 
 export class RuntimeConfiguration {
   static current = new RuntimeConfiguration(fallbackApiBaseUrl, fallbackWorkflowWebSocketPath, '')
+  private static readonly listeners = new Set<RuntimeConfigurationListener>()
 
   readonly apiBaseUrl: string
   readonly workflowWebSocketPath: string
@@ -37,19 +39,43 @@ export class RuntimeConfiguration {
         const configuredGoogleClientId = typeof document?.meshingress?.googleClientId === 'string'
           ? document.meshingress.googleClientId.trim()
           : ''
-        RuntimeConfiguration.current = new RuntimeConfiguration(
+        RuntimeConfiguration.update(new RuntimeConfiguration(
           normalizedApiBaseUrl,
           typeof configuredPath === 'string' && configuredPath.trim()
             ? normalizePath(configuredPath)
             : fallbackWorkflowWebSocketPath,
-          configuredGoogleClientId || await loadGoogleClientId(normalizedApiBaseUrl),
-        )
+          configuredGoogleClientId,
+        ))
       }
     } catch (error) {
       console.warn('Unable to load runtime-config.yaml; using the build-time API URL.', error)
     }
 
     return RuntimeConfiguration.current
+  }
+
+  static async loadGoogleClientIdInBackground(): Promise<void> {
+    const configuration = RuntimeConfiguration.current
+    if (configuration.googleClientId) return
+
+    const googleClientId = await loadGoogleClientId(configuration.apiBaseUrl)
+    if (!googleClientId) return
+
+    RuntimeConfiguration.update(new RuntimeConfiguration(
+      configuration.apiBaseUrl,
+      configuration.workflowWebSocketPath,
+      googleClientId,
+    ))
+  }
+
+  static subscribe(listener: RuntimeConfigurationListener): () => void {
+    RuntimeConfiguration.listeners.add(listener)
+    return () => RuntimeConfiguration.listeners.delete(listener)
+  }
+
+  private static update(configuration: RuntimeConfiguration): void {
+    RuntimeConfiguration.current = configuration
+    RuntimeConfiguration.listeners.forEach((listener) => listener(configuration))
   }
 }
 

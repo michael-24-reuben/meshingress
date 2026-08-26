@@ -73,8 +73,25 @@ export function getCacheDirectoryPath(cacheType: CacheType): string {
 
 export async function schemaFingerprint(schema: JsonSchema): Promise<string> {
   const content = new TextEncoder().encode(stableJson(schema))
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', content)
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  if (globalThis.crypto?.subtle?.digest) {
+    try {
+      const digest = await globalThis.crypto.subtle.digest('SHA-256', content)
+      return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+    } catch {
+      // Fallback if subtle digest fails
+    }
+  }
+  // Deterministic fallback hash for non-secure HTTP contexts (e.g. --host on LAN)
+  let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0
+  const str = stableJson(schema)
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 2654435761)
+    h2 = Math.imul(h2 ^ ch, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(16, '0')
 }
 
 export async function resolveDirectory(root: FileSystemDirectoryHandleLike, relativePath: string): Promise<FileSystemDirectoryHandleLike> {

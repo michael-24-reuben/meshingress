@@ -350,32 +350,7 @@ export const studioRailPanels = [
         titleAttributes: {
           className: 'node-name'
         },
-        title: ({ selectedNode, presentations, onNodeChange }: EditNodePanelTitleProps) => {
-          const [editingTitle, setEditingTitle] = useState(false)
-          const [titleDraft, setTitleDraft] = useState(selectedNode?.title ?? '')
-          useEffect(() => {
-            setEditingTitle(false)
-            setTitleDraft(selectedNode?.title ?? '')
-          }, [selectedNode?.id, selectedNode?.title])
-
-          const commitTitle = () => {
-            const title = titleDraft.trim()
-            if (selectedNode && title) onNodeChange(selectedNode.id, { title })
-            setEditingTitle(false)
-          }
-
-          return !selectedNode ? 'No node selected' : (<>
-            <span className="node-icon panel-node-icon" title={`${selectedNode.toolId} / ${selectedNode.functionName}`}>
-              <WorkflowNodeIcon descriptor={presentations.forNode(selectedNode)} size={24} />
-            </span>{editingTitle ?
-              <input aria-label="Node name" autoFocus className="node-name-input" onBlur={commitTitle} onChange={(event) =>
-                setTitleDraft(event.target.value)} onKeyDown={(event) => {
-                  if (event.key === 'Enter') event.currentTarget.blur()
-                }} value={titleDraft} />
-              : <button className="node-name-label" onClick={() => setEditingTitle(true)} type="button">{selectedNode.title}</button>}
-            <button aria-label="Edit node name" className="node-name-edit" onClick={() => setEditingTitle(true)} title="Edit node name" type="button"><PencilIcon size={15} /></button>
-          </>)
-        },
+        title: (props: EditNodePanelTitleProps) => <EditNodePanelTitle {...props} />,
         body: [
           {
             kind: 'node-editor',
@@ -484,6 +459,35 @@ export const drawerRailItems: readonly StudioRailItem[] = studioRailPanels.filte
 export const rightRailItems: readonly StudioRailItem[] = studioRailPanels.filter(
   (item) => getItemSurface(item) === 'right'
 )
+
+function EditNodePanelTitle({ selectedNode, presentations, onNodeChange }: EditNodePanelTitleProps) {
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState(selectedNode?.title ?? '')
+  useEffect(() => {
+    setEditingTitle(false)
+    setTitleDraft(selectedNode?.title ?? '')
+  }, [selectedNode?.id, selectedNode?.title])
+
+  const commitTitle = () => {
+    const title = titleDraft.trim()
+    if (selectedNode && title) onNodeChange(selectedNode.id, { title })
+    setEditingTitle(false)
+  }
+
+  return !selectedNode ? 'No node selected' : (
+    <>
+      <span className="node-icon panel-node-icon" title={`${selectedNode.toolId} / ${selectedNode.functionName}`}>
+        <WorkflowNodeIcon descriptor={presentations.forNode(selectedNode)} size={24} />
+      </span>{editingTitle ?
+        <input aria-label="Node name" autoFocus className="node-name-input" onBlur={commitTitle} onChange={(event) =>
+          setTitleDraft(event.target.value)} onKeyDown={(event) => {
+            if (event.key === 'Enter') event.currentTarget.blur()
+          }} value={titleDraft} />
+        : <button className="node-name-label" onClick={() => setEditingTitle(true)} type="button">{selectedNode.title}</button>}
+      <button aria-label="Edit node name" className="node-name-edit" onClick={() => setEditingTitle(true)} title="Edit node name" type="button"><PencilIcon size={15} /></button>
+    </>
+  )
+}
 
 export const studioPanelCatalog: readonly StudioRailItem[] = studioRailPanels
 

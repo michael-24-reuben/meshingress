@@ -1,3 +1,5 @@
+import { generateUuid } from '../../utils/uuid'
+
 export const GRID_SIZE = 20
 export const NODE_STAGE_INSET = GRID_SIZE * 2
 export const NODE_HEIGHT = GRID_SIZE * 6
@@ -138,7 +140,7 @@ export interface LogEntry {
   severity?: 'error'
 }
 
-export const createLogEntryId = (source: string, time: string, uuid: string = crypto.randomUUID()): string =>
+export const createLogEntryId = (source: string, time: string, uuid: string = generateUuid()): string =>
   `${uuid}-${time}-${source}`
 
 export const createLogEntry = (
@@ -146,7 +148,7 @@ export const createLogEntry = (
   message: string,
   severity?: LogEntry['severity'],
   time: string = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-  uuid: string = crypto.randomUUID()
+  uuid: string = generateUuid()
 ): LogEntry => ({
   id: createLogEntryId(source, time, uuid),
   time,

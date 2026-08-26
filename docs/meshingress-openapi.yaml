@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: http://100.121.15.11:4737
+- url: http://192.168.1.159:4737
   description: Generated server url
 tags:
 - name: Artifact repository
@@ -2655,28 +2655,22 @@ components:
           type: boolean
         string:
           type: boolean
-        int:
+        double:
+          type: boolean
+        binary:
+          type: boolean
+        boolean:
           type: boolean
         textual:
           type: boolean
           deprecated: true
-        long:
-          type: boolean
-        double:
-          type: boolean
-        boolean:
-          type: boolean
-        pojo:
-          type: boolean
         short:
           type: boolean
-        binary:
+        long:
           type: boolean
-        integralNumber:
+        int:
           type: boolean
-        valueNode:
-          type: boolean
-        container:
+        pojo:
           type: boolean
         nodeType:
           type: string
@@ -2690,13 +2684,19 @@ components:
           - OBJECT
           - POJO
           - STRING
-        missingNode:
-          type: boolean
-        floatingPointNumber:
+        integralNumber:
           type: boolean
         bigDecimal:
           type: boolean
+        valueNode:
+          type: boolean
         bigInteger:
+          type: boolean
+        container:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        missingNode:
           type: boolean
         embeddedValue:
           type: boolean

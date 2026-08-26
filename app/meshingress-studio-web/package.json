@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "launch": "node scripts/launcher.js",
+    "clean": "node scripts/launcher.js --clean-only",
     "lint": "oxlint",
     "preview": "vite preview"
   },

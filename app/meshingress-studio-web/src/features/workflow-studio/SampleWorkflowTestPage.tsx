@@ -3,7 +3,8 @@ import { initialNodes, initialEdges, workflowName } from './compilation/sample-w
 import { workflowDefinition, type WorkflowDefinitionPayload } from './compilation/definition'
 import { ToolResultStore } from './storage/tool-result-store'
 import { RuntimeConfiguration } from '../../runtime/RuntimeConfiguration'
-import { apiRequest } from '../../api/client'
+import { apiRequest, MeshingressApiError } from '../../api/client'
+import { generateUuid } from '../../utils/uuid'
 import type { WorkflowNode, WorkflowEdge, WorkflowNodeResult, WorkflowRunResult, NodeRunState } from './types'
 
 export interface RawConsoleMessage {
@@ -133,7 +134,7 @@ export function SampleWorkflowTestPage({ onBackToStudio }: { onBackToStudio?: ()
     resetStateForRun('ws')
 
     const wsUrl = getWebSocketUrl()
-    const requestId = crypto.randomUUID()
+    const requestId = generateUuid()
     const outboundPayload = { action: 'run', definition: compiledDefinition, requestId }
 
     appendLog('SYS', `Opening WebSocket connection to ${wsUrl}`, { url: wsUrl })
@@ -251,7 +252,7 @@ export function SampleWorkflowTestPage({ onBackToStudio }: { onBackToStudio?: ()
       })
 
       socket.addEventListener('error', (err) => {
-        appendLog('ERROR', 'WebSocket transport error. Make sure backend is running or try HTTP/Mock.', err)
+        appendConfiguredServerFailure('WebSocket', err)
         setRunStatus('failed')
         setRunningMode('idle')
       })
@@ -264,7 +265,7 @@ export function SampleWorkflowTestPage({ onBackToStudio }: { onBackToStudio?: ()
         setRunningMode((prev) => (prev === 'ws' ? 'idle' : prev))
       })
     } catch (err) {
-      appendLog('ERROR', `Failed to initialize WebSocket: ${err instanceof Error ? err.message : String(err)}`, err)
+      appendConfiguredServerFailure('WebSocket', err)
       setRunStatus('failed')
       setRunningMode('idle')
     }
@@ -291,8 +292,8 @@ export function SampleWorkflowTestPage({ onBackToStudio }: { onBackToStudio?: ()
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Mcp-Session-Id': crypto.randomUUID(),
-          'X-Request-Id': crypto.randomUUID(),
+          'Mcp-Session-Id': generateUuid(),
+          'X-Request-Id': generateUuid(),
         },
         body: JSON.stringify(compiledDefinition),
       })
@@ -321,11 +322,24 @@ export function SampleWorkflowTestPage({ onBackToStudio }: { onBackToStudio?: ()
       })
       setNodeExecutions((prev) => ({ ...prev, ...nextExecs }))
     } catch (err) {
-      appendLog('ERROR', `HTTP Request failed: ${err instanceof Error ? err.message : String(err)}`, err)
+      if (err instanceof MeshingressApiError) {
+        appendLog('ERROR', `HTTP Request failed: ${err.message}`, err)
+      } else {
+        appendConfiguredServerFailure('HTTP', err)
+      }
       setRunStatus('failed')
     } finally {
       setRunningMode('idle')
     }
+  }
+
+  const appendConfiguredServerFailure = (transport: 'HTTP' | 'WebSocket', error: unknown) => {
+    const apiBaseUrl = RuntimeConfiguration.current.apiBaseUrl
+    appendLog(
+      'ERROR',
+      `${transport} could not reach the configured Meshingress server at ${apiBaseUrl}. Verify the server is running and reachable, or update public/runtime-config.yaml.`,
+      { apiBaseUrl, configFile: 'public/runtime-config.yaml', error },
+    )
   }
 
   // Simulated Mock Run for testing UI without active backend
