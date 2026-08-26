@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 2,
+  "metadata": {
+    "namespace": "powershell",
+    "title": "PowerShell CLI",
+    "summary": "PowerShell command execution",
+    "description": "Executes PowerShell scripts through the PowerShell tool functions.",
+    "authors": [
+      {
+        "name": "Markus Ressel",
+        "urls": ["mailto:markus@ressel.dev"]
+      }
+    ],
+    "license": "",
+    "tags": ["powershell", "cli"],
+    "links": [
+      {"kind": "documentation", "url": "https://learn.microsoft.com/powershell/", "label": "PowerShell Documentation"},
+      {"kind": "source", "url": "https://github.com/PowerShell/PowerShell", "label": "PowerShell GitHub Repository"}
+    ],
+    "icon": {
+      "resourcePath": "powershell.svg",
+      "mimeType": "SVG_IMAGE",
+      "accessibleLabel": "PowerShell"
+    }
+  },
+  "properties": [
+    {
+      "name": "meshingress.powershell.executable",
+      "description": "PowerShell executable used by native deployments.",
+      "defaultValue": "pwsh",
+      "valueType": "string",
+      "required": false,
+      "secret": false
+    },
+    {
+      "name": "meshingress.powershell.timeout-ms",
+      "description": "Default PowerShell execution timeout in milliseconds.",
+      "defaultValue": "20000",
+      "valueType": "long",
+      "required": false,
+      "secret": false
+    }
+  ],
+  "requirements": [
+    {
+      "kind": "executable",
+      "name": "pwsh",
+      "description": "PowerShell 7+ executable must be available on PATH or configured through meshingress.powershell.executable.",
+      "required": true,
+      "label": "",
+      "license": "",
+      "vcs": "",
+      "cloneUrl": "",
+      "checkoutRef": "",
+      "baseUrlProperty": "",
+      "credentialProperty": "",
+      "scope": "",
+      "canonicalIdentity": ""
+    },
+    {
+      "kind": "scope",
+      "name": "SHELL_EXECUTE",
+      "description": "Execute shell commands or scripts. Critical risk; requires explicit approval.",
+      "required": true,
+      "label": "",
+      "license": "",
+      "vcs": "",
+      "cloneUrl": "",
+      "checkoutRef": "",
+      "baseUrlProperty": "",
+      "credentialProperty": "",
+      "scope": "SHELL_EXECUTE",
+      "canonicalIdentity": ""
+    },
+    {
+      "kind": "scope",
+      "name": "FILES_WRITE",
+      "description": "Write file contents.",
+      "required": true,
+      "label": "",
+      "license": "",
+      "vcs": "",
+      "cloneUrl": "",
+      "checkoutRef": "",
+      "baseUrlProperty": "",
+      "credentialProperty": "",
+      "scope": "FILES_WRITE",
+      "canonicalIdentity": ""
+    }
+  ],
+  "readme": "# PowerShell CLI\n\nExecutes PowerShell scripts through the `powershell.cli.execute` MCP function.\n\nNative deployments require a PowerShell executable. By default, Meshingress uses `pwsh`.\nOverride this through `meshingress.powershell.executable` when needed.\nConfigure `resources/application.properties` beside this artifact when a native deployment needs a host-specific PowerShell executable or timeout default."
+}
