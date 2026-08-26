@@ -54,7 +54,7 @@
 
         <dependency>
             <groupId>dev.mrk.toolspace.ytdlp</groupId>
-            <artifactId>x-yt-dlp</artifactId>
+            <artifactId>yt-dlp</artifactId>
             <version>${project.version}</version>
         </dependency>
 

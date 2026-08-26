@@ -23,7 +23,7 @@ tools/
 *.class
 
 ### Architect ###
-architect/
+#architect/
 architect/**/env.yaml
 architect/**/env.local.yaml
 architect/**/secrets.json
@@ -62,11 +62,8 @@ build/
 
 ### Toolspace ###
 # Exclude tool modules and their build artifacts
-toolspace/x-*
-!toolspace/x-transform/
-!toolspace/x-transform/**
-toolspace/x-transform/**/node_modules/
-toolspace/**/target/
+#toolspace/x-*
+toolspace/**/**/node_modules/
 
 ### Secure Files ###
 *.pem

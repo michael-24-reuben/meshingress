@@ -46,7 +46,7 @@
         <module>toolspace/powershell-cli</module>
         <module>toolspace/x-faster-whisper</module>
         <module>toolspace/x-transform</module>
-        <module>toolspace/x-yt-dlp</module>
+        <module>toolspace/yt-dlp</module>
         <module>toolspace/youtube</module>
         <module>toolspace/x-open-ink-library</module>
     </modules>
