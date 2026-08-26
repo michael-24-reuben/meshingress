@@ -1,0 +1,46 @@
+{
+  "id": "2026-06-26-mvp-cli-caller",
+  "title": "MVP CLI Caller",
+  "status": "resolved",
+  "createdAt": "2026-06-26T03:55:14.4215697-04:00",
+  "activatedAt": "2026-06-26T23:17:12.9817419-04:00",
+  "resolvedAt": "2026-06-26T23:25:50.6248262-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-26T23:25:50.6248262-04:00",
+  "tags": [
+    "mvp",
+    "cli",
+    "tools",
+    "config",
+    "priority-07"
+  ],
+  "related": [
+    "2026-06-26-nextcloud-mcp-core-architecture",
+    "2026-06-26-mvp-mcp-tool-runtime",
+    "2026-06-26-mvp-files-share-user-tools",
+    "2026-06-26-mvp-integration-verification-docs"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "parent-architect",
+    "summary": "MVP child architect for command-line tool listing, invocation, account testing, and config checks."
+  },
+  "resolutionOrder": 7,
+  "events": [
+    {
+      "at": "2026-06-26T03:55:14.4215697-04:00",
+      "type": "CREATED",
+      "note": "Created as the seventh MVP child architect to resolve."
+    },
+    {
+      "at": "2026-06-26T23:17:12.9817419-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated to implement the MVP local CLI caller."
+    },
+    {
+      "at": "2026-06-26T23:25:50.6248262-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved after adding the CLI module, command tests, focused reactor verification, and full reactor verification."
+    }
+  ]
+}

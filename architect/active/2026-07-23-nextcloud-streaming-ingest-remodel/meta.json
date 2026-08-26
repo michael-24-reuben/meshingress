@@ -1,0 +1,33 @@
+{
+  "id": "2026-07-23-nextcloud-streaming-ingest-remodel",
+  "title": "Nextcloud Streaming Ingest Remodel",
+  "status": "active",
+  "createdAt": "2026-07-23T01:37:59-04:00",
+  "activatedAt": "2026-07-23T02:10:00-04:00",
+  "updatedAt": "2026-07-23T21:46:22-04:00",
+  "tags": ["storage", "nextcloud", "design", "investigation", "needs-user-decision"],
+  "related": ["2026-07-22-delegated-external-source-import", "2026-07-21-nextcloud-source-import-workflow"],
+  "sourceReports": ["nextcloud-streaming-ingest-2026-07-23-013759"],
+  "events": [
+    {
+      "at": "2026-07-23T01:37:59-04:00",
+      "type": "CREATED_PENDING",
+      "note": "Created from streaming-ingest research; no production lifecycle or deployed app was changed."
+    },
+    {
+      "at": "2026-07-23T02:06:00-04:00",
+      "type": "ROUTING_CALLERS_ADDED",
+      "note": "Added test-only JavaScript callers for each candidate routing shape; no live call was issued."
+    },
+    {
+      "at": "2026-07-23T02:10:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "User started the routing implementation slice."
+    },
+    {
+      "at": "2026-07-23T21:46:22-04:00",
+      "type": "TRANSFER_MODEL_RECONCILED",
+      "note": "Streaming-ingest follow-up is now explicitly a delegated-source destination concern and cannot be paired with Meshingress queued publication."
+    }
+  ]
+}

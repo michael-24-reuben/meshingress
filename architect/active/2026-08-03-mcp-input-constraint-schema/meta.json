@@ -1,0 +1,62 @@
+{
+  "id": "2026-08-03-mcp-input-constraint-schema",
+  "title": "MCP Input Constraint Schema",
+  "status": "active",
+  "createdAt": "2026-08-03T00:00:00-04:00",
+  "activatedAt": "2026-08-03T00:00:00-04:00",
+  "updatedAt": "2026-08-05T14:15:17-04:00",
+  "tags": ["api", "backend", "frontend", "design", "validation"],
+  "related": ["2026-05-20-mcp-route-annotation-framework", "2026-07-26-workflow-runtime-beta"],
+  "events": [
+    {
+      "type": "CREATED_ACTIVE",
+      "at": "2026-08-03T00:00:00-04:00",
+      "note": "Created for typed MCP input constraints, schema compilation, and Studio type-reading consolidation."
+    },
+    {
+      "type": "INITIAL_SCHEMA_SLICE_IMPLEMENTED",
+      "at": "2026-08-03T13:33:47-04:00",
+      "note": "Added typed constraint annotations, schema compilation, generic collection item schemas, Toonverse numeric bounds, and centralized Studio type resolution."
+    },
+    {
+      "type": "HELLO_WORLD_SCHEMA_FIXTURE_ADDED",
+      "at": "2026-08-03T13:56:00-04:00",
+      "note": "Refactored Hello World to expose every Studio object category as optional schema parameters and verified the generated schema."
+    },
+    {
+      "type": "FULL_TYPE_CONSTRAINT_FAMILY_ADDED",
+      "at": "2026-08-03T14:50:00-04:00",
+      "note": "Added and compiled companion constraints for every remaining Studio parameter object category, including explicit x-mcp extensions where JSON Schema has no standard keyword."
+    },
+    {
+      "type": "HELLO_WORLD_FULL_CONSTRAINT_FIXTURE_ADDED",
+      "at": "2026-08-03T14:58:00-04:00",
+      "note": "Applied a representative companion constraint to each optional Hello World parameter and expanded its schema regression test."
+    },
+    {
+      "type": "STUDIO_CONSTRAINT_SYNC_SET_AS_CURRENT_OBJECTIVE",
+      "at": "2026-08-03T15:11:12-04:00",
+      "note": "The next unresolved slice is to synchronize compiled input-schema constraints with Studio parameter controls and presentation; backend runtime validation remains a later follow-up."
+    },
+    {
+      "type": "NUMERIC_SLIDER_STUDIO_SLICE_IMPLEMENTED",
+      "at": "2026-08-05T13:10:38-04:00",
+      "note": "The opt-in McpNumericSliderConstraints contract now publishes x-mcp-control: slider for bounded integer and decimal fields; Studio renders it as a snap-to-step slider with a bottom scale and editable right-side value setter."
+    },
+    {
+      "type": "NUMERIC_SLIDER_COMPACT_VALUE_DISPLAY_REFINED",
+      "at": "2026-08-05T13:56:53-04:00",
+      "note": "The slider value setter now rests as a three-significant-digit mantissa plus external K/M-style unit, then expands to the exact value on hover or focus; its height and radius were reduced."
+    },
+    {
+      "type": "NUMERIC_SLIDER_DECIMAL_WIDTH_CORRECTED",
+      "at": "2026-08-05T14:06:53-04:00",
+      "note": "Expanded value width now derives from the complete raw decimal string plus two character cells, preventing dots, leading zeroes, signs, and fractional digits from clipping."
+    },
+    {
+      "type": "NUMERIC_SLIDER_SCALE_ENDPOINTS_CALIBRATED",
+      "at": "2026-08-05T14:15:17-04:00",
+      "note": "Defined a 16px range thumb and positioned minimum/midpoint/maximum labels beneath the matching thumb centers, eliminating endpoint offset."
+    }
+  ]
+}

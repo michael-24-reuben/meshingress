@@ -1,0 +1,23 @@
+# Todo
+
+- [x] Finish naming cleanup for `lib/meshingress-tool-api-manifest`.
+- [x] Decide final package names for manifest API classes.
+- [x] Add `McpToolManifestDefinition`.
+- [x] Add typed `ToolProperty` model.
+- [x] Add typed `ToolRequirement` model.
+- [x] Add typed `ToolLink` model.
+- [x] Add manifest validation rules.
+- [x] Add discovery link from tool class to manifest definition.
+- [x] Add static manifest export format.
+- [x] Preserve `resources/application.yaml` export compatibility.
+- [x] Preserve root and resources README export compatibility.
+- [x] Extend repository assessment to read manifest metadata without executing uploaded code.
+- [x] Add repository payload storage for manifest requirements and links through `resources/tool-manifest.json`.
+- [x] Add source repository URL canonicalization.
+- [ ] Add source repository reference tracking for reuse and cleanup safety. Deferred to a focused source-cache lifecycle entry.
+- [x] Extend runtime metadata reader to consume static manifest output.
+- [x] Migrate `PowerShellCliTool` as the pilot.
+- [x] Keep unrelated example requirements out of the production PowerShell manifest.
+- [x] Add focused manifest module tests.
+- [x] Add repository export/integration tests.
+- [x] Add runtime install resource tests if resource layout changes.

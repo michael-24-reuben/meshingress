@@ -1,0 +1,48 @@
+{
+  "id": "2026-08-15-persistent-google-profiles-and-limits",
+  "title": "Persistent Google Profiles and Configurable Limits",
+  "status": "resolved",
+  "createdAt": "2026-08-15T19:40:05-04:00",
+  "activatedAt": "2026-08-15T20:14:42-04:00",
+  "resolvedAt": "2026-08-15T20:14:42-04:00",
+  "discontinuedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-08-15T20:14:42-04:00",
+  "tags": [
+    "security",
+    "aegis",
+    "oidc",
+    "profiles",
+    "rate-limits",
+    "quotas",
+    "prd"
+  ],
+  "related": [
+    "2026-07-16-mcp-oidc-principal-and-header-migration",
+    "2026-08-15-aegis-profile-lifecycle",
+    "2026-08-15-studio-login-interactions",
+    "2026-07-16-mcp-tool-authorization-and-credential-strategies"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Plan durable, spoof-resistant Google-linked Aegis profiles and configurable per-profile rate and quota enforcement."
+  },
+  "events": [
+    {
+      "at": "2026-08-15T19:40:05-04:00",
+      "type": "CREATED",
+      "note": "Created as pending design work; no automatic profile provisioning or limit enforcement was implemented."
+    },
+    {
+      "at": "2026-08-15T20:14:42-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated to implement provider-neutral verified identity admission and profile limits."
+    },
+    {
+      "at": "2026-08-15T20:14:42-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented closed-by-default admission, durable verified identity binding, configurable request/execution/concurrency limits, and management routes with focused verification."
+    }
+  ]
+}

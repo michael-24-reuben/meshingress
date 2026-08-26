@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-08-tool-module-catalog-api",
+  "title": "Tool Module Catalog API",
+  "type": "feature",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-08T10:26:20-04:00",
+  "activatedAt": "2026-08-08T10:26:20-04:00",
+  "updatedAt": "2026-08-08T10:36:56-04:00",
+  "resolvedAt": "2026-08-08T10:36:56-04:00",
+  "tags": ["api", "server", "studio", "tool-metadata", "tool-modules"],
+  "related": ["2026-08-07-tool-family-contribution-precedence", "2026-07-02-tool-manifest-external-requirements"],
+  "events": [
+    {
+      "at": "2026-08-08T10:26:20-04:00",
+      "type": "CREATED",
+      "note": "Owner authorized a manifest-backed runtime module catalog for metadata, properties, requirements, README, and controlled icons across source and installed modules."
+    },
+    {
+      "at": "2026-08-08T10:36:56-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and verified a manifest-backed public module catalog for classpath and runtime modules, including Studio namespace icons with a folder fallback."
+    }
+  ]
+}

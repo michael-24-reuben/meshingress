@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-06-studio-runtime-trace-drawer",
+  "title": "Studio Runtime Trace Drawer",
+  "type": "feature",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-06T00:00:00-04:00",
+  "activatedAt": "2026-08-06T00:00:00-04:00",
+  "updatedAt": "2026-08-06T21:11:57-04:00",
+  "resolvedAt": "2026-08-06T21:11:57-04:00",
+  "tags": ["frontend", "studio", "workflow", "runtime", "ui", "observability"],
+  "related": ["2026-07-26-workflow-runtime-beta"],
+  "events": [
+    {
+      "at": "2026-08-06T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created for the owner-approved session-local Studio Runtime trace drawer implementation."
+    },
+    {
+      "at": "2026-08-06T00:00:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated to add client-captured live run trace presentation without expanding the beta runtime cancellation contract."
+    },
+    {
+      "at": "2026-08-06T21:11:57-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and verified the session-local Runtime drawer trace presentation."
+    }
+  ]
+}

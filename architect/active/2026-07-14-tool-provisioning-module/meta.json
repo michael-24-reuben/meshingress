@@ -1,0 +1,116 @@
+{
+  "id": "2026-07-14-tool-provisioning-module",
+  "title": "Meshingress Tool Provisioning Module",
+  "status": "active",
+  "createdAt": "2026-07-14T22:00:00-04:00",
+  "activatedAt": "2026-07-15T00:00:00-04:00",
+  "resolvedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-07-15T21:05:58-04:00",
+  "tags": [
+    "meshingress",
+    "tool-runtime",
+    "provisioning",
+    "dependency-installation",
+    "dependency-verification",
+    "python",
+    "git-repository",
+    "uv",
+    "fawltydeps",
+    "module-design",
+    "maven",
+    "security"
+  ],
+  "related": [
+    "2026-07-02-tool-manifest-external-requirements",
+    "2026-05-26-tool-runtime-loader",
+    "2026-07-14-artifact-type-lifecycle-and-cli-harness"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Create a dedicated Meshingress library module responsible for installing and verifying tool dependencies, beginning with Python GitHub repositories and undeclared Python dependency detection."
+  },
+  "events": [
+    {
+      "at": "2026-07-14T22:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created architecture package for lib/meshingress-tool-provisioning."
+    },
+    {
+      "at": "2026-07-15T00:00:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated for the x-faster-whisper local virtual-environment provisioning and Java-to-Python MCP bridge slice."
+    },
+    {
+      "at": "2026-07-15T01:50:00-04:00",
+      "type": "IMPLEMENTATION_SLICE_COMPLETED",
+      "note": "Added the provider-neutral provisioning contract, local Python venv provider, x-faster-whisper bridge, local venv, and focused verification."
+    },
+    {
+      "at": "2026-07-15T09:44:21-04:00",
+      "type": "MANIFEST_RESOLUTION_SCOPE_CONSOLIDATED",
+      "note": "Absorbed the unfinished managed source-resolution and activation work from the resolved tool-manifest external-requirements record; the manifest declaration surface remains complete, while its provisioning lifecycle is active here."
+    },
+    {
+      "at": "2026-07-15T10:45:06-04:00",
+      "type": "RELATED_CODE_INVENTORIED",
+      "note": "Recorded manifest, repository, runtime-loader, artifact-storage, process-runner, and toolspace reuse boundaries before implementation to avoid duplicate source acquisition or activation lifecycle code."
+    },
+    {
+      "at": "2026-07-15T11:13:40-04:00",
+      "type": "GIT_SOURCE_PROVISIONING_SLICE_COMPLETED",
+      "note": "Added managed Git checkout staging, canonical vendor placement, commit markers, pinned-revision reuse, revision invalidation, optional subdirectory support, and local Git fixture tests."
+    },
+    {
+      "at": "2026-07-15T11:51:15-04:00",
+      "type": "RUNTIME_READINESS_GATE_COMPLETED",
+      "note": "Connected trusted cached static manifests to pinned Git source provisioning before classloading and registry registration; server startup and read-only MCP listing passed."
+    },
+    {
+      "at": "2026-07-15T13:19:20-04:00",
+      "type": "TOOL_ARTIFACT_PACKAGING_BOUNDARY_VERIFIED",
+      "note": "Excluded local vendor source and virtual-environment paths at both resource-copy and JAR assembly stages; focused tests and incremental artifact inspection passed."
+    },
+    {
+      "at": "2026-07-15T13:37:20-04:00",
+      "type": "FASTER_WHISPER_EXTERNAL_MANIFEST_DECLARED",
+      "note": "Declared and registered the pinned Faster Whisper Git source plus tool-local runtime and STT configuration metadata through the auto-configuration manifest pattern."
+    },
+    {
+      "at": "2026-07-15T16:57:05-04:00",
+      "type": "PUBLICATION_LIFECYCLE_VALIDATED",
+      "note": "Upload, assessment, and approval passed; publication failed closed on four inferred scopes not included in review. Assessment also showed that runtime-only manifest registration leaves published artifact resources empty, so no static source gate or managed dependency provisioning was reached."
+    },
+    {
+      "at": "2026-07-15T17:36:36-04:00",
+      "type": "STATIC_MANIFEST_BUILD_EXPORT_COMPLETED",
+      "note": "Added a reusable build-time manifest executor and bound x-faster-whisper to generate META-INF/meshingress/tool-manifest.json before JAR packaging; focused tests and JAR inspection passed."
+    },
+    {
+      "at": "2026-07-15T17:49:37-04:00",
+      "type": "EXTERNAL_SOURCE_PUBLICATION_LIFECYCLE_COMPLETED",
+      "note": "Fresh x-faster-whisper publication lifecycle exported review resources, installed one runtime handler, and materialized the pinned SYSTRAN source under repository/vendor without bundling the tool; server-side Python venv creation remains deferred."
+    },
+    {
+      "at": "2026-07-15T18:14:24-04:00",
+      "type": "EXPORTED_PROPERTIES_FORMAT_CORRECTED",
+      "note": "Replaced generated application.yaml with typed application.properties output and updated repository/runtime resource consumers; verification was intentionally not run at user direction."
+    },
+    {
+      "at": "2026-07-15T18:42:30-04:00",
+      "type": "PYTHON_RUNTIME_RESOLUTION_IMPLEMENTED",
+      "note": "Added static Python project discovery, server-managed venv provisioning, child-context interpreter injection, and Windows-safe staging identities. Focused provisioning/runtime tests passed; the live activation attempt reached the provider before an unrelated publication-signature barrier prevented a final retry."
+    },
+    {
+      "at": "2026-07-15T18:47:54-04:00",
+      "type": "PYTHON_VENV_LIVE_VERIFIED",
+      "note": "Corrected a Windows ProcessBuilder working-directory length failure by shortening the disposable staging path. The production PythonVenvProvisioner then created the managed Faster Whisper venv, installed the staged project, verified import faster_whisper, and passed pip check without modifying the vendor checkout."
+    },
+    {
+      "at": "2026-07-15T21:05:58-04:00",
+      "type": "PREACTIVATION_DEPENDENCY_REVIEW_REQUIRED",
+      "note": "Changed the required lifecycle boundary: external source and candidate Python environment resolution must occur during assessment for user review. Activation may only promote or reuse an approved, verified candidate; it must not first download source or install Python dependencies."
+    }
+  ]
+}

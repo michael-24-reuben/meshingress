@@ -1,0 +1,40 @@
+{
+  "id": "2026-07-24-x-yt-dlp-local-tool-module",
+  "title": "Local yt-dlp Tool Module",
+  "status": "resolved",
+  "createdAt": "2026-07-24T00:00:00-04:00",
+  "activatedAt": "2026-07-24T00:00:00-04:00",
+  "resolvedAt": "2026-07-24T01:33:12-04:00",
+  "discontinuedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-07-24T01:34:58-04:00",
+  "tags": ["backend", "cli", "docs", "storage", "verification"],
+  "related": ["2026-07-14-tool-provisioning-module", "2026-07-23-x-transform-backend-tool"],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Create a local-only x-yt-dlp module that vendors the runtime source and exposes a constrained MCP wrapper."
+  },
+  "events": [
+    {
+      "at": "2026-07-24T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created as active work from the local-only yt-dlp module request."
+    },
+    {
+      "at": "2026-07-24T00:00:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation started immediately."
+    },
+    {
+      "at": "2026-07-24T01:33:12-04:00",
+      "type": "RESOLVED",
+      "note": "Vendored local runtime, MCP wrapper, and focused verification completed."
+    },
+    {
+      "at": "2026-07-24T01:34:58-04:00",
+      "type": "UPDATED",
+      "note": "Final server reactor verification passed after isolating PYTHONPATH from host values."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "2026-08-04-workflow-canvas-pan-state-race",
+  "title": "Workflow Canvas pan state race",
+  "status": "resolved",
+  "type": "bug",
+  "priority": "high",
+  "createdAt": "2026-08-04T17:15:41-04:00",
+  "activatedAt": "2026-08-04T17:15:41-04:00",
+  "resolvedAt": "2026-08-04T17:15:41-04:00",
+  "updatedAt": "2026-08-04T17:15:41-04:00",
+  "scope": "app/meshingress-studio-web/src/features/workflow-studio/components/WorkflowCanvas.tsx",
+  "tags": [
+    "workflow-studio",
+    "react",
+    "pointer-events",
+    "state-management",
+    "bug"
+  ],
+  "events": [
+    {
+      "at": "2026-08-04T17:15:41-04:00",
+      "type": "CREATED",
+      "note": "Recorded the canvas blank-page failure reported from the React development console."
+    },
+    {
+      "at": "2026-08-04T17:15:41-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "User authorized implementation of the focused pan-handler fix."
+    },
+    {
+      "at": "2026-08-04T17:15:41-04:00",
+      "type": "RESOLVED",
+      "note": "Snapshot the pan gesture before queuing the React transform update; Studio lint and production build passed."
+    }
+  ]
+}

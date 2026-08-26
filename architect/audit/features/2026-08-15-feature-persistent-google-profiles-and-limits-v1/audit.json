@@ -1,0 +1,88 @@
+{
+  "id": "feature-persistent-google-profiles-and-limits-v1",
+  "recordedAt": "2026-08-15T20:14:42-04:00",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "packages/aegis",
+      "app/meshingress-server"
+    ]
+  },
+  "summary": "Persistent Google-authenticated profiles resolved exclusively by verified issuer and subject, backed by server-owned admission policy and request-time execution and quota limits.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "source inspection on 2026-08-15",
+      "architect resolved entry 2026-08-15-persistent-google-profiles-and-limits",
+      "focused Maven verification on 2026-08-15"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "packages/aegis/src/main/java/dev/mrk/aegis/VerifiedIdentity.java",
+      "lines": "13-47",
+      "note": "Defines provider-neutral external identity structure carrying verified issuer, subject, method, scopes, roles, and display attributes."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/security/AegisProfileIdentityResolver.java",
+      "lines": "14-47",
+      "note": "Resolves exactly one active local Aegis profile matched by verified issuer and subject identity index."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/security/ProfileAdmissionService.java",
+      "lines": "21-59",
+      "note": "Server-owned admission boundary enforcing closed-by-default profile creation and provisioning unprivileged pending profiles when self-service is enabled."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/auth/ProfileAdmissionController.java",
+      "lines": "18-63",
+      "note": "Exposes /api/v1/auth/profile/admit and /api/v1/auth/profile/me endpoints that accept only Spring-verified JWT principals."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/security/ProfileLimitService.java",
+      "lines": "24-110",
+      "note": "Enforces request-time rate, execution, and concurrency reservations with global/profile limit switches and audited JSON-RPC limit denials."
+    },
+    {
+      "kind": "verification",
+      "path": "app/meshingress-server/src/test/java/dev/mrk/meshingress/security/ProfileAdmissionServiceTest.java",
+      "lines": "24-58",
+      "note": "Verifies closed admission mode and unprivileged pending profile self-service creation."
+    },
+    {
+      "kind": "verification",
+      "path": "app/meshingress-server/src/test/java/dev/mrk/meshingress/security/ProfileLimitServiceTest.java",
+      "lines": "23-53",
+      "note": "Verifies rate limit enforcement, stable PROFILE_LIMIT_EXCEEDED error formatting, and global limits toggle."
+    },
+    {
+      "kind": "design-record",
+      "path": "architect/resolved/2026-08-15-persistent-google-profiles-and-limits/prd.md",
+      "lines": "1-122",
+      "note": "Defines product requirements for spoof-resistant identity binding, closed admission policy, limit hierarchy, and audit constraints."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "security",
+    "aegis",
+    "google",
+    "profiles",
+    "oidc",
+    "rate-limits",
+    "quotas",
+    "admission"
+  ]
+}

@@ -1,0 +1,26 @@
+# Todo
+
+- [x] Record the agreed public terminology and boundary between declared and observed schemas.
+- [x] Record `outputTypes` as the initial annotation contract instead of an initial `DispatchExecutionResult<RT>` refactor.
+- [x] Record the authoritative `structuredOutput` precedence rule.
+- [x] Select NetworkNT JSON Schema Validator 3.0.6 for the Java/Jackson 3 runtime.
+- [x] Design and add `@McpFunction.outputTypes` with a source-compatible empty default.
+- [ ] Define/implement output-interface property annotations and schema rules.
+- [x] Compile output types, multiple variants, and the structured-content envelope into `outputSchema`.
+- [x] Publish descriptor output schemas through `tools/list`.
+- [x] Normalize generated JSON into the canonical structured-content envelope while preserving raw replay, and infer observed schemas from `structuredContent.data` only.
+- [x] Refactor workflow execution records and WebSocket events so tool-node results retain the canonical envelope while workflow bindings use payload `data` only.
+- [x] Persist authoritative tool-node records incrementally in Studio and use terminal workflow records only for reconciliation/fallback.
+- [x] Render the current serial WorkflowRuntime as one fixed timeline lane; defer multiple lanes until the server exposes concurrent worker identities.
+- [x] Add warn-only NetworkNT validation for declared schemas at the common tool-execution boundary.
+- [x] Map bounded validator diagnostics into MCP `_meta` without changing successful results.
+- [x] Project typed `StructuredContent` schemas into workflow node results while moving runtime validation facts to `diagnostics`; raw `JsonNode` structured content remains schema-less.
+- [ ] Add configurable output-schema policy modes (`off`, `warn`, `enforce`); enforcement is deliberately deferred.
+- [x] Define and implement v1 declared-schema cache keys and refresh behavior in Studio.
+- [x] Implement Studio `structuredOutput` precedence and declared-schema UI guidance without duplicate validation.
+- [x] Implement the eligible observed-schema baseline/caching flow.
+- [ ] Implement neutral drift events and configurable event-to-severity mapping.
+- [ ] Add remaining backend and Studio regression coverage.
+- [x] Run focused Maven validation tests, including a real `/mcp` declared-schema call.
+- [ ] Run Studio lint/build and live MCP discovery/repeated-call smoke checks.
+- [x] Hand this architect to Antigravity CLI / Gemini to create a source- and test-backed `architect/audit/features/` capability snapshot after implementation is usable; independently verify its audit files before relying on them.

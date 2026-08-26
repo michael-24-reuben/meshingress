@@ -1,0 +1,54 @@
+{
+  "id": "feature-google-oidc-resource-authentication-v1",
+  "recordedAt": "2026-08-15T19:45:33-04:00",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "lib/meshingress-config",
+      "app/meshingress-server"
+    ]
+  },
+  "summary": "The server can operate as an OIDC-protected MCP resource, validating issuer and audience and exposing OAuth protected-resource metadata for compatible MCP clients.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "source inspection on 2026-08-15",
+      "focused Maven verification on 2026-08-15"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/security/SecurityConfig.java",
+      "lines": "27-64",
+      "note": "Protects MCP when configured and validates the configured issuer and audience on JWTs."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/security/McpOAuthResourceMetadata.java",
+      "lines": "8-34",
+      "note": "Builds resource and metadata identifiers from deployment configuration."
+    },
+    {
+      "kind": "verification",
+      "path": "app/meshingress-server/src/test/java/dev/mrk/meshingress/security/MeshingressOidcPropertiesBindingTest.java",
+      "lines": "14-30",
+      "note": "Verifies OIDC properties bind through the canonical security configuration constructor."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "security",
+    "oidc",
+    "oauth",
+    "jwt",
+    "mcp"
+  ]
+}

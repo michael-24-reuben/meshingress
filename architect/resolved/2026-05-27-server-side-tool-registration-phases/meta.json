@@ -1,0 +1,70 @@
+{
+  "id": "2026-05-27-server-side-tool-registration-phases",
+  "title": "Server-side Tool Registration Phases",
+  "status": "resolved",
+  "createdAt": "2026-05-27T00:00:00-04:00",
+  "activatedAt": "2026-05-27T00:00:00-04:00",
+  "resolvedAt": "2026-05-27T01:34:37-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-05-27T01:34:37-04:00",
+  "tags": [
+    "tool-runtime-loader",
+    "tool-registration",
+    "roles-controller",
+    "plugins",
+    "maven-coordinates",
+    "local-jar",
+    "bundle",
+    "native-tools",
+    "security",
+    "audit",
+    "design",
+    "implementation"
+  ],
+  "related": [],
+  "relatedFiles": [
+    "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/RoleToolService.java",
+    "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationService.java",
+    "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolRegistrationStrategy.java",
+    "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ExperimentalToolRegistrationStrategy.java",
+    "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/StagingToolRegistrationStrategy.java",
+    "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/BundleToolRegistrationStrategy.java",
+    "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/NativeToolRegistrationStrategy.java",
+    "lib/meshingress-tool-runtime-loader/src/main/java/dev/mrk/meshingress/runtime/bundle/ClasspathToolBundle.java",
+    "app/meshingress-tool-bundle/pom.xml",
+    "app/meshingress-server/pom.xml",
+    "lib/meshingress-tool-runtime-loader/src/main/java/dev/mrk/meshingress/runtime/artifacts/LocalJarSource.java",
+    "lib/meshingress-tool-runtime-loader/src/main/java/dev/mrk/meshingress/runtime/artifacts/MavenCoordinatesSource.java",
+    "lib/meshingress-tool-annotations/src/main/java/dev/mrk/meshingress/scopes/McpToolScope.java",
+    "lib/meshingress-config/src/main/java/dev/mrk/meshingress/config/MeshingressProperties.java",
+    "app/meshingress-server/src/main/resources/application.properties",
+    "app/meshingress-server/src/test/java/dev/mrk/meshingress/mcp/McpControllerTests.java",
+    "config-properties.md"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "Discussion about making roles/tools/register the server-side entrypoint for tool registration, with phase-based behavior for experimental local JARs, staging Maven coordinates, bundled classpath tools, and native server tools."
+  },
+  "events": [
+    {
+      "at": "2026-05-27T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created architect entry for server-side tool registration phase implementation."
+    },
+    {
+      "at": "2026-05-27T00:00:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation design is active because controller/runtime-loader integration is being planned."
+    },
+    {
+      "at": "2026-05-27T00:00:00-04:00",
+      "type": "UPDATED",
+      "note": "Added config-properties.md for meshingress.tools.registration phase gates, staging conflict policy, override policy, and computation redirection rules."
+    },
+    {
+      "at": "2026-05-27T01:34:37-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented phase-aware roles/tools/register routing, registration service strategies, config binding, provenance records, and MVC verification."
+    }
+  ]
+}

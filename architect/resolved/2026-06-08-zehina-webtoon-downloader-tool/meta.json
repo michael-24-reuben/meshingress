@@ -1,0 +1,48 @@
+{
+  "id": "2026-06-08-zehina-webtoon-downloader-tool",
+  "title": "Zehina Webtoon Downloader Tool",
+  "status": "resolved",
+  "createdAt": "2026-06-08T13:01:53-04:00",
+  "activatedAt": "2026-06-08T13:12:00-04:00",
+  "resolvedAt": "2026-06-08T13:28:00-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-08T13:28:00-04:00",
+  "tags": [
+    "toolspace",
+    "webtoon",
+    "manhwa",
+    "external-cli",
+    "metadata",
+    "download",
+    "safety",
+    "future"
+  ],
+  "related": [
+    "2026-05-23-runtime-tool-creation-and-registry",
+    "2026-05-26-tool-runtime-loader",
+    "2026-05-28-direct-registration-hardening",
+    "2026-06-08-sql-tool-metadata-store"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User asked to create an architect entry for Zehina/Webtoon-Downloader after a repo lookup identified it as the best Web Comics candidate for downloading public WEBTOON chapters and metadata as a Meshingress tool."
+  },
+  "events": [
+    {
+      "at": "2026-06-08T13:01:53-04:00",
+      "type": "CREATED",
+      "note": "Created as pending PRD/design work for a guarded Meshingress wrapper around Zehina/Webtoon-Downloader."
+    },
+    {
+      "at": "2026-06-08T13:12:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated by user request to resolve the new manhwa/Webtoon tool architect entry."
+    },
+    {
+      "at": "2026-06-08T13:28:00-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and verified a guarded toolspace/webtoon-downloader module with MCP functions, fake-runner MVC coverage, packaging, and live server restart."
+    }
+  ]
+}

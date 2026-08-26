@@ -1,0 +1,54 @@
+{
+  "id": "feature-mcp-availability-annotations-v1",
+  "recordedAt": "2026-08-15T19:45:33-04:00",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "lib/meshingress-tool-framework",
+      "app/meshingress-studio-web"
+    ]
+  },
+  "summary": "Annotated MCP functions emit a versioned availability descriptor under annotations.availability, and Studio consumes that descriptor as a typed contract.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "source inspection on 2026-08-15",
+      "availability implementation discussion"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/framework/scanning/McpToolAnnotationScanner.java",
+      "lines": "662-723",
+      "note": "Adds the availability annotation node and serializes the three supported condition families."
+    },
+    {
+      "kind": "code",
+      "path": "lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/framework/scanning/McpToolAnnotationScanner.java",
+      "lines": "210-325",
+      "note": "Evaluates annotation policies while the scanner determines availability."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-studio-web/src/api/mcp.ts",
+      "lines": "3-26",
+      "note": "Defines the Studio TypeScript contract for the versioned descriptor."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "mcp",
+    "tool-metadata",
+    "availability",
+    "annotations",
+    "studio"
+  ]
+}

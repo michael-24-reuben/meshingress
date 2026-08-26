@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-08-tool-module-opaque-id",
+  "title": "Tool Module Opaque ID",
+  "type": "feature",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-08T11:05:08-04:00",
+  "activatedAt": "2026-08-08T11:05:08-04:00",
+  "updatedAt": "2026-08-08T11:14:50-04:00",
+  "resolvedAt": "2026-08-08T11:14:50-04:00",
+  "tags": ["api", "studio", "tool-modules", "identity"],
+  "related": ["2026-08-08-tool-module-catalog-api"],
+  "events": [
+    {
+      "at": "2026-08-08T11:05:08-04:00",
+      "type": "CREATED",
+      "note": "Owner requested opaque catalog tool IDs after MCP tools/list and direct module data ownership for Explorer namespace icons."
+    },
+    {
+      "at": "2026-08-08T11:09:32-04:00",
+      "type": "RESOLVED",
+      "note": "Replaced public raw module IDs with stable catalog toolIds, made catalog loading follow tools/list, and verified direct Explorer namespace icon lookup."
+    },
+    {
+      "at": "2026-08-08T11:14:00-04:00",
+      "type": "REOPENED",
+      "note": "Live API verification proved the icon resource is healthy, but Studio rendered the relative icon path against its own origin rather than the configured API origin."
+    },
+    {
+      "at": "2026-08-08T11:14:50-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved API-relative catalog links against the configured Meshingress API origin and verified the Studio production build."
+    }
+  ]
+}

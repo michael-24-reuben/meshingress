@@ -1,0 +1,37 @@
+{
+  "id": "2026-08-03-youtube-tool-foundation",
+  "title": "YouTube Tool Foundation",
+  "status": "active",
+  "createdAt": "2026-08-03T22:16:47-04:00",
+  "activatedAt": "2026-08-03T22:16:47-04:00",
+  "updatedAt": "2026-08-12T01:49:59-04:00",
+  "tags": ["api", "backend", "design", "future", "tools"],
+  "related": ["2026-07-24-x-yt-dlp-local-tool-module"],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Create a YouTube tool foundation that distinguishes official APIs from dedicated YouTube providers and leaves operational functions for later implementation."
+  },
+  "events": [
+    {
+      "at": "2026-08-03T22:16:47-04:00",
+      "type": "CREATED_ACTIVE",
+      "note": "Created for the implemented YouTube catalog and future provider-adapter boundary."
+    },
+    {
+      "at": "2026-08-03T22:20:32-04:00",
+      "type": "FOUNDATION_IMPLEMENTED",
+      "note": "Attached the catalog-only module, added provider contracts and MCP discovery coverage, and passed focused module and server tests."
+    },
+    {
+      "at": "2026-08-06T00:55:57-04:00",
+      "type": "CREDENTIAL_MANIFEST_DECLARED",
+      "note": "Added blank API-key and OAuth metadata references, registered the manifest at startup, and verified module plus server discovery tests."
+    },
+    {
+      "at": "2026-08-12T01:49:59-04:00",
+      "type": "PUBLIC_DATA_API_IMPLEMENTED",
+      "note": "Added production-profile API-key configuration and four credential-gated official public Data API read functions; OAuth and all account-authorized operations remain out of scope."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-14-artifact-type-lifecycle-and-cli-harness",
+  "title": "Scope Policy Lifecycle and Artifact Type Cleanup",
+  "type": "architecture-design",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-07-14T02:06:24-04:00",
+  "activatedAt": "2026-07-14T02:53:22-04:00",
+  "updatedAt": "2026-07-14T02:56:50-04:00",
+  "tags": ["artifacts", "tool-modules", "cli-harness", "availability", "scopes", "repository"],
+  "events": [
+    {
+      "at": "2026-07-14T02:06:24-04:00",
+      "type": "CREATED",
+      "note": "Recorded the artifact-type redesign before changing the currently tool-module-only lifecycle."
+    },
+    {
+      "at": "2026-07-14T02:31:07-04:00",
+      "type": "DECISION_RECORDED",
+      "note": "Removed unused SBOM, attestation, security-policy, template, and runtime-plugin artifact categories from the proposed future taxonomy; recorded immutable detection plus revisioned scope enablement."
+    },
+    {
+      "at": "2026-07-14T02:53:22-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "User made scope policy the current assignment; CLI harness and availability work remain later slices."
+    },
+    {
+      "at": "2026-07-14T02:56:50-04:00",
+      "type": "IMPLEMENTATION_VERIFIED",
+      "note": "Verified the local H2 migration: one legacy generated-module artifact and its revoked HMAC publication now persist as TOOL_MODULE."
+    }
+  ]
+}

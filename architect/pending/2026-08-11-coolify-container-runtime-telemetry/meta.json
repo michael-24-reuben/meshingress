@@ -1,0 +1,41 @@
+{
+  "id": "2026-08-11-coolify-container-runtime-telemetry",
+  "title": "Coolify Container Runtime Telemetry and Delivery",
+  "status": "pending",
+  "createdAt": "2026-08-11T00:34:06-04:00",
+  "activatedAt": null,
+  "resolvedAt": null,
+  "discontinuedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-08-11T00:34:06-04:00",
+  "tags": [
+    "design",
+    "prd",
+    "deployment",
+    "coolify",
+    "containers",
+    "runtime-telemetry",
+    "studio",
+    "mcp",
+    "cloudflare",
+    "future"
+  ],
+  "related": [
+    "2026-08-09-meshingress-hot-runtime-replacement",
+    "2026-07-18-mcp-progress-runtime-lifecycle",
+    "2026-07-26-workflow-runtime-beta",
+    "2026-05-23-runtime-tool-creation-and-registry"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Owner selected a Coolify-first Meshingress container deployment with a single execution-container telemetry boundary, a native MCP resource for Studio Runtime visualization, and a future Cloudflare-compatible delivery path."
+  },
+  "events": [
+    {
+      "at": "2026-08-11T00:34:06-04:00",
+      "type": "CREATED",
+      "note": "Created as a pending architecture and PRD package; it supersedes the Kubernetes-first hot-runtime-replacement record without implementing source or deployment changes."
+    }
+  ]
+}

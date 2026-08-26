@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-12-versioned-tool-workspace-delegation",
+  "title": "Versioned Tool Workspace Delegation",
+  "type": "design",
+  "status": "pending",
+  "priority": "high",
+  "createdAt": "2026-08-12T01:35:10-04:00",
+  "updatedAt": "2026-08-12T01:35:10-04:00",
+  "tags": ["backend", "design", "storage", "tools", "versioning"],
+  "related": [
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-07-23-tool-owned-storage-transfer-model",
+    "2026-08-03-youtube-tool-foundation"
+  ],
+  "events": [
+    {
+      "at": "2026-08-12T01:35:10-04:00",
+      "type": "CREATED",
+      "note": "Recorded the owner decision to give every artifact version its own workspace and require explicit code-level delegation for reads from prior versions."
+    }
+  ]
+}

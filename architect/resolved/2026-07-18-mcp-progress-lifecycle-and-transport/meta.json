@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-18-mcp-progress-lifecycle-and-transport",
+  "title": "MCP Progress Lifecycle and Transport",
+  "type": "architecture",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-07-18T19:09:56-04:00",
+  "activatedAt": "2026-07-18T19:35:08-04:00",
+  "resolvedAt": "2026-07-18T19:35:08-04:00",
+  "updatedAt": "2026-07-18T19:35:08-04:00",
+  "tags": ["api", "mcp", "progress", "transport", "websocket", "http", "design"],
+  "related": [
+    "2026-05-18-mcp-annotation-dispatch-architecture",
+    "2026-05-19-mcp-websocket-auth",
+    "2026-07-17-toonverse-source-tools"
+  ],
+  "events": [
+    {
+      "at": "2026-07-18T19:09:56-04:00",
+      "type": "CREATED",
+      "note": "Created from the draft progress API and the long-running Toonverse download discussion."
+    },
+    {
+      "at": "2026-07-18T19:35:08-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated for the owner-requested WebSocket reporter replacement."
+    },
+    {
+      "at": "2026-07-18T19:35:08-04:00",
+      "type": "RESOLVED",
+      "note": "Replaced the draft WebSocketReporter with MeshigressWebSocketReporter and split deferred runtime lifecycle work into a follow-up record."
+    }
+  ]
+}

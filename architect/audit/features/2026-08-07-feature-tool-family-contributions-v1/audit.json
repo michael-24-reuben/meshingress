@@ -1,0 +1,55 @@
+{
+  "id": "feature-tool-family-contributions-v1",
+  "recordedAt": "2026-08-07T14:39:03Z",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "lib/meshingress-tool-api-manifest",
+      "app/meshingress-server"
+    ]
+  },
+  "summary": "Tools can contribute functions under one common namespace. Persisted precedence gives a primary contribution ownership of duplicate functions while lower-precedence contributions remain active for their unique functions.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "architect/resolved/2026-08-07-tool-family-contribution-precedence",
+      "source inspection on 2026-08-07"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "lib/meshingress-tool-api-manifest/src/main/java/dev/mrk/meshingress/toolmetadata/ToolModuleMetadata.java",
+      "lines": "5-20",
+      "note": "Module-authored common namespace contract."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/registration/ToolContributionResolver.java",
+      "lines": "11-29",
+      "note": "Persisted-precedence function ownership and conflict capture."
+    },
+    {
+      "kind": "verification",
+      "path": "architect/resolved/2026-08-07-tool-family-contribution-precedence/verification.md",
+      "lines": "3-11",
+      "note": "Focused regression-verification record."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "mcp",
+    "tool-module",
+    "extension",
+    "namespace",
+    "registry",
+    "precedence"
+  ]
+}

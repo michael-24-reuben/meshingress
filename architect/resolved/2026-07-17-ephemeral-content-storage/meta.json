@@ -1,0 +1,116 @@
+{
+  "id": "2026-07-17-ephemeral-content-storage",
+  "title": "Ephemeral Content Storage",
+  "status": "resolved",
+  "createdAt": "2026-07-17T22:41:58-04:00",
+  "activatedAt": "2026-07-18T00:01:55-04:00",
+  "resolvedAt": "2026-07-18T01:55:41-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-07-18T01:55:41-04:00",
+  "tags": [
+    "storage",
+    "ephemeral-storage",
+    "server-route",
+    "filesystem",
+    "database",
+    "lease",
+    "structured-content",
+    "security",
+    "ssrf",
+    "design",
+    "future",
+    "routes",
+    "leases",
+    "quota",
+    "ownership",
+    "remote-ingestion",
+    "resumable-upload",
+    "observability",
+    "v1-scope"
+  ],
+  "related": [
+    "2026-07-17-toonverse-source-tools"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Planning request for a generic first-class /storage route that serves temporary physical content through expiring, request-limited leases."
+  },
+  "events": [
+    {
+      "at": "2026-07-17T22:41:58-04:00",
+      "type": "CREATED",
+      "note": "Created as a planning-only pending architect record. No storage implementation was authorized."
+    },
+    {
+      "at": "2026-07-17T23:27:29-04:00",
+      "type": "UPDATED",
+      "note": "Expanded planning with route design, management APIs, feature inventory, deferred extensions, and a recommended v1 implementation scope."
+    },
+    {
+      "at": "2026-07-17T23:47:17-04:00",
+      "type": "CONFIGURATION_BOUNDARY_SELECTED",
+      "note": "Selected application.properties and a typed meshingress.storage group; a separate storage.properties file is not part of the design."
+    },
+    {
+      "at": "2026-07-17T23:51:02-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved the planning architecture with internal tool ingestion and opaque-token retrieval. Secure management, remote ingestion, and other extended routes are deferred; no implementation was authorized."
+    },
+    {
+      "at": "2026-07-17T23:56:09-04:00",
+      "type": "REOPENED",
+      "note": "User clarified that resolving an architect means accomplishing its intended design work. The earlier high-level route plan is insufficient without the code-level architecture."
+    },
+    {
+      "at": "2026-07-18T00:01:55-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Began the requested implementation-ready code architecture design without authorizing runtime implementation."
+    },
+    {
+      "at": "2026-07-18T00:05:40-04:00",
+      "type": "CODE_ARCHITECTURE_COMPLETED",
+      "note": "Completed the implementation-ready module/API, persistence/filesystem, lifecycle/concurrency, Spring route/configuration, and verification design. No runtime implementation was authorized or performed."
+    },
+    {
+      "at": "2026-07-18T00:05:40-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved as a completed architecture design. Runtime implementation remains a separately authorized future execution slice."
+    },
+    {
+      "at": "2026-07-18T00:13:01-04:00",
+      "type": "REOPENED",
+      "note": "User directed that completion requires source implementation and verification, not architecture documentation alone. Reopened to implement the approved v1 scope."
+    },
+    {
+      "at": "2026-07-18T00:27:53-04:00",
+      "type": "IMPLEMENTED",
+      "note": "Implemented the producer API, typed configuration, filesystem/JDBC lifecycle, public capability retrieval, cleanup, and focused source tests for the accepted v1 scope."
+    },
+    {
+      "at": "2026-07-18T00:27:53-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved only after source implementation and focused verification completed. Deferred source-tool opt-in and extended route capabilities remain out of scope."
+    },
+    {
+      "at": "2026-07-18T01:42:36-04:00",
+      "type": "REOPENED",
+      "note": "The opaque-token blob lease design does not meet the clarified requirement: tools need session/request-scoped physical workspaces, a manifest file, and explicit file retrieval routes. Reopened to replace that contract in source code and verify it."
+    },
+    {
+      "at": "2026-07-18T01:53:24-04:00",
+      "type": "IMPLEMENTED",
+      "note": "Replaced the blob lease with the meshingress-tool-api workspace contract, session/request filesystem layout, manifest publication, workspace metadata, explicit file routes, and cleanup."
+    },
+    {
+      "at": "2026-07-18T01:53:24-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved after the source implementation and five focused workspace/controller tests passed in the full server reactor." 
+    },
+    {
+      "at": "2026-07-18T01:55:41-04:00",
+      "type": "VERIFIED",
+      "note": "Re-ran the focused server reactor after adding tool ID to generated manifest metadata; all five workspace/controller tests still passed."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-15-security-management-dispatch-routes",
+  "title": "Security Management Dispatch Routes",
+  "type": "security-design",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-15T09:12:00-04:00",
+  "activatedAt": "2026-08-15T09:30:00-04:00",
+  "resolvedAt": "2026-08-15T10:00:00-04:00",
+  "updatedAt": "2026-08-15T10:00:00-04:00",
+  "tags": ["aegis", "authentication", "authorization", "mcp", "routes", "security"],
+  "related": [
+    "2026-08-15-aegis-profile-lifecycle",
+    "2026-08-15-mcp-call-context-security-refactor",
+    "2026-07-16-mcp-oidc-principal-and-header-migration",
+    "2026-07-16-mcp-tool-authorization-and-credential-strategies",
+    "2026-08-14-aegis-bootstrap-enrollment"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Route-readiness review found reusable Aegis primitives but no durable stores, policy domain, server adapters, or production identity integration for security management dispatch routes."
+  },
+  "events": [
+    {
+      "at": "2026-08-15T09:12:00-04:00",
+      "type": "CREATED",
+      "note": "Recorded the route-enablement prerequisites and supported security management method contract without authorizing implementation."
+    },
+    {
+      "at": "2026-08-15T09:30:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation authorized. Initial policy language is exact tool-name grant policy with priority and deny-overrides semantics."
+    },
+    {
+      "at": "2026-08-15T10:00:00-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented the management dispatch surface, durable JDBC stores, OIDC claim mapping/configuration, policy evaluation, audit events, and focused tests. Live issuer deployment validation remains configuration-owned."
+    }
+  ]
+}

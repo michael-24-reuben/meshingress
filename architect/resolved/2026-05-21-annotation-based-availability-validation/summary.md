@@ -1,0 +1,2 @@
+# Summary
+`McpRouteValidator` no longer hardcodes built-in availability annotation checks. Each availability annotation now declares a Spring-managed validation condition, and the validator resolves that condition and aggregates its violations. The route-framework tests pass with the new annotation-driven validation flow. A separate application test run still shows unrelated auth test compilation failures that were not part of this task.

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-15-studio-login-interactions",
+  "title": "Studio Google and Native Login Interactions",
+  "type": "security-implementation",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-08-15T15:45:33-04:00",
+  "activatedAt": "2026-08-15T15:45:33-04:00",
+  "updatedAt": "2026-08-15T15:56:17-04:00",
+  "tags": ["security", "frontend", "studio", "oidc", "native-login", "aegis"],
+  "related": [
+    "2026-07-16-mcp-oidc-principal-and-header-migration",
+    "2026-08-14-aegis-bootstrap-enrollment"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Implement Google-first Studio authentication, document the future native alternative, and keep native-password verification safe during local validation."
+  },
+  "events": [
+    {
+      "at": "2026-08-15T15:45:33-04:00",
+      "type": "CREATED",
+      "note": "Created for the requested Google-first Studio login and right-aligned profile menu implementation."
+    },
+    {
+      "at": "2026-08-15T15:45:33-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation begins immediately; raw passwords and tokens must not be logged."
+    },
+    {
+      "at": "2026-08-15T15:51:35-04:00",
+      "type": "UPDATED",
+      "note": "Implemented Studio Google token handoff, right-aligned profile menu, and development-only native submission validation with redacted audit logging."
+    },
+    {
+      "at": "2026-08-15T15:56:17-04:00",
+      "type": "UPDATED",
+      "note": "Added runtime discovery of the public Google client ID from configured server OIDC metadata and blocked native-password validation over non-loopback HTTP."
+    }
+  ]
+}

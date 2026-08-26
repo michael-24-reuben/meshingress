@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-24-qbittorrent-tool",
+  "title": "qBittorrent Tool",
+  "type": "tool-module",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-07-24T00:10:28-04:00",
+  "activatedAt": "2026-07-24T00:10:28-04:00",
+  "updatedAt": "2026-07-24T00:19:57-04:00",
+  "tags": ["mcp", "toolspace", "qbittorrent", "storage", "async"],
+  "related": ["2026-07-23-tool-owned-storage-transfer-model"],
+  "events": [
+    {
+      "at": "2026-07-24T00:10:28-04:00",
+      "type": "CREATED",
+      "note": "User authorized implementation of a Meshingress-owned qBittorrent tool after the generic local-byte queued-publication contract was completed."
+    },
+    {
+      "at": "2026-07-24T00:10:28-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation began on development without changing the separately assigned Nextcloud deployment work."
+    },
+    {
+      "at": "2026-07-24T00:19:57-04:00",
+      "type": "SOURCE_IMPLEMENTED",
+      "note": "Added the bundled qBittorrent tool module, durable job store, comprehensive job-scoped MCP surface, WebUI fixture tests, and server discovery coverage. Local qBittorrent installation/configuration remains absent."
+    }
+  ]
+}

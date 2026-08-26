@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-20-add-interface-return-schemas",
+  "title": "Add Interface Return Schemas",
+  "type": "design",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-08-20T00:00:00-04:00",
+  "activatedAt": "2026-08-20T10:49:02-04:00",
+  "updatedAt": "2026-08-21T22:19:02-04:00",
+  "tags": ["api", "backend", "frontend", "design", "validation", "workflow-studio", "mcp"],
+  "related": [
+    "2026-08-03-mcp-input-constraint-schema",
+    "2026-05-17-mcp-http-tool-registry",
+    "2026-07-26-workflow-runtime-beta"
+  ],
+  "origin": {
+    "source": "conversation",
+    "title": "Add interface return schemas",
+    "sessionId": "01a01d8a-e8ec-7383-8314-f7fa8a5ad320"
+  },
+  "events": [
+    {
+      "at": "2026-08-20T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Recorded the agreed output-schema, runtime-validation, and Studio observed-schema architecture before implementation starts."
+    },
+    {
+      "at": "2026-08-20T10:49:02-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Owner requested implementation to begin and requested an Antigravity/Gemini feature-audit handoff."
+    },
+    {
+      "at": "2026-08-20T11:12:57-04:00",
+      "type": "IMPLEMENTATION_SLICE_COMPLETED",
+      "note": "Implemented output-type declaration/discovery and Studio precedence, passed focused scanner tests, and independently verified the requested Gemini feature-audit snapshot. Runtime validation and observed-schema policy work remain active."
+    },
+    {
+      "at": "2026-08-20T12:41:55-04:00",
+      "type": "STUDIO_SCHEMA_CACHE_IMPLEMENTED",
+      "note": "Added local workspace schema-only caching: declared schemas refresh from their tool descriptor, and only eligible explicit structured-output results without a declared schema establish an observed write-once baseline."
+    },
+    {
+      "at": "2026-08-20T13:02:27-04:00",
+      "type": "YOUTUBE_OUTPUT_TYPES_IMPLEMENTED",
+      "note": "Declared schema-backed payloads for the callable YouTube catalog and public Data API functions, aligned their structured results with those payloads, and corrected catalog availability to the implemented public-read boundary."
+    },
+    {
+      "at": "2026-08-21T01:00:42-04:00",
+      "type": "WARN_ONLY_OUTPUT_SCHEMA_VALIDATION_IMPLEMENTED",
+      "note": "Added NetworkNT-based declared-output validation at DefaultToolExecutor, bounded warn-only MCP metadata, and focused unit plus real MCP-call coverage. Anonymous structured content, enforcement, and workflow diagnostic projection remain deferred."
+    },
+    {
+      "at": "2026-08-21T03:33:56-04:00",
+      "type": "TYPED_OUTPUT_VARIANT_VALIDATION_IMPLEMENTED",
+      "note": "Retained per-output-type payload schemas in descriptors and selected the returned typed StructuredContent variant before validation, preventing unrelated oneOf branches from masking declared-output mismatches."
+    },
+    {
+      "at": "2026-08-21T03:53:21-04:00",
+      "type": "TYPED_OUTPUT_VARIANT_VALIDATION_REVERTED",
+      "note": "Removed typed class-to-schema selection after confirming that module-owned StructuredContent may intentionally contain anonymous JsonNode payloads. Aggregate declared-schema validation remains in place."
+    },
+    {
+      "at": "2026-08-21T09:07:04-04:00",
+      "type": "GENERATED_JSON_STRUCTURED_CONTENT_IMPLEMENTED",
+      "note": "Added canonical generated-JSON structured content while preserving raw replay and made Studio observed-schema inference operate on structuredContent.data only."
+    },
+    {
+      "at": "2026-08-21T09:36:00-04:00",
+      "type": "WORKFLOW_RESULT_CONTRACT_REFACTOR_STARTED",
+      "note": "Started splitting workflow payload dataflow from authoritative per-node structured-content records and WebSocket persistence events."
+    },
+    {
+      "at": "2026-08-21T14:50:57-04:00",
+      "type": "WORKFLOW_RESULT_CONTRACT_REFACTOR_IMPLEMENTED",
+      "note": "Implemented nodeResults transport records, data-only workflow bindings, streamed WebSocket records, Studio incremental persistence, and terminal reconciliation with focused passing tests."
+    },
+    {
+      "at": "2026-08-21T15:14:34-04:00",
+      "type": "RUNTIME_TIMELINE_LANES_CORRECTED",
+      "note": "Replaced transient running-state lane allocation with deterministic timestamp-interval allocation; verified sequential and overlapping spans directly."
+    },
+    {
+      "at": "2026-08-21T15:17:51-04:00",
+      "type": "RUNTIME_TIMELINE_LANES_CORRECTION_REVERTED",
+      "note": "Owner requested reversion of the interval-based lane allocator; restored the prior first-open-lane behavior."
+    },
+    {
+      "at": "2026-08-21T15:40:00-04:00",
+      "type": "AUTHORITATIVE_WORKFLOW_LIFECYCLE_TIMING_IMPLEMENTED",
+      "note": "Added server execution timestamps, per-run WebSocket lifecycle sequencing, Studio completed-interval lane allocation, and sequence-gap diagnostics."
+    },
+    {
+      "at": "2026-08-21T16:45:15-04:00",
+      "type": "UNIFIED_RUNTIME_TIMELINE_LANES_IMPLEMENTED",
+      "note": "Replaced provisional running-lane allocation with one server-time interval allocator for every timed span and aligned trace display timing to that server axis."
+    },
+    {
+      "at": "2026-08-21T16:53:45-04:00",
+      "type": "SERIAL_RUNTIME_SINGLE_LANE_IMPLEMENTED",
+      "note": "Removed client-generated lane allocation because the current WorkflowRuntime has one serial worker; Studio renders one fixed timeline lane pending explicit concurrent worker identity support."
+    },
+    {
+      "at": "2026-08-21T22:09:58-04:00",
+      "type": "RUNTIME_TYPED_OUTPUT_SCHEMA_REFINEMENT_STARTED",
+      "note": "Owner clarified that workflow node outputSchema must carry the generated contract of typed StructuredContent, while runtime issues move into extensible diagnostics. Raw JsonNode structured content must not receive an inferred schema."
+    },
+    {
+      "at": "2026-08-21T22:14:00-04:00",
+      "type": "RUNTIME_TYPED_OUTPUT_SCHEMA_REFINEMENT_IMPLEMENTED",
+      "note": "Workflow node records now generate outputSchema from concrete typed StructuredContent classes, project output-schema validation facts as diagnostics, and keep GeneratedJsonContent/JsonNode structured content schema-less. Focused workflow tests passed."
+    },
+    {
+      "at": "2026-08-21T22:19:02-04:00",
+      "type": "FEATURE_AUDIT_RECORDED",
+      "note": "Recorded a source- and test-backed feature audit for workflow typed output schemas, generated JSON exclusion, diagnostics, and Studio cache behavior."
+    }
+  ]
+}

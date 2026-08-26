@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-18-mcp-progress-runtime-lifecycle",
+  "title": "MCP Progress Runtime Lifecycle",
+  "type": "architecture",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-07-18T19:35:08-04:00",
+  "activatedAt": "2026-07-18T19:41:55-04:00",
+  "updatedAt": "2026-07-19T12:55:07-04:00",
+  "tags": ["api", "mcp", "progress", "transport", "websocket", "http", "design"],
+  "related": ["2026-07-18-mcp-progress-lifecycle-and-transport"],
+  "events": [
+    {
+      "at": "2026-07-18T19:35:08-04:00",
+      "type": "CREATED",
+      "note": "Follow-up created while resolving the WebSocket reporter replacement; it preserves the unimplemented runtime lifecycle scope."
+    },
+    {
+      "at": "2026-07-18T19:41:55-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated for invocation-scoped McpProgressReporter parameter injection only."
+    },
+    {
+      "at": "2026-07-18T19:47:30-04:00",
+      "type": "IMPLEMENTED_SLICE",
+      "note": "Annotated tool functions and annotated routes now recognize and inject a fresh no-op McpProgressReporter without exposing it in client input schemas."
+    },
+    {
+      "at": "2026-07-18T19:50:11-04:00",
+      "type": "ADOPTED_SIGNATURE",
+      "note": "ToonverseTool.downloadBook now appends McpProgressReporter without emitting events."
+    },
+    {
+      "at": "2026-07-18T20:21:55-04:00",
+      "type": "ADOPTED_REPORTING",
+      "note": "ToonverseTool.downloadBook now emits planned, chapter, packaging, publish, completion, and failure lifecycle events to its invocation-scoped reporter; delivery remains unwired."
+    },
+    {
+      "at": "2026-07-18T21:16:40-04:00",
+      "type": "IMPLEMENTED_WEBSOCKET_LIFECYCLE",
+      "note": "WebSocket calls now receive correlated notifications/progress events. The first plan starts one estimate plus configured-grace deadline; HTTP remains terminal request/response and a missing WebSocket plan is stopped by the configured default-timeout guard."
+    },
+    {
+      "at": "2026-07-19T12:55:07-04:00",
+      "type": "IMPLEMENTED_OBSERVED_ETA",
+      "note": "WebSocket progress now produces asynchronous notifications/progress/estimate events from a serial EWMA estimator. Observed ETA is client-only and does not alter the fixed dispatch deadline."
+    }
+  ]
+}

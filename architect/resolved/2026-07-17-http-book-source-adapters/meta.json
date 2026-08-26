@@ -1,0 +1,50 @@
+{
+  "id": "2026-07-17-http-book-source-adapters",
+  "title": "HTTP Book Source Adapters",
+  "status": "resolved",
+  "createdAt": "2026-07-17T14:27:03-04:00",
+  "activatedAt": "2026-07-17T15:08:39-04:00",
+  "resolvedAt": "2026-07-17T15:27:30-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-07-17T15:27:30-04:00",
+  "tags": [
+    "prd",
+    "design",
+    "book-extraction",
+    "http-client",
+    "source-adapter",
+    "image-book",
+    "text-book",
+    "manga",
+    "manhwa",
+    "yaml",
+    "spring",
+    "toolspace",
+    "mcp-tool",
+    "future",
+    "mvp"
+  ],
+  "related": [],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Design discussion for HTTP-based textual-book and image-book tools with mutable per-source YAML, code-owned extraction workflows, and Spring-injected source adapters. Toonverse is the initial image-book source."
+  },
+  "events": [
+    {
+      "at": "2026-07-17T14:27:03-04:00",
+      "type": "CREATED",
+      "note": "Packaged the finalized discussion as a pending architecture and implementation PRD."
+    },
+    {
+      "at": "2026-07-17T15:08:39-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation authorized for the existing x-open-ink-library module."
+    },
+    {
+      "at": "2026-07-17T15:27:30-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and verified the Open Ink Library image-book source-adapter MVP; follow-on text/page/sync work is explicitly deferred."
+    }
+  ]
+}

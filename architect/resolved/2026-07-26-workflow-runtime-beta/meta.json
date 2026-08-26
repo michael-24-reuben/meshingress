@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-26-workflow-runtime-beta",
+  "title": "Workflow Runtime Beta Draft",
+  "type": "architecture-beta-draft",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-07-26T18:25:10-04:00",
+  "updatedAt": "2026-07-26T19:22:43-04:00",
+  "resolvedAt": "2026-07-26T18:47:55-04:00",
+  "tags": ["workflow", "runtime", "backend", "design", "beta", "mcp"],
+  "related": [
+    "2026-05-23-runtime-tool-creation-and-registry",
+    "2026-07-18-mcp-progress-runtime-lifecycle"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Beta architecture draft for an executable, typed workflow runtime independent of the Workflow Studio canvas layout."
+  },
+  "events": [
+    {
+      "at": "2026-07-26T18:25:10-04:00",
+      "type": "CREATED",
+      "note": "Created from the workflow-runtime and typed-result-routing design discussion."
+    },
+    {
+      "at": "2026-07-26T18:47:55-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented the in-process workflow runtime beta with typed routing, native flow nodes, internal tool execution, and focused tests. Durable instances and publication remain deferred."
+    },
+    {
+      "at": "2026-07-26T19:04:38-04:00",
+      "type": "UPDATED",
+      "note": "Added a reusable sequential definition for system volume, greeting, and Toonverse search using the installed tool contracts."
+    },
+    {
+      "at": "2026-07-26T19:22:43-04:00",
+      "type": "UPDATED",
+      "note": "Added a named manual-run HTTP route and Studio result rendering, then completed one live run successfully."
+    }
+  ]
+}

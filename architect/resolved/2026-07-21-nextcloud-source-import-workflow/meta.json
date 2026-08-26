@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-21-nextcloud-source-import-workflow",
+  "title": "Meshingress Workspace App and Source Import",
+  "type": "architecture-design",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-07-21T09:06:44-04:00",
+  "activatedAt": "2026-07-21T10:31:58-04:00",
+  "updatedAt": "2026-07-21T20:03:04-04:00",
+  "resolvedAt": "2026-07-21T20:03:04-04:00",
+  "tags": ["storage", "nextcloud", "meshingress-workspace", "source-import", "async", "mcp"],
+  "related": [
+    "2026-07-20-local-async-external-handoff",
+    "2026-07-20-storage-lifecycle-and-write-only-handoff",
+    "2026-07-17-ephemeral-content-storage"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "Design a general-purpose Nextcloud Meshingress workspace app. Its first operation accepts a source URL and relative path, uses the caller tool identity to place the download under Meshingress/storage, and reports final metadata without a local Meshingress download/upload handoff."
+  },
+  "events": [
+    {
+      "at": "2026-07-21T09:06:44-04:00",
+      "type": "CREATED",
+      "note": "Created after research confirmed that a small custom Nextcloud app with an OCS API route and queued background job is the appropriate implementation; Flow is optional post-import automation, not the source-import API itself."
+    },
+    {
+      "at": "2026-07-21T09:33:11-04:00",
+      "type": "REVISED",
+      "note": "Broadened the design from a download-only app to the Meshingress workspace app, established the managed Workspace/Meshingress directory layout, required tool identity for storage downloads, and removed EXTERNAL_EXTERNAL from the planned lifecycle model."
+    },
+    {
+      "at": "2026-07-21T09:45:23-04:00",
+      "type": "REVISED",
+      "note": "Moved artifacts, quarantine, and vendor under repository; clarified that Nextcloud storage is the stable official storage/<tool-id> workspace and never incorporates ephemeral session or request identifiers."
+    },
+    {
+      "at": "2026-07-21T10:31:58-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation authorized: create, install, and verify the Nextcloud Meshingress workspace app."
+    },
+    {
+      "at": "2026-07-21T10:42:13-04:00",
+      "type": "BLOCKED",
+      "note": "The app is installed and enabled, but the end-to-end source-import test cannot proceed until the selected admin workspace parent exists and an authenticated API credential for a current Nextcloud user is available."
+    },
+    {
+      "at": "2026-07-21T10:47:04-04:00",
+      "type": "BLOCKER_RECHECKED",
+      "note": "After the owner reported creating Workspace, direct Nextcloud filesystem inspection found no Workspace folder at any depth up to three under either current user, admin or temporary."
+    },
+    {
+      "at": "2026-07-21T10:52:05-04:00",
+      "type": "TARGET_CORRECTED",
+      "note": "The intended workspace is on alphasunny-xps-8700, not the local AIO host used for initial installation. The ops account authenticated successfully and is in the remote admin group; its existing /Workspace was confirmed by the owner."
+    },
+    {
+      "at": "2026-07-21T10:52:05-04:00",
+      "type": "REOPENED",
+      "note": "Resumed deployment investigation against the correct remote Nextcloud target. The remaining blocker is server-side installation access for the custom PHP app."
+    },
+    {
+      "at": "2026-07-21T10:53:25-04:00",
+      "type": "BLOCKED",
+      "note": "Remote OCS and WebDAV verification for ops succeeded, including the existing Workspace collection. Installation remains blocked because the current machine has no authorized SSH key or other server-side route to copy the custom app and run occ on the remote host."
+    },
+    {
+      "at": "2026-07-21T11:04:47-04:00",
+      "type": "REOPENED",
+      "note": "The owner enabled Tailscale SSH and provided the remote Linux username. Server-side Docker access is confirmed; remote installation and verification are in progress."
+    },
+    {
+      "at": "2026-07-21T11:15:13-04:00",
+      "type": "BLOCKED",
+      "note": "Remote install and source-import worker verification succeeded. A brief owner-approved reload of the Nextcloud web container is still needed to clear stale web-process state before the HTTP status endpoint can be reverified."
+    },
+    {
+      "at": "2026-07-21T13:37:18-04:00",
+      "type": "REVISED",
+      "note": "Kept the app scoped to Nextcloud 34, added a credential-free SSH/Docker installer helper, and recorded the later Meshingress link-source storage lifecycle handoff as a distinct follow-up from EXTERNAL_EXTERNAL removal."
+    },
+    {
+      "at": "2026-07-21T13:39:05-04:00",
+      "type": "VERIFIED",
+      "note": "Installer live dry run against the existing remote app correctly staged source, refused overwrite, cleaned up, and preserved the app directory. A quoting defect found by that test was fixed; its single nested staging copy was removed after exact-path verification."
+    },
+    {
+      "at": "2026-07-21T13:50:56-04:00",
+      "type": "RESOLVED",
+      "note": "A graceful Apache reload restored OCS status-route visibility. Remote OCS now returns completed import metadata, and WebDAV content matches the worker SHA-256."
+    },
+    {
+      "at": "2026-07-21T17:55:36-04:00",
+      "type": "REOPENED",
+      "note": "Live delegated imports remained QUEUED. Investigation found an inactive scheduler, a stale ResultAdapter::free() call in the deployed app, and MySQL NULL update rendering that blocked the RUNNING transition."
+    },
+    {
+      "at": "2026-07-21T17:55:36-04:00",
+      "type": "RESOLVED",
+      "note": "The app replacement, SQL-NULL repair, and one-minute host worker schedule are deployed. The previously queued Meshingress jobs were consumed without a new worker error."
+    },
+    {
+      "at": "2026-07-21T18:00:52-04:00",
+      "type": "REOPENED",
+      "note": "A new delegated test job remained unrun because the generic once-per-minute worker selected from the full Nextcloud queue rather than the Meshingress job class."
+    },
+    {
+      "at": "2026-07-21T18:00:52-04:00",
+      "type": "RESOLVED",
+      "note": "The current test job was force-executed successfully. Cron now runs standard Nextcloud work every five minutes and a class-specific Meshingress worker every minute."
+    },
+    {
+      "at": "2026-07-21T19:23:03-04:00",
+      "type": "REOPENED",
+      "note": "The owner requested removal of the minute-scale scheduler latency after validating the repair."
+    },
+    {
+      "at": "2026-07-21T19:23:03-04:00",
+      "type": "RESOLVED",
+      "note": "A registered direct worker command with one-second watch polling is deployed and running. The prior minute schedule was replaced with a boot-started persistent account worker; ordinary Nextcloud cron remains every five minutes."
+    },
+    {
+      "at": "2026-07-21T20:03:04-04:00",
+      "type": "REOPENED",
+      "note": "The owner requested that the persistent worker become part of the app installer rather than a separate host setup."
+    },
+    {
+      "at": "2026-07-21T20:03:04-04:00",
+      "type": "RESOLVED",
+      "note": "The installer now manages one marked boot worker and restarts it after a successful app deployment, while preserving normal Nextcloud cron and unrelated user cron entries."
+    }
+  ]
+}

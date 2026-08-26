@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-22-http-route-openapi-documentation",
+  "title": "HTTP Route OpenAPI Documentation",
+  "type": "documentation-implementation",
+  "status": "resolved",
+  "priority": "medium",
+  "createdAt": "2026-07-22T12:40:18-04:00",
+  "activatedAt": "2026-07-22T12:40:18-04:00",
+  "updatedAt": "2026-07-22T12:45:00-04:00",
+  "resolvedAt": "2026-07-22T12:45:00-04:00",
+  "tags": ["api", "docs", "openapi", "artifacts", "storage"],
+  "related": ["2026-07-14-artifact-type-lifecycle-and-cli-harness", "2026-07-20-storage-lifecycle-and-write-only-handoff"],
+  "origin": {
+    "source": "chat",
+    "summary": "Document the artifact repository and storage retrieval HTTP routes in the source-generated OpenAPI contract."
+  },
+  "events": [
+    {
+      "at": "2026-07-22T12:40:18-04:00",
+      "type": "CREATED",
+      "note": "Created after the user authorized implementation of documentation for the non-MCP HTTP routes."
+    },
+    {
+      "at": "2026-07-22T12:40:18-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation will add source-level OpenAPI descriptions and contract tests without changing route behavior."
+    },
+    {
+      "at": "2026-07-22T12:45:00-04:00",
+      "type": "RESOLVED",
+      "note": "Documented artifact and storage HTTP routes and verified their generated Springdoc contract with focused reactor tests."
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "id": "2026-07-17-toonverse-source-tools",
+  "title": "Toonverse Source Tools",
+  "status": "active",
+  "createdAt": "2026-07-17T16:59:54-04:00",
+  "activatedAt": "2026-07-17T16:59:54-04:00",
+  "resolvedAt": "2026-07-18T07:45:26-04:00",
+  "updatedAt": "2026-07-18T07:45:26-04:00",
+  "tags": ["mcp-tool", "source-adapter", "toonverse", "http-client", "mvp"],
+  "related": ["2026-07-17-http-book-source-adapters"],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Reorients Open Ink Library from generic book tools to individual source-owned public tools, beginning with Toonverse fetch and search."
+  },
+  "events": [
+    {
+      "at": "2026-07-17T16:59:54-04:00",
+      "type": "CREATED_ACTIVE",
+      "note": "Implementation authorized for the source-first Toonverse slice."
+    },
+    {
+      "at": "2026-07-17T17:43:25-04:00",
+      "type": "CONTRACT_EXPANDED",
+      "note": "Expanded the source tool contract with complete metadata-plus-chapter-page retrieval."
+    },
+    {
+      "at": "2026-07-17T17:52:31-04:00",
+      "type": "CONTRACT_CORRECTED",
+      "note": "Restored toonverse.fetch as metadata-only and added toonverse.fetch-full for complete metadata plus the first chapter page."
+    },
+    {
+      "at": "2026-07-17T19:12:56-04:00",
+      "type": "REQUEST_SURFACE_EXPANDED",
+      "note": "Added fetch-full chapter page controls and the source-owned fetch-chapter request; response schemas remain deferred."
+    },
+    {
+      "at": "2026-07-17T20:12:56-04:00",
+      "type": "REQUEST_SURFACE_EXPANDED",
+      "note": "Added fetch-chapters for validated inclusive reader chapter ranges of up to 10 payloads."
+    },
+    {
+      "at": "2026-07-17T20:15:17-04:00",
+      "type": "VERIFICATION_UPDATED",
+      "note": "Added the no-network chapter-range-cap validation test; module verification now passes with 19 tests."
+    },
+    {
+      "at": "2026-07-17T20:23:34-04:00",
+      "type": "CONTRACT_CORRECTED",
+      "note": "Removed the unintended 10-chapter cap; fetch-chapters now supports the caller-supplied inclusive range."
+    },
+    {
+      "at": "2026-07-18T02:03:00-04:00",
+      "type": "STORAGE_DOWNLOAD_IMPLEMENTATION_STARTED",
+      "note": "User authorized a Toonverse source operation that downloads chapter pages into the server-owned ToolStorageWorkspace book layout."
+    },
+    {
+      "at": "2026-07-18T06:33:37-04:00",
+      "type": "IMPLEMENTED",
+      "note": "Added toonverse.download-book with source page and cover downloads, book/chapter descriptors, and ToolStorageWorkspace publication."
+    },
+    {
+      "at": "2026-07-18T06:33:37-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved after module tests and focused server MCP discovery/storage tests passed. Response-interface modeling and generic book tools remain intentionally deferred."
+    },
+    {
+      "at": "2026-07-18T07:38:24-04:00",
+      "type": "REOPENED",
+      "note": "A real 1..300 download-book call returned JSON-RPC -32603. Investigation is active to correct the unhonored operation timeout and provide a bounded, observable download result."
+    },
+    {
+      "at": "2026-07-18T07:45:26-04:00",
+      "type": "IMPLEMENTED",
+      "note": "Published function timeout metadata to MCP dispatch, honored configured tool timeouts for tools/call, and added chapter availability preflight before storage is opened."
+    },
+    {
+      "at": "2026-07-18T07:45:26-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved after focused tool-framework, source-tool, and server regression tests passed."
+    }
+  ]
+}

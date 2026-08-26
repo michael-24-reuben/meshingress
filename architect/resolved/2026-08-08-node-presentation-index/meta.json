@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-08-node-presentation-index",
+  "title": "Node Presentation Index",
+  "type": "refactor",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-08T17:53:17-04:00",
+  "activatedAt": "2026-08-08T17:53:17-04:00",
+  "updatedAt": "2026-08-08T18:03:25-04:00",
+  "resolvedAt": "2026-08-08T18:03:25-04:00",
+  "tags": ["studio", "mcp", "tool-modules", "icons", "workflow"],
+  "related": ["2026-08-08-tool-module-catalog-api", "2026-08-08-tool-module-opaque-id"],
+  "events": [
+    {
+      "at": "2026-08-08T17:53:17-04:00",
+      "type": "CREATED",
+      "note": "Owner authorized a shared node-presentation index so Explorer and node renderers use server-owned module identity rather than tool-name heuristics."
+    },
+    {
+      "at": "2026-08-08T18:03:25-04:00",
+      "type": "RESOLVED",
+      "note": "MCP functions now carry opaque module ownership, and all Studio node and namespace icon consumers share a constant-time presentation index."
+    }
+  ]
+}

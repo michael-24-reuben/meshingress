@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-15-aegis-profile-lifecycle",
+  "title": "Aegis Profile Lifecycle Core",
+  "type": "security-implementation",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-15T00:45:00-04:00",
+  "activatedAt": "2026-08-15T00:45:00-04:00",
+  "resolvedAt": "2026-08-15T09:05:00-04:00",
+  "updatedAt": "2026-08-15T09:05:00-04:00",
+  "tags": ["aegis", "authentication", "authorization", "profiles", "security", "api"],
+  "related": [
+    "2026-08-14-aegis-bootstrap-enrollment",
+    "2026-08-15-mcp-call-context-security-refactor",
+    "2026-07-16-mcp-oidc-principal-and-header-migration",
+    "2026-07-16-mcp-tool-authorization-and-credential-strategies"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Implement the profile capabilities previously identified as missing before app or MCP route wiring, and record the supported method contract."
+  },
+  "events": [
+    {
+      "at": "2026-08-15T00:45:00-04:00",
+      "type": "CREATED",
+      "note": "Created as the active reusable Aegis profile lifecycle implementation slice."
+    },
+    {
+      "at": "2026-08-15T09:05:00-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented the framework-free profile lifecycle service, compare-and-set store SPI, in-memory reference store, documented dispatch contract, and focused tests."
+    }
+  ]
+}

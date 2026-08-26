@@ -1,0 +1,39 @@
+{
+  "id": "2026-05-30-voicebox-backend-tool",
+  "title": "Voicebox Backend Tool Conversion",
+  "status": "resolved",
+  "createdAt": "2026-05-30T13:47:02-04:00",
+  "activatedAt": "2026-05-30T13:47:02-04:00",
+  "resolvedAt": "2026-05-30T13:54:23-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-05-30T13:54:23-04:00",
+  "tags": [
+    "mcp",
+    "toolspace",
+    "backend-only",
+    "voicebox"
+  ],
+  "related": [],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User asked to strip the repo down to backend-only and convert it to a jamiepine/voicebox tool."
+  },
+  "events": [
+    {
+      "at": "2026-05-30T13:47:02-04:00",
+      "type": "CREATED",
+      "note": "Created for the Voicebox backend-only tool conversion."
+    },
+    {
+      "at": "2026-05-30T13:47:02-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation began immediately."
+    },
+    {
+      "at": "2026-05-30T13:54:23-04:00",
+      "type": "RESOLVED",
+      "note": "Voicebox module, backend-only wiring, and focused verification completed."
+    }
+  ]
+}

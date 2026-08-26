@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-16-mcp-tool-authorization-and-credential-strategies",
+  "title": "MCP Tool Authorization and Credential Strategies",
+  "type": "security-implementation",
+  "status": "pending",
+  "priority": "high",
+  "createdAt": "2026-07-16T09:35:00-04:00",
+  "updatedAt": "2026-07-16T09:35:00-04:00",
+  "tags": ["security", "mcp", "authorization", "tools", "credentials"],
+  "related": ["2026-07-14-mcp-authentication-and-authorization"],
+  "events": [
+    {
+      "at": "2026-07-16T09:35:00-04:00",
+      "type": "CREATED",
+      "note": "Created from the resolved MCP authentication architecture."
+    }
+  ]
+}

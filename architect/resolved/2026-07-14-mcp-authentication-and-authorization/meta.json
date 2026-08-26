@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-14-mcp-authentication-and-authorization",
+  "title": "MCP Authentication and Authorization Architecture",
+  "type": "security-design",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-07-14T01:19:32-04:00",
+  "updatedAt": "2026-07-16T09:35:00-04:00",
+  "resolvedAt": "2026-07-16T09:35:00-04:00",
+  "tags": ["security", "authentication", "authorization", "oauth", "oidc", "mcp", "tool-policy", "design"],
+  "related": ["2026-07-13-managed-project-maintenance"],
+  "events": [
+    {
+      "at": "2026-07-14T01:19:32-04:00",
+      "type": "CREATED",
+      "note": "Recorded a pending design inspired by ToolHive's two-boundary authentication model; no production authentication behavior was changed."
+    },
+    {
+      "at": "2026-07-16T09:35:00-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved the architecture into explicit production decisions and child implementation entries; added bounded reported-client trace capture without treating client metadata as identity."
+    }
+  ]
+}

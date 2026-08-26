@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-03-windows-launcher-runtime-discovery",
+  "title": "Windows Launcher Runtime Discovery",
+  "type": "bug",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-03T00:00:00-04:00",
+  "activatedAt": "2026-08-03T00:00:00-04:00",
+  "updatedAt": "2026-08-03T00:51:49-04:00",
+  "resolvedAt": "2026-08-03T00:51:49-04:00",
+  "tags": ["bug", "cli", "runtime", "windows", "process", "verification"],
+  "related": [],
+  "events": [
+    {
+      "at": "2026-08-03T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created for a launcher control-center failure to recognize a healthy Meshingress development runtime."
+    },
+    {
+      "at": "2026-08-03T00:00:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated to add bounded runtime discovery and verify it against the live development process."
+    },
+    {
+      "at": "2026-08-03T00:51:49-04:00",
+      "type": "RESOLVED",
+      "note": "The Windows launcher now adopts a healthy Meshingress development process after verifying its listener, actuator health, and exact process identity."
+    }
+  ]
+}

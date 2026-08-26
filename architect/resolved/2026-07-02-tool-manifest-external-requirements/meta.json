@@ -1,0 +1,44 @@
+{
+  "id": "2026-07-02-tool-manifest-external-requirements",
+  "title": "Tool Manifest External Requirements",
+  "status": "resolved",
+  "createdAt": "2026-07-02T15:04:59-04:00",
+  "activatedAt": null,
+  "resolvedAt": "2026-07-02T16:20:04-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-07-02T16:20:04-04:00",
+  "tags": [
+    "tool-api",
+    "manifest",
+    "metadata",
+    "resources",
+    "repository",
+    "runtime-install",
+    "external-requirements",
+    "design",
+    "future"
+  ],
+  "related": [
+    "2026-05-23-runtime-tool-creation-and-registry",
+    "2026-05-27-cli-anything-tool-import-flow",
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-05-19-tool-annotation-library"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "temp/2026-07-02-tool-manifest-external-requirements-architect.md",
+    "summary": "Reviewed draft for replacing tool property/readme annotations with class-based manifests that can declare properties, requirements, links, readme text, and external source repository requirements."
+  },
+  "events": [
+    {
+      "at": "2026-07-02T15:04:59-04:00",
+      "type": "CREATED",
+      "note": "Created pending architect from draft review and live source assessment."
+    },
+    {
+      "at": "2026-07-02T16:20:04-04:00",
+      "type": "RESOLVED",
+      "note": "Replaced property/readme annotations with class-based manifest definitions, static manifest resources, and repository/runtime integration."
+    }
+  ]
+}

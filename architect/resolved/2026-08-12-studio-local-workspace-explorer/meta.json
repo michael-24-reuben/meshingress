@@ -1,0 +1,22 @@
+{
+  "id": "2026-08-12-studio-local-workspace-explorer",
+  "title": "Studio Local Workspace Explorer",
+  "status": "resolved",
+  "createdAt": "2026-08-12T00:00:00-04:00",
+  "activatedAt": "2026-08-12T00:00:00-04:00",
+  "updatedAt": "2026-08-12T00:30:00-04:00",
+  "resolvedAt": "2026-08-12T00:30:00-04:00",
+  "tags": ["frontend", "ui", "workspace", "mvp"],
+  "events": [
+    {
+      "type": "CREATED_ACTIVE",
+      "at": "2026-08-12T00:00:00-04:00",
+      "note": "Implementation started from the user-requested Studio Explorer slice."
+    },
+    {
+      "type": "RESOLVED",
+      "at": "2026-08-12T00:30:00-04:00",
+      "note": "Client-only Explorer selection, recents, and workspace commands are implemented and built."
+    }
+  ]
+}

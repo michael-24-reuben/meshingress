@@ -1,0 +1,35 @@
+{
+  "id": "2026-08-01-studio-typed-argument-inputs",
+  "title": "Workflow Studio typed argument input components",
+  "status": "resolved",
+  "type": "ui-architecture",
+  "priority": "high",
+  "createdAt": "2026-08-01T21:45:14-04:00",
+  "activatedAt": "2026-08-01T21:45:14-04:00",
+  "resolvedAt": "2026-08-01T21:50:49-04:00",
+  "updatedAt": "2026-08-01T21:50:49-04:00",
+  "scope": "app/meshingress-studio-web/src/features/workflow-studio",
+  "tags": [
+    "workflow-studio",
+    "argument-inputs",
+    "react",
+    "json-schema"
+  ],
+  "events": [
+    {
+      "at": "2026-08-01T21:45:14-04:00",
+      "type": "CREATED",
+      "note": "Recorded the modular Workflow Studio argument-input design before implementation."
+    },
+    {
+      "at": "2026-08-01T21:45:14-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "User authorized the initial simple-type implementation slice."
+    },
+    {
+      "at": "2026-08-01T21:50:49-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented the initial modular native controls and verified Studio lint and production build."
+    }
+  ]
+}

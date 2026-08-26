@@ -1,0 +1,51 @@
+{
+  "id": "2026-06-26-mvp-spring-server-transport",
+  "title": "MVP Spring Server Transport",
+  "status": "resolved",
+  "createdAt": "2026-06-26T03:55:14.4215697-04:00",
+  "activatedAt": "2026-06-27T00:54:36-04:00",
+  "resolvedAt": "2026-06-27T01:02:26-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-27T01:41:12-04:00",
+  "tags": [
+    "mvp",
+    "spring",
+    "server",
+    "transport",
+    "priority-08"
+  ],
+  "related": [
+    "2026-06-26-nextcloud-mcp-core-architecture",
+    "2026-06-26-mvp-mcp-tool-runtime",
+    "2026-06-26-mvp-files-share-user-tools",
+    "2026-06-26-mvp-integration-verification-docs"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "parent-architect",
+    "summary": "MVP child architect for Spring Boot wiring and HTTP/MCP transport."
+  },
+  "resolutionOrder": 8,
+  "events": [
+    {
+      "at": "2026-06-26T03:55:14.4215697-04:00",
+      "type": "CREATED",
+      "note": "Created as the eighth MVP child architect to resolve."
+    },
+    {
+      "at": "2026-06-27T00:54:36-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Activated for Spring Boot server transport implementation."
+    },
+    {
+      "at": "2026-06-27T01:02:26-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and verified the MVP Spring Boot server transport."
+    },
+    {
+      "at": "2026-06-27T01:41:12-04:00",
+      "type": "UPDATED",
+      "note": "Recorded local Spring Boot launch and health endpoint smoke result."
+    }
+  ]
+}

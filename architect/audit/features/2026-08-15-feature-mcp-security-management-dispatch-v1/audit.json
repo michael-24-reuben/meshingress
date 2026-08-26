@@ -1,0 +1,53 @@
+{
+  "id": "feature-mcp-security-management-dispatch-v1",
+  "recordedAt": "2026-08-15T19:45:33-04:00",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "app/meshingress-server"
+    ]
+  },
+  "summary": "Meshingress exposes authenticated caller introspection and privileged, tenant-scoped security-management operations through annotated MCP dispatch routes.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "source inspection on 2026-08-15",
+      "security dispatch implementation discussion"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/security/SecurityMcpController.java",
+      "lines": "10-18",
+      "note": "Publishes security/whoami as an MCP dispatch method."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/security/RolesSecurityMcpController.java",
+      "lines": "12-127",
+      "note": "Publishes profile, identity, credential-binding, and tool-policy management methods below roles/security."
+    },
+    {
+      "kind": "verification",
+      "path": "app/meshingress-server/src/test/java/dev/mrk/meshingress/security/management/SecurityDispatchContractTest.java",
+      "lines": "14-27",
+      "note": "Asserts approved methods are registered and that no credential verification dispatch route exists."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "mcp",
+    "dispatch",
+    "security",
+    "profiles",
+    "tool-policy"
+  ]
+}

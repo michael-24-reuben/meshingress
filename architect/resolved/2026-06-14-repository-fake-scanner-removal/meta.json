@@ -1,0 +1,40 @@
+{
+  "id": "2026-06-14-repository-fake-scanner-removal",
+  "title": "Repository Fake Scanner Removal",
+  "status": "resolved",
+  "createdAt": "2026-06-14T00:52:00-04:00",
+  "activatedAt": "2026-06-14T00:52:00-04:00",
+  "resolvedAt": "2026-06-14T00:52:00-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-14T00:52:00-04:00",
+  "tags": [
+    "artifact-repository",
+    "scanner",
+    "sbom",
+    "scope-scanner",
+    "cleanup",
+    "security"
+  ],
+  "related": [
+    "2026-06-05-embedded-assessment-enrichment",
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-06-08-sql-tool-metadata-store",
+    "2026-06-14-repository-scanner-sandbox-pipeline"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "User identified that fake-scanner could be removed now that CycloneDX SBOM generation and bytecode scope scanning are implemented and passing."
+  },
+  "events": [
+    {
+      "at": "2026-06-14T00:52:00-04:00",
+      "type": "CREATED",
+      "note": "Created as an immediate cleanup record for removing the fake repository scanner from the MVP flow."
+    },
+    {
+      "at": "2026-06-14T00:52:00-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved by removing fake-scanner wiring/configuration and updating repository/runtime publication tests to use SBOM and bytecode scope scanner assessment metadata."
+    }
+  ]
+}

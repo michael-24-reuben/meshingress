@@ -1,0 +1,37 @@
+{
+  "id": "2026-05-21-annotation-based-availability-validation",
+  "title": "Annotation-Based Availability Validation",
+  "status": "resolved",
+  "createdAt": "2026-05-21T00:00:00-04:00",
+  "activatedAt": null,
+  "resolvedAt": "2026-05-21T14:11:05-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-05-21T14:11:05-04:00",
+  "tags": [
+    "route-framework",
+    "availability",
+    "validation",
+    "annotations",
+    "spring",
+    "refactor",
+    "startup-validation"
+  ],
+  "related": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User requested an architect entry for replacing hardcoded availability validation in McpRouteValidator with annotation-declared Spring-managed validation classes."
+  },
+  "events": [
+    {
+      "at": "2026-05-21T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Created implementation-planning record for annotation-based route availability validation."
+    },
+    {
+      "at": "2026-05-21T14:11:05-04:00",
+      "type": "RESOLVED",
+      "note": "Replaced hardcoded availability validation in McpRouteValidator with annotation-declared Spring-managed condition classes and added coverage for invalid metadata paths."
+    }
+  ]
+}
+

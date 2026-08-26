@@ -1,0 +1,67 @@
+{
+  "id": "workflow-typed-output-schemas-v1",
+  "recordedAt": "2026-08-21T22:19:02-04:00",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "lib/meshingress-tool-api-dispatch",
+      "app/meshingress-server",
+      "app/meshingress-studio-web"
+    ]
+  },
+  "summary": "Workflow node results carry a generated contract for concrete typed StructuredContent, while non-fatal execution observations are exposed as typed diagnostics and anonymous JsonNode content remains schema-less.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "source inspection and focused Maven verification on 2026-08-21",
+      "active architect entry 2026-08-20-add-interface-return-schemas"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "lib/meshingress-tool-api-dispatch/src/main/java/dev/mrk/meshingress/dispatch/StructuredContentSchemaGenerator.java",
+      "lines": "21-99",
+      "note": "Generates a Draft 2020-12 envelope schema from the concrete typed content class and explicitly excludes GeneratedJsonContent."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/workflow/WorkflowRuntime.java",
+      "lines": "216-283",
+      "note": "Projects typed content schemas into node outputSchema and translates validation facts into output.schema diagnostics."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/workflow/WorkflowRun.java",
+      "lines": "33-60",
+      "note": "Defines the transport-facing node result and non-fatal diagnostic record contracts."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-studio-web/src/features/workflow-studio/WorkflowStudioPage.tsx",
+      "lines": "487-502",
+      "note": "Caches a supplied typed schema as declared and reserves observed inference for eligible schema-less results."
+    },
+    {
+      "kind": "verification",
+      "path": "app/meshingress-server/src/test/java/dev/mrk/meshingress/workflow/WorkflowRuntimeTests.java",
+      "lines": "139-201",
+      "note": "Focused tests prove JsonNode structured content has no outputSchema and ProcessExecutionContent produces a typed envelope schema."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "workflow",
+    "structured-content",
+    "output-schema",
+    "diagnostics",
+    "studio"
+  ]
+}

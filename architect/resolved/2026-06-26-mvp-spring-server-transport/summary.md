@@ -1,0 +1,3 @@
+# Summary
+
+Implemented the MVP Spring Boot server transport in `app/nextcloud-mcp-server`. The server exposes health, account listing/testing, tool listing/calling, MCP alias endpoints, and a minimal JSON-RPC `/mcp` endpoint while delegating all capability execution to the existing MVP tool runtime and files/share/user tool modules. Tests verify that tool listing stays local-only and that tool calls resolve the current OCS user id before WebDAV paths are built. Focused and non-live full reactor verification passed; the only live-enabled full reactor failure was an external HTTP 502 from the Nextcloud host during the existing live SDK smoke test.

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-07-tool-family-contribution-precedence",
+  "title": "Tool Family Contributions and Persisted Function Precedence",
+  "type": "design",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-07T00:00:00-04:00",
+  "activatedAt": "2026-08-07T00:20:00-04:00",
+  "updatedAt": "2026-08-07T20:26:01-04:00",
+  "resolvedAt": "2026-08-07T20:26:01-04:00",
+  "tags": ["backend", "database", "design", "mcp", "tool-metadata", "tool-naming", "tool-registration", "studio"],
+  "related": [
+    "2026-07-02-tool-manifest-external-requirements",
+    "2026-05-23-runtime-tool-creation-and-registry",
+    "2026-08-03-youtube-tool-foundation"
+  ],
+  "events": [
+    {
+      "at": "2026-08-07T00:00:00-04:00",
+      "type": "CREATED",
+      "note": "Recorded the owner-directed design for one-name tool families, additive artifact contributions, and database-controlled function precedence."
+    },
+    {
+      "at": "2026-08-07T00:10:00-04:00",
+      "type": "UPDATED",
+      "note": "Renamed the public family field to namespace and clarified that presentation metadata belongs to each contributing module."
+    },
+    {
+      "at": "2026-08-07T00:20:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Owner authorized implementation of the structured metadata and persisted contribution-precedence design."
+    },
+    {
+      "at": "2026-08-07T00:30:00-04:00",
+      "type": "BLOCKED",
+      "note": "Implementation requires an owner decision on the durable registry store and first-install reservation order before precedence can safely govern runtime function ownership."
+    },
+    {
+      "at": "2026-08-07T00:40:00-04:00",
+      "type": "REOPENED",
+      "note": "Owner authorized the existing file-backed registration store plus normalized precedence data and a pre-activation reservation flow."
+    },
+    {
+      "at": "2026-08-07T00:50:00-04:00",
+      "type": "UPDATED",
+      "note": "Confirmed the file-backed store is retained; implementation proceeds with reservation-before-activation rather than a SQL migration."
+    },
+    {
+      "at": "2026-08-07T10:05:00-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented schema-two module metadata, schema-three file-backed contribution/conflict persistence, deterministic runtime ownership, controlled icon export/retrieval, role-gated administration, and focused regression verification."
+    },
+    {
+      "at": "2026-08-07T10:07:00-04:00",
+      "type": "UPDATED",
+      "note": "Re-ran the resolved focused reactor suite including manifest schema and migration coverage."
+    },
+    {
+      "at": "2026-08-07T20:00:00-04:00",
+      "type": "REOPENED",
+      "note": "Owner authorized implementation of the namespace plus McpTool plus McpFunction public-ID resolution."
+    },
+    {
+      "at": "2026-08-07T20:26:01-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and verified three-part public tool IDs, manifest-sourced module namespaces, module migrations, and registry validation."
+    }
+  ]
+}

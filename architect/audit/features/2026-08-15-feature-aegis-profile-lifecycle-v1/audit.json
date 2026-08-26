@@ -1,0 +1,54 @@
+{
+  "id": "feature-aegis-profile-lifecycle-v1",
+  "recordedAt": "2026-08-15T19:45:33-04:00",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "packages/aegis",
+      "app/meshingress-server"
+    ]
+  },
+  "summary": "Aegis provides a framework-free, revision-safe profile lifecycle with identities and credential bindings; the server includes a JDBC-backed integration surface.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "source inspection on 2026-08-15",
+      "Aegis implementation discussion"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "packages/aegis/src/main/java/dev/mrk/aegis/ProfileService.java",
+      "lines": "13-203",
+      "note": "Implements profile creation, lifecycle changes, identity linking, credential binding, and compare-and-set mutation."
+    },
+    {
+      "kind": "verification",
+      "path": "packages/aegis/src/test/java/dev/mrk/aegis/ProfileServiceTest.java",
+      "lines": "23-98",
+      "note": "Covers revision conflicts, terminal revocation, identity-binding integrity, and secret-safe profile values."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-server/src/main/java/dev/mrk/meshingress/security/AegisProfileIdentityResolver.java",
+      "lines": "14-47",
+      "note": "Resolves exactly one active local profile after the external issuer and subject are verified."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "security",
+    "aegis",
+    "profiles",
+    "credentials",
+    "identity"
+  ]
+}

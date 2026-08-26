@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-03-studio-root-and-site-error-pages",
+  "title": "Studio Root and Site Error Pages",
+  "type": "design",
+  "status": "pending",
+  "priority": "high",
+  "createdAt": "2026-08-03T00:54:25-04:00",
+  "updatedAt": "2026-08-03T00:54:25-04:00",
+  "tags": ["frontend", "ui", "server", "error-handling", "workflow-studio"],
+  "related": ["2026-07-26-workflow-runtime-beta", "2026-08-01-studio-typed-argument-inputs"],
+  "events": [
+    {
+      "at": "2026-08-03T00:54:25-04:00",
+      "type": "CREATED",
+      "note": "Recorded the owner decision that the Meshingress root route should open Workflow Studio and that the fallback error page should become a same-site surface."
+    }
+  ]
+}

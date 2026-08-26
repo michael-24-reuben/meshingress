@@ -1,0 +1,41 @@
+{
+  "id": "2026-05-19-tool-annotation-library",
+  "title": "Tool Annotation Library",
+  "status": "resolved",
+  "createdAt": "2026-05-19T15:18:41-04:00",
+  "activatedAt": "2026-05-19T15:18:41-04:00",
+  "resolvedAt": "2026-05-19T15:22:15-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-05-19T15:22:15-04:00",
+  "tags": [
+    "mcp",
+    "tool-api",
+    "annotations",
+    "library",
+    "refactor"
+  ],
+  "related": [
+    "2026-05-18-mcp-annotation-dispatch-architecture"
+  ],
+  "origin": {
+    "source": "chat",
+    "summary": "Create a new lib module that provides annotation-based tool metadata, modeled after controller dispatch annotations and the helloworld temp sample, without attaching it to execution logic yet."
+  },
+  "events": [
+    {
+      "at": "2026-05-19T15:18:41-04:00",
+      "type": "CREATED",
+      "note": "Started focused tool annotation library work."
+    },
+    {
+      "at": "2026-05-19T15:18:41-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation begins immediately."
+    },
+    {
+      "at": "2026-05-19T15:22:15-04:00",
+      "type": "RESOLVED",
+      "note": "Added annotation library module and verified focused Maven tests."
+    }
+  ]
+}

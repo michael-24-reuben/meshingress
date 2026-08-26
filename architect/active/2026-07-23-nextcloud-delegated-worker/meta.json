@@ -1,0 +1,32 @@
+{
+  "id": "2026-07-23-nextcloud-delegated-worker",
+  "title": "Nextcloud Delegated Worker",
+  "status": "active",
+  "createdAt": "2026-07-23T08:30:00-04:00",
+  "activatedAt": "2026-07-23T08:30:00-04:00",
+  "updatedAt": "2026-07-23T11:06:00-04:00",
+  "tags": ["nextcloud", "storage", "worker", "delegated-source", "migration"],
+  "related": ["2026-07-23-nextcloud-streaming-ingest-remodel", "2026-07-22-delegated-external-source-import"],
+  "events": [
+    {
+      "at": "2026-07-23T08:30:00-04:00",
+      "type": "CREATED_ACTIVE",
+      "note": "Started a fresh delegated-worker path before preserving the existing Nextcloud app as meshingress-v1."
+    },
+    {
+      "at": "2026-07-23T08:35:00-04:00",
+      "type": "V1_SOURCE_PRESERVED",
+      "note": "Renamed integrations/nextcloud/meshingress to integrations/nextcloud/meshingress-v1 without changing its contents."
+    },
+    {
+      "at": "2026-07-23T09:20:00-04:00",
+      "type": "IMPLEMENTATION_STARTED",
+      "note": "Created the new plain-named integrations/nextcloud/meshingress app with the sealed delegated-workspace contract, per-source durable retries, and dedicated worker command."
+    },
+    {
+      "at": "2026-07-23T11:06:00-04:00",
+      "type": "LIVE_DELEGATION_MONITORED",
+      "note": "Updated and ran the WebSocket caller against the current deployment. A four-chapter, 100-page Toonverse workspace progressed QUEUED (attempt 2) to COMPLETED after reconnect-safe status monitoring. The fresh app source was pushed but not deployed."
+    }
+  ]
+}

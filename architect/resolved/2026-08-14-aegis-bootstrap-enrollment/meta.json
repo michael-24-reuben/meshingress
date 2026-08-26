@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-14-aegis-bootstrap-enrollment",
+  "title": "Aegis Bootstrap Administrator Enrollment",
+  "type": "security-design",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-14T20:07:23-04:00",
+  "activatedAt": "2026-08-14T20:28:46-04:00",
+  "resolvedAt": "2026-08-14T20:34:46-04:00",
+  "updatedAt": "2026-08-14T20:34:46-04:00",
+  "tags": ["aegis", "authentication", "authorization", "bootstrap", "security", "design"],
+  "related": [
+    "2026-07-14-mcp-authentication-and-authorization",
+    "2026-07-16-mcp-oidc-principal-and-header-migration",
+    "2026-07-16-mcp-tool-authorization-and-credential-strategies",
+    "2026-05-20-bootstrap-admin-json-auth-store"
+  ],
+  "events": [
+    {
+      "at": "2026-08-14T20:07:23-04:00",
+      "type": "CREATED",
+      "note": "Recorded the owner-requested design for a one-time, rotating initial-administrator enrollment flow in the reusable Aegis module."
+    },
+    {
+      "at": "2026-08-14T20:28:46-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "The owner authorized implementation of the portable Aegis bootstrap contract with module properties parsing."
+    },
+    {
+      "at": "2026-08-14T20:34:46-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented and package-tested the framework-free bootstrap SPI, reference atomic store, and safe module configuration defaults."
+    }
+  ]
+}

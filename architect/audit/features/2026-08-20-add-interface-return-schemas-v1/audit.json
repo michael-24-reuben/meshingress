@@ -1,0 +1,74 @@
+{
+  "id": "add-interface-return-schemas-v1",
+  "recordedAt": "2026-08-20T11:09:57-04:00",
+  "status": "implemented",
+  "scope": {
+    "project": "meshingress",
+    "modules": [
+      "lib/meshingress-tool-annotations",
+      "lib/meshingress-tool-api",
+      "lib/meshingress-tool-framework",
+      "app/meshingress-studio-web"
+    ]
+  },
+  "summary": "MCP functions may declare output payload types that are compiled into a structured-content envelope outputSchema; Studio honors an explicit structured-output override before the schema fallback.",
+  "origin": {
+    "kind": "implementation-audit",
+    "recordedFrom": [
+      "source inspection and focused Maven verification on 2026-08-20",
+      "Antigravity CLI / Gemini audit handoff, independently checked before promotion from its isolated scratch workspace"
+    ],
+    "authority": "Snapshot only; referenced live source and tests are authoritative and may have changed after this record."
+  },
+  "evidence": [
+    {
+      "kind": "code",
+      "path": "lib/meshingress-tool-annotations/src/main/java/dev/mrk/meshingress/api/tools/annotation/McpFunction.java",
+      "lines": "27-49",
+      "note": "Adds source-compatible outputTypes plus the INFER, ENABLED, and DISABLED structured-output declaration modes."
+    },
+    {
+      "kind": "code",
+      "path": "lib/meshingress-tool-api/src/main/java/dev/mrk/meshingress/api/tools/function/McpFunctionDescriptor.java",
+      "lines": "25-37",
+      "note": "Publishes a non-null outputSchema in the MCP tools/list function descriptor."
+    },
+    {
+      "kind": "code",
+      "path": "lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/framework/scanning/McpToolAnnotationScanner.java",
+      "lines": "155-162, 626-776",
+      "note": "Compiles interface accessors, records, fields, primitives, enums, collections, maps, and variants into the full structured-content envelope schema; explicit output mode becomes an MCP annotation."
+    },
+    {
+      "kind": "verification",
+      "path": "lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/framework/scanning/McpToolAnnotationScannerTests.java",
+      "lines": "183-205, 338-375",
+      "note": "Focused Maven test passed 10/10, covering interface accessors, nested records, oneOf variants, and explicit enabled/disabled behavior."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-studio-web/src/api/mcp.ts",
+      "lines": "14-37",
+      "note": "Defines the optional structuredOutput annotation and resolves explicit true/false before falling back to outputSchema presence."
+    },
+    {
+      "kind": "code",
+      "path": "app/meshingress-studio-web/src/features/workflow-studio/components/WorkflowCanvas.tsx",
+      "lines": "732-736, 792-826",
+      "note": "Surfaces declared-schema, observed-schema-policy, and disabled output states in Studio."
+    }
+  ],
+  "markdownRef": [
+    {
+      "path": "audit.md",
+      "role": "feature memo"
+    }
+  ],
+  "tags": [
+    "mcp",
+    "output-schema",
+    "structured-output",
+    "tool-metadata",
+    "studio"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-20-storage-lifecycle-and-write-only-handoff",
+  "title": "Storage Lifecycle and Write-Only Handoff",
+  "type": "architecture-design",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-07-20T08:48:21-04:00",
+  "updatedAt": "2026-07-20T09:17:13-04:00",
+  "activatedAt": "2026-07-20T09:16:00-04:00",
+  "resolvedAt": "2026-07-20T09:17:13-04:00",
+  "tags": ["storage", "api", "config", "database", "audit", "design"],
+  "related": ["2026-07-17-ephemeral-content-storage"],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Extend ephemeral workspace storage with explicit local/external lifecycles and write-only foreign handoff targets while preserving durable local metadata and audit records."
+  },
+  "events": [
+    {
+      "at": "2026-07-20T08:48:21-04:00",
+      "type": "CREATED",
+      "note": "Created from the storage lifecycle, external handoff, configuration, and file API discussion."
+    },
+    {
+      "at": "2026-07-20T09:16:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Owner authorized implementation and resolution."
+    },
+    {
+      "at": "2026-07-20T09:17:13-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented local/local and local/WebDAV handoff storage lifecycles, shared metadata audit tables, capability-gated file APIs, and focused verification."
+    }
+  ]
+}

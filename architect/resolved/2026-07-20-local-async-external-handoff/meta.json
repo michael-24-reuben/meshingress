@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-20-local-async-external-handoff",
+  "title": "Local Async External Handoff",
+  "type": "architecture-design",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-07-20T21:22:07-04:00",
+  "updatedAt": "2026-07-20T22:09:53-04:00",
+  "activatedAt": "2026-07-20T21:38:35-04:00",
+  "resolvedAt": "2026-07-20T22:09:53-04:00",
+  "tags": ["storage", "webdav", "handoff", "async", "resilience", "mcp"],
+  "related": [
+    "2026-07-20-storage-lifecycle-and-write-only-handoff",
+    "2026-07-17-ephemeral-content-storage",
+    "2026-07-18-mcp-progress-runtime-lifecycle"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Decouple final external publication from the tool request after a successful local package/download, so external latency and retryable failures do not consume the MCP request deadline."
+  },
+  "events": [
+    {
+      "at": "2026-07-20T21:22:07-04:00",
+      "type": "CREATED",
+      "note": "Created from the LOCAL_ASYNC_EXTERNAL storage-lifecycle discussion."
+    },
+    {
+      "at": "2026-07-20T21:32:57-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved by user decision: do not pursue this lifecycle direction; no implementation was authorized or performed."
+    },
+    {
+      "at": "2026-07-20T21:38:35-04:00",
+      "type": "REOPENED",
+      "note": "User corrected the closeout and explicitly authorized implementation of the entire todo list."
+    },
+    {
+      "at": "2026-07-20T21:49:54-04:00",
+      "type": "RESOLVED",
+      "note": "Implemented LOCAL_ASYNC_EXTERNAL with durable queue state, bounded worker recovery/retry, manifest-last WebDAV handoff, status/requeue APIs, configuration, and focused verification."
+    },
+    {
+      "at": "2026-07-20T22:06:32-04:00",
+      "type": "REOPENED",
+      "note": "User authorized the missing client-observability correction: expose handoff status through MCP and keep the WebSocket open until the handoff reaches a terminal state."
+    },
+    {
+      "at": "2026-07-20T22:09:53-04:00",
+      "type": "RESOLVED",
+      "note": "Added Toonverse publication-status MCP polling and changed the bundled WebSocket client to close only after a terminal handoff state."
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-15-mcp-call-context-security-refactor",
+  "title": "MCP Call Context Security and Eligibility Refactor",
+  "type": "security-implementation",
+  "status": "resolved",
+  "priority": "high",
+  "createdAt": "2026-08-15T00:11:33-04:00",
+  "activatedAt": "2026-08-15T00:12:00-04:00",
+  "updatedAt": "2026-08-15T00:30:00-04:00",
+  "resolvedAt": "2026-08-15T00:30:00-04:00",
+  "tags": ["security", "mcp", "context", "authorization", "availability", "refactor"],
+  "related": [
+    "2026-07-14-mcp-authentication-and-authorization",
+    "2026-07-16-mcp-oidc-principal-and-header-migration",
+    "2026-07-16-mcp-tool-authorization-and-credential-strategies",
+    "2026-05-22-mcp-tool-availability-annotations",
+    "2026-07-18-mcp-progress-runtime-lifecycle",
+    "2026-08-14-aegis-bootstrap-enrollment"
+  ],
+  "events": [
+    {
+      "at": "2026-08-15T00:11:33-04:00",
+      "type": "CREATED",
+      "note": "Created from an MCP transport, dispatch, availability, and workflow-context review; no implementation was authorized."
+    },
+    {
+      "at": "2026-08-15T00:12:00-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Owner authorized replacement of the temporary header-derived security path."
+    },
+    {
+      "at": "2026-08-15T00:30:00-04:00",
+      "type": "RESOLVED",
+      "note": "Replaced raw header context and caller-controlled admin roles with verified-principal context, centralized eligibility, and workflow lineage. OIDC and credential strategy integration remain separate pending records."
+    }
+  ]
+}

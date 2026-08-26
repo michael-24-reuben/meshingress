@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-07-22-delegated-external-source-import",
+  "title": "Delegated External Source-Import Lifecycle",
+  "type": "feature-implementation",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-07-22T01:03:35-04:00",
+  "activatedAt": "2026-07-22T01:03:35-04:00",
+  "updatedAt": "2026-07-23T21:46:22-04:00",
+  "tags": ["storage", "nextcloud", "delegated-external", "source-import", "toonverse"],
+  "related": ["2026-07-21-nextcloud-source-import-workflow"],
+  "origin": {
+    "source": "chat",
+    "summary": "Implement a delegated-external storage lifecycle that records source URLs, submits one Nextcloud source-import job during publication, and lets link-producing tools avoid local byte downloads."
+  },
+  "events": [
+    {
+      "at": "2026-07-22T01:03:35-04:00",
+      "type": "CREATED",
+      "note": "Created after implementation authorization for the delegated URL storage lifecycle."
+    },
+    {
+      "at": "2026-07-22T01:03:35-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Implementation begins with the tool API, lifecycle policy, Nextcloud OCS client, durable source records, and Toonverse integration."
+    },
+    {
+      "at": "2026-07-22T01:32:20-04:00",
+      "type": "REVISED",
+      "note": "Adopted the reserved-workspace protocol: native files and source URLs are appended while OPEN, then one explicit seal queues the Nextcloud import."
+    },
+    {
+      "at": "2026-07-22T02:04:00-04:00",
+      "type": "IMPLEMENTATION_PROGRESS",
+      "note": "Implemented and locally verified the SPI, lifecycle adapter, reservation API, Toonverse URL delegation, and file-metadata repair. Live deployment is pending restored Tailscale SSH authentication."
+    },
+    {
+      "at": "2026-07-22T02:12:00-04:00",
+      "type": "LIVE_SMOKE_TEST_BLOCKED",
+      "note": "The generated reservation-flow test reached Nextcloud but received OCS 404/status 998 Invalid query, confirming the new routes are not deployed."
+    },
+    {
+      "at": "2026-07-22T02:32:00-04:00",
+      "type": "LIVE_NEXTCLOUD_VERIFIED",
+      "note": "Deployed and restarted the app; the generated reserve-upload-append-seal test completed with three non-zero image sizes and native book.json in one manifest."
+    },
+    {
+      "at": "2026-07-22T23:09:09-04:00",
+      "type": "LIVE_ADAPTER_FAILURE_REPORTED",
+      "note": "A live MCP download returned HTTP 204 with no terminal result, created no current Nextcloud reservation, and left no retry identifier. Prioritize rebuilding the Meshingress server from current source and prove one small MCP download returns a durable workspace status before adding broader retry behavior."
+    },
+    {
+      "at": "2026-07-22T23:20:57-04:00",
+      "type": "CRITICAL_NATIVE_UPLOAD_REPAIRED",
+      "note": "Rebuilt and restarted Meshingress, then corrected the Java client to send the deployed Nextcloud 34 contentBase64 JSON upload contract. A live one-chapter MCP request completed and its Nextcloud book.json (280 bytes), chapter.json (811 bytes), and manifest (6550 bytes) were non-zero application/json files."
+    },
+    {
+      "at": "2026-07-23T00:59:37-04:00",
+      "type": "VIEWER_CAPABILITY_REPAIRED",
+      "note": "Replaced returned authenticated Nextcloud DAV paths with opaque, persisted Meshingress viewer capabilities that stream from the same Nextcloud workspace. A live anonymous fetch returned inline application/json book.json and the final one-chapter import completed with the configured 50-request cap."
+    },
+    {
+      "at": "2026-07-23T21:46:22-04:00",
+      "type": "TRANSFER_MODEL_RECONCILED",
+      "note": "Shared storage refactor superseded delegated-external as a lifecycle: new callers request DELEGATED_SOURCE_URLS and use meshingress.storage.external.delegated-target. The destination-owned import status remains unchanged."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "2026-06-27-scanner-process-runner-policy",
+  "title": "Scanner Process Runner Policy",
+  "status": "resolved",
+  "createdAt": "2026-06-27T01:01:16-04:00",
+  "activatedAt": "2026-06-27T01:01:16-04:00",
+  "resolvedAt": "2026-06-27T01:06:42-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-06-27T01:06:42-04:00",
+  "tags": [
+    "repository",
+    "scanner",
+    "security-assessment",
+    "external-tools",
+    "timeout",
+    "failure-policy",
+    "supply-chain"
+  ],
+  "related": [
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-06-14-repository-scanner-sandbox-pipeline"
+  ],
+  "sourceReports": [],
+  "origin": {
+    "source": "PAS",
+    "summary": "Selected from the repository artifact implementation backlog after embedded SBOM, sandbox, scope evidence, direct registration hardening, and publication eligibility policy were resolved. This focused slice prepares a shared fail-closed execution boundary for later external scanner CLI integrations."
+  },
+  "events": [
+    {
+      "at": "2026-06-27T01:01:16-04:00",
+      "type": "CREATED",
+      "note": "Created and activated as the next focused PAS objective."
+    },
+    {
+      "at": "2026-06-27T01:06:42-04:00",
+      "type": "RESOLVED",
+      "note": "Added scanner process runner, normalized failure evidence, and focused verification."
+    }
+  ]
+}

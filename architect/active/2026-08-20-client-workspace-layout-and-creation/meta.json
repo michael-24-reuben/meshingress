@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-20-client-workspace-layout-and-creation",
+  "title": "Client Workspace Layout Packages and Creation Flow",
+  "type": "feature-plan",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-08-20T11:56:47-04:00",
+  "activatedAt": "2026-08-20T12:06:49-04:00",
+  "updatedAt": "2026-08-22T10:07:25-04:00",
+  "tags": ["frontend", "design", "storage", "workspace", "versioning", "ui"],
+  "related": [
+    "2026-07-13-managed-project-maintenance",
+    "2026-08-12-versioned-tool-workspace-delegation"
+  ],
+  "events": [
+    {
+      "at": "2026-08-20T11:56:47-04:00",
+      "type": "CREATED",
+      "note": "Recorded the owner-requested local client-workspace creation flow and paired, versioned scaffold-plus-contract layout model."
+    },
+    {
+      "at": "2026-08-20T12:03:08-04:00",
+      "type": "AUDIT_REQUESTED",
+      "note": "Requested an Antigravity CLI audit/features handoff with output restricted to the paired feature-audit directory. The CLI print window elapsed without artifacts or a handoff, so no audit is linked or treated as complete."
+    },
+    {
+      "at": "2026-08-20T12:06:49-04:00",
+      "type": "MOVED_TO_ACTIVE",
+      "note": "Owner authorized implementation of the client-local workspace layout and creation feature."
+    },
+    {
+      "at": "2026-08-20T12:16:46-04:00",
+      "type": "IMPLEMENTATION_SLICE_COMPLETED",
+      "note": "Implemented the v1 paired layout package, writable parent-folder creation flow, child-project activation, and focused creation-contract verification. Existing-project manifest loading and live browser File System Access smoke testing remain follow-up work."
+    },
+    {
+      "at": "2026-08-20T12:41:55-04:00",
+      "type": "IMPLEMENTATION_SLICE_EXTENDED",
+      "note": "Extended layout v1 with generated, ignored var/cache/tool-output-schemas declared and observed cache directories so Studio can persist schema-only tool-output knowledge locally without storing result values."
+    },
+    {
+      "at": "2026-08-22T09:59:32-04:00",
+      "type": "IMPLEMENTATION_SLICE_EXTENDED",
+      "note": "Persisted Saved tool IDs in ignored .meshingress workspace-local state, resolving them against the live tool catalog rather than browser-local storage."
+    },
+    {
+      "at": "2026-08-22T10:07:25-04:00",
+      "type": "IMPLEMENTATION_SLICE_EXTENDED",
+      "note": "Changed Saved tool identity to the moduleToolId plus callable toolId pair, while retaining read compatibility with the initial ID-only format."
+    }
+  ]
+}
