@@ -38,6 +38,7 @@ architect/**/captures/
 .project
 .settings
 .springBeans
+.xpsignore
 .sts4-cache
 
 ### IntelliJ IDEA ###
