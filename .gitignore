@@ -1,29 +1,71 @@
-HELP.md
-temp/
-/repository/**
-/tools/
-# Keep source documentation and coverage beneath Java packages named "tools" trackable.
-!lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/
-!lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/availability/
-!lib/meshingress-tool-framework/src/main/java/dev/mrk/meshingress/tools/availability/README.md
-!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/
-!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/availability/
-!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/availability/withintimeranges/
-!lib/meshingress-tool-framework/src/test/java/dev/mrk/meshingress/tools/availability/withintimeranges/EnableWithinTimeRangesPolicyTests.java
-
-
-.mvn/wrapper/maven-wrapper.jar
+### Build & Compiled Outputs ###
 target/
-!**/src/main/**/target/
-!**/src/test/**/target/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
+bin/
+out/
+dist/
 *.class
 
-### Architect ###
-#architect/
+### Archives & Jars ###
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+!.mvn/wrapper/maven-wrapper.jar
+
+### Python Bytecode & Environments ###
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+venv/
+.venv/
+env/
+
+### Node / Frontend ###
+node_modules/
+dist-ssr/
+coverage/
+.nyc_output/
+
+### Temporary & Scratch Files ###
+/temp/
+scratch/
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+### Databases & Local State ###
+*.mv.db
+*.trace.db
+*.sqlite
+*.sqlite3
+/var/
+.cache/
+/identifier.sqlite
+
+### Secrets & Security ###
+*.pem
+*.key
+*.pkcs12
+*.pfx
+*.p12
+*.jks
+*.keystore
+*.env
+.env
+.env.*
+!.env.example
+*.env.local
+/config/application-production.properties
 architect/**/env.yaml
 architect/**/env.local.yaml
 architect/**/secrets.json
@@ -31,69 +73,29 @@ architect/**/private.md
 architect/**/raw-logs/
 architect/**/captures/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.xpsignore
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+### IDEs & Editors ###
+.idea/
 *.iml
+*.iws
 *.ipr
-
-### NetBeans ###
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+.apt_generated
+.sts4-cache
+.antigravity/
+.nb-gradle/
 /nbproject/private/
 /nbbuild/
-/dist/
 /nbdist/
-/.nb-gradle/
 
-### VS Code ###
-.vscode/
-
-### AI plugin - Antigravity ###
-.antigravity/
-
-### Toolspace ###
-# Exclude tool modules and their build artifacts
-#toolspace/x-*
-toolspace/**/**/node_modules/
-
-### Secure Files ###
-*.pem
-*.env
-/config/application-production.properties
-
-### Logging and Tracing ###
+### Logging & Tooling Artifacts ###
 *.log
-/var/
-.cache/**
-venv/**
-
-### ETC ###
-/tools/**/*.jar
-/identifier.sqlite
 /.agents/automation/logs/
-/app/meshingress-server/.cache/
-/lib/meshingress-codeql-scope-sample/vendor/
-/temp/*.jar
-/temp/cobalt-sources-*/
-
-/architect-v1/
 /generated/meshingress-html-client/v1.0/
-/generated/meshingress-java-client/
 /generated/meshingress-html-client/vendor/**
+/lib/meshingress-codeql-scope-sample/vendor/
 
-### Temporary Exclusions ###
-/packages/
-!/packages/
-/packages/*/
-!/packages/aegis/
-!/packages/aegis/**
-/packages/aegis/target/

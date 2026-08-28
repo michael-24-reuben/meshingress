@@ -1,0 +1,48 @@
+### Build & Target Artifacts ###
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+dist/
+node_modules/
+
+### Compiled Binaries ###
+*.class
+*.py[cod]
+__pycache__/
+
+### Python Virtual Envs ###
+venv/
+.venv/
+
+### Caches, DBs & Logs ###
+.cache/
+*.log
+*.mv.db
+*.db
+*.sqlite
+
+### IDE & Editor Metadata ###
+.idea/
+*.iws
+*.iml                                                                                                                                                                                                    
+*.ipr
+.vscode/
+.antigravity/
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+### Wrapper & Temp ###
+.mvn/wrapper/maven-wrapper.jar
+/temp/*.jar

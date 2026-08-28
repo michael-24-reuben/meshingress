@@ -49,6 +49,7 @@
         <module>toolspace/yt-dlp</module>
         <module>toolspace/youtube</module>
         <module>toolspace/x-open-ink-library</module>
+      <module>toolspace/nextcloud</module>
     </modules>
 
     <properties>
