@@ -452,10 +452,10 @@ public class ToolRegistrationService {
 
     private BundleSpec bundleFrom(ToolRegistrationBundleParams bundle) {
         if (bundle == null) {
-            return new BundleSpec("meshingress-tool-bundle");
+            return new BundleSpec("meshingress-tool-distribution");
         }
         String bundleId = firstText(bundle.bundleId(), bundle.artifactId());
-        return new BundleSpec(bundleId == null || bundleId.isBlank() ? "meshingress-tool-bundle" : bundleId);
+        return new BundleSpec(bundleId == null || bundleId.isBlank() ? "meshingress-tool-distribution" : bundleId);
     }
 
     private NativeSpec nativeFrom(ToolRegistrationNativeParams nativeTool, String toolId) {

@@ -155,7 +155,7 @@ public record MeshingressProperties(
             public Registration {
                 stagingConflictPolicy = stagingConflictPolicy == null ? StagingConflictPolicy.REPLACE_EXISTING : stagingConflictPolicy;
                 localJarRoot = defaultString(localJarRoot, "tools/lib");
-                bundlePomPath = defaultString(bundlePomPath, "app/meshingress-tool-bundle/pom.xml");
+                bundlePomPath = defaultString(bundlePomPath, "distribution/meshingress-tool-distribution/pom.xml");
             }
 
             static Registration defaults() {
@@ -172,7 +172,7 @@ public record MeshingressProperties(
                         false,
                         StagingConflictPolicy.REPLACE_EXISTING,
                         "tools/lib",
-                        "app/meshingress-tool-bundle/pom.xml",
+                        "distribution/meshingress-tool-distribution/pom.xml",
                         true,
                         true,
                         true

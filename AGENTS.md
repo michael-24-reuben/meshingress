@@ -17,7 +17,7 @@ High-level architecture (big picture)
   - `lib/meshingress-tool-api` contains the shared MCP tool SPI.
   - `toolspace/*` contains attachable tool modules, including `toolspace/helloworld`, `toolspace/instagram-api`, `toolspace/powershell-cli`, `toolspace/whatsapp-cobalt`, `toolspace/voicebox`, and `toolspace/webtoon-downloader`.
   - `app/meshingress-server` contains the Spring Boot application. Java 25 is used (see `pom.xml`).
-  - `app/meshingress-tool-bundle` aggregates tool module dependencies for server startup discovery.
+  - `distribution/meshingress-tool-distribution` aggregates tool module dependencies for server startup discovery; `app/meshingress-tool-bundle` is a compatibility bridge.
 - Two logical surfaces:
   - HTTP/REST internal API under `/api/v1/architect/*` (in `architect/` domain work; see `architect/README.md`).
   - MCP transport: a JSON-RPC 2.0 over HTTP endpoint at POST `/mcp` implemented by `mcp/McpController` and routed to `mcp/McpDispatcher`.
@@ -43,7 +43,7 @@ Key files to read first
 - `app/meshingress-server/src/main/java/dev/mrk/meshingress/mcp/McpWebSocketHandler.java` — WebSocket JSON-RPC handling.
 - `app/meshingress-server/src/main/java/dev/mrk/meshingress/controller/roles/RoleAuthorizationService.java` — role auth logic (X-Mcp-Role header, legacy X-Mcp-Admin header, or Bearer admin token).
 - `app/meshingress-server/src/main/resources/application.properties` — application properties; default name set.
-- `app/meshingress-tool-bundle/pom.xml` — tool dependency bundle attached by the server.
+- `distribution/meshingress-tool-distribution/pom.xml` — authoritative tool dependency distribution attached by the server.
 - `architect/README.md` — project-specific developer/agent conventions and task tracking (highly recommended).
 
 What to know about MCP (concrete patterns)
@@ -88,7 +88,7 @@ Where agents should edit to add a tool
 1. Create a module under `toolspace/<name>` that depends on `dev.mrk.meshingress:meshingress-tool-api`.
 2. Implement `McpToolHandler` and return a `McpToolDescriptor` from `descriptor()`.
 3. Expose the handler as a Spring bean. Prefer a module-local Boot auto-configuration file under `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
-4. Attach the module by adding it as a dependency of `app/meshingress-tool-bundle/pom.xml` (the server depends on this bundle).
+4. Attach the module by adding it as a dependency of `distribution/meshingress-tool-distribution/pom.xml` (the server depends on this distribution).
 5. Add MVC tests in `app/meshingress-server` that confirm `tools/list` and `tools/call` see the attached tool.
 
 Quick JSON-RPC examples

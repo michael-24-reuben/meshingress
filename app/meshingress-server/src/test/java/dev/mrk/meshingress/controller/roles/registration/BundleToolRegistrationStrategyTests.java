@@ -115,7 +115,7 @@ class BundleToolRegistrationStrategyTests {
                 ToolRegistrationPhase.BUNDLE,
                 new LocalJarSpec(jar.getFileName().toString(), sha256(jar), null),
                 coordinates,
-                new BundleSpec("meshingress-tool-bundle"),
+                new BundleSpec("meshingress-tool-distribution"),
                 null,
                 false
         );

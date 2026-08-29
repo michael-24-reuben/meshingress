@@ -1,0 +1,3 @@
+# Summary
+
+The tool dependency graph is explicit and non-circular, and the distribution is now canonical beyond Maven wiring. Tools import the BOM and depend on the starter; the distribution selects shipped tools; the server consumes it; and registration defaults, API examples, tests, docs, and snapshots now point to it. Only the legacy bundle artifact and root reactor entry retain the old name as a compatibility bridge. The server reactor packages successfully and its executable archive contains every selected tool. The full test baseline remains blocked by an unrelated existing API test assertion.

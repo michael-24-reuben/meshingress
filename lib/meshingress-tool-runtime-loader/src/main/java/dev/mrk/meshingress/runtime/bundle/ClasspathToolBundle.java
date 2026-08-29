@@ -23,7 +23,7 @@ public record ClasspathToolBundle(
 
     public static ClasspathToolBundle meshingressDefault(List<String> toolArtifacts) {
         return new ClasspathToolBundle(
-                "meshingress-tool-bundle",
+                "meshingress-tool-distribution",
                 toolArtifacts,
                 ToolLoadingStrategy.CLASSPATH_BUNDLE,
                 "Tools are resolved by Maven into a bundle dependency and discovered from the server classpath at startup."

@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>dev.mrk.meshingress</groupId>
-            <artifactId>meshingress-tool-bundle</artifactId>
+            <artifactId>meshingress-tool-distribution</artifactId>
             <version>${project.version}</version>
         </dependency>
 

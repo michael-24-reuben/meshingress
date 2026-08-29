@@ -21,6 +21,10 @@
     <modules>
         <module>packages/aegis</module>
 
+        <module>distribution/meshingress-tool-bom</module>
+        <module>distribution/meshingress-tool-starter</module>
+        <module>distribution/meshingress-tool-distribution</module>
+
         <module>app/meshingress-tool-bundle</module>
         <module>app/meshingress-server</module>
 

@@ -8,7 +8,7 @@ Meshingress is a Java/Spring Boot MCP tool server and runtime that discovers, re
 
 ```txt
 app/meshingress-server
-app/meshingress-tool-bundle
+distribution/meshingress-tool-distribution
 lib/meshingress-tool-api
 lib/meshingress-tool-annotations
 lib/meshingress-tool-framework
@@ -18,7 +18,7 @@ architect/
 ```
 
 - `app/meshingress-server` is the Spring Boot MCP server runtime.
-- `app/meshingress-tool-bundle` aggregates attachable tool modules for server startup discovery.
+- `distribution/meshingress-tool-distribution` aggregates attachable tool modules for server startup discovery. `app/meshingress-tool-bundle` remains a compatibility bridge.
 - `lib/meshingress-tool-api` contains the tool SPI (`McpToolHandler`, `DispatchExecutionResult`).
 - `lib/meshingress-tool-annotations` defines the tool annotation model.
 - `lib/meshingress-tool-framework` implements annotation scanning and dispatch wiring.
@@ -95,7 +95,7 @@ Run the server module from `app/meshingress-server` using Spring Boot/Maven once
    - `meshingress-tool-annotations`
    - `spring-boot-autoconfigure`
 4. Add the module to the root Maven `<modules>` list.
-5. Add the tool module as a dependency of `app/meshingress-tool-bundle/pom.xml` (the server depends on this bundle).
+5. Add the tool module as a dependency of `distribution/meshingress-tool-distribution/pom.xml` (the server depends on this distribution).
 6. Create a tool class with `@McpTool` and one or more `@McpFunction` methods.
 7. Add input records or function parameters.
 8. Declare least-privilege scopes with `@McpToolScopes`.

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-29-storage-provider-nodes-and-nextcloud-sdk-extraction",
+  "title": "Storage Provider Nodes and Nextcloud SDK Extraction",
+  "type": "architecture-design",
+  "status": "pending",
+  "priority": "high",
+  "createdAt": "2026-08-29T17:15:47-04:00",
+  "updatedAt": "2026-08-29T17:15:47-04:00",
+  "tags": ["architecture", "mcp-node", "service-provider", "storage", "nextcloud", "local-storage", "toolspace", "sdk", "scopes"],
+  "related": [
+    "2026-05-23-runtime-tool-creation-and-registry",
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-07-23-tool-owned-storage-transfer-model",
+    "2026-08-12-versioned-tool-workspace-delegation",
+    "2026-08-28-tool-distribution-modules"
+  ],
+  "origin": {
+    "kind": "design-discussion",
+    "reference": "temp/codex-session-01a04b49-ceb4-7211-b3b4-532489dd1c6c.md",
+    "rawReference": "codex-session-raw-01a04b49-ceb4-7211-b3b4-532489dd1c6c.md"
+  },
+  "events": [{
+    "at": "2026-08-29T17:15:47-04:00",
+    "kind": "created",
+    "summary": "Captured the storage-provider-node and Nextcloud SDK extraction design discussion. No implementation is authorized by this record."
+  }]
+}

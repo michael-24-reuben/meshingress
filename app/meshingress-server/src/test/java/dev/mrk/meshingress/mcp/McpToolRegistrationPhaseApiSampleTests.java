@@ -116,7 +116,7 @@ class McpToolRegistrationPhaseApiSampleTests {
                             "phase": "bundle",
                             "toolId": "helloworld.text",
                             "bundle": {
-                              "bundleId": "meshingress-tool-bundle"
+                              "bundleId": "meshingress-tool-distribution"
                             }
                           }
                         }

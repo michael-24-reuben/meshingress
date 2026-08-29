@@ -16,6 +16,18 @@
   <name>yt-dlp</name>
   <description>YouTube Downloader (yt-dlp) is a command-line program to download videos from YouTube and other sites.</description>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>dev.mrk.meshingress</groupId>
+        <artifactId>meshingress-tool-bom</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <properties>
     <maven.compiler.source>25</maven.compiler.source>
     <maven.compiler.target>25</maven.compiler.target>
@@ -25,13 +37,7 @@
   <dependencies>
     <dependency>
       <groupId>dev.mrk.meshingress</groupId>
-      <artifactId>meshingress-tool-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>dev.mrk.meshingress</groupId>
-      <artifactId>meshingress-tool-annotations</artifactId>
-      <version>${project.version}</version>
+      <artifactId>meshingress-tool-starter</artifactId>
     </dependency>
     <dependency>
       <groupId>dev.mrk.meshingress</groupId>
@@ -39,17 +45,8 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>dev.mrk.meshingress</groupId>
-      <artifactId>meshingress-tool-api-manifest</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
   </dependencies>
 </project>

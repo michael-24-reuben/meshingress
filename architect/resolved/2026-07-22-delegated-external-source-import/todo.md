@@ -13,4 +13,4 @@
 - [x] Invoke one small valid `toonverse.download-book` range through MCP and verify a terminal JSON-RPC result contains a Nextcloud request/workspace identifier.
 - [x] Poll the returned identifier to `COMPLETED` or an explicit retryable `FAILED` result; verify the final manifest has non-zero byte sizes and viewer-safe MIME metadata.
 - [x] Replace protected Nextcloud DAV links with a bounded, viewer-safe stream capability that does not copy the workspace.
-- [ ] Add a retained retry/status contract only after the current adapter is proven to produce a durable identifier on both success and failure.
+- [x] ~~Add a retained retry/status contract only after the current adapter is proven to produce a durable identifier on both success and failure.~~ *(Superseded: Retained retry and status contract was moved to destination-owned database tables in Nextcloud `2026-07-23-nextcloud-delegated-worker` and reconciled in `2026-07-23-tool-owned-storage-transfer-model`)*

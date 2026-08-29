@@ -37,6 +37,9 @@ public class HelloWorldTool {
                 .error(false)
                 .build();
     }
+    /*
+    * - @McpCallContext(services={@McpCallContext.Service(type=ToolStorageService.class, oneof={classes})})
+    * */
 
     @McpConfigureMapping(timeoutMs = 20_000)
     @McpFunction(value = "greetings", description = "Greet a person with optional tone, context, and presentation details.")

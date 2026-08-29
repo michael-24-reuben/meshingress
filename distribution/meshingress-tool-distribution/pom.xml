@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>dev.mrk.meshingress</groupId>
+        <artifactId>meshingress</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>meshingress-tool-distribution</artifactId>
+    <name>meshingress-tool-distribution</name>
+    <description>Shipped Meshingress tool inventory for server startup discovery</description>
+
+    <repositories>
+        <repository>
+            <id>meshingress-artifacts</id>
+            <url>file:${maven.multiModuleProjectDirectory}/repository/artifacts</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.mrk.toolspace</groupId>
+            <artifactId>helloworld</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.toolspace</groupId>
+            <artifactId>powershell-cli</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.toolspace.openinklibrary</groupId>
+            <artifactId>x-open-ink-library</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.toolspace.transform</groupId>
+            <artifactId>x-transform</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.toolspace.ytdlp</groupId>
+            <artifactId>yt-dlp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.toolspace.youtube</groupId>
+            <artifactId>youtube</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

@@ -12,55 +12,12 @@
 
     <artifactId>meshingress-tool-bundle</artifactId>
     <name>meshingress-tool-bundle</name>
-    <description>Classpath tool dependency bundle for Meshingress server startup discovery</description>
-
-    <repositories>
-        <repository>
-            <id>meshingress-artifacts</id>
-            <url>file:${maven.multiModuleProjectDirectory}/repository/artifacts</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
+    <description>Compatibility bridge to the Meshingress shipped-tool distribution</description>
 
     <dependencies>
         <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>helloworld</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace</groupId>
-            <artifactId>powershell-cli</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace.openinklibrary</groupId>
-            <artifactId>x-open-ink-library</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace.transform</groupId>
-            <artifactId>x-transform</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace.ytdlp</groupId>
-            <artifactId>yt-dlp</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.mrk.toolspace.youtube</groupId>
-            <artifactId>youtube</artifactId>
+            <groupId>dev.mrk.meshingress</groupId>
+            <artifactId>meshingress-tool-distribution</artifactId>
             <version>${project.version}</version>
         </dependency>
 

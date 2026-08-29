@@ -1,10 +1,11 @@
 {
   "id": "2026-07-23-nextcloud-delegated-worker",
   "title": "Nextcloud Delegated Worker",
-  "status": "active",
+  "status": "resolved",
   "createdAt": "2026-07-23T08:30:00-04:00",
   "activatedAt": "2026-07-23T08:30:00-04:00",
-  "updatedAt": "2026-07-23T11:06:00-04:00",
+  "resolvedAt": "2026-08-29T03:18:00-04:00",
+  "updatedAt": "2026-08-29T03:18:00-04:00",
   "tags": ["nextcloud", "storage", "worker", "delegated-source", "migration"],
   "related": ["2026-07-23-nextcloud-streaming-ingest-remodel", "2026-07-22-delegated-external-source-import"],
   "events": [
@@ -27,6 +28,11 @@
       "at": "2026-07-23T11:06:00-04:00",
       "type": "LIVE_DELEGATION_MONITORED",
       "note": "Updated and ran the WebSocket caller against the current deployment. A four-chapter, 100-page Toonverse workspace progressed QUEUED (attempt 2) to COMPLETED after reconnect-safe status monitoring. The fresh app source was pushed but not deployed."
+    },
+    {
+      "at": "2026-08-29T03:18:00-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved on development. The fresh Nextcloud delegated-worker app, database schema, lease management, per-source retry isolation, and end-to-end delegated execution are verified and working as intended."
     }
   ]
 }

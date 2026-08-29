@@ -3,11 +3,12 @@
   "id": "2026-07-22-delegated-external-source-import",
   "title": "Delegated External Source-Import Lifecycle",
   "type": "feature-implementation",
-  "status": "active",
+  "status": "resolved",
   "priority": "high",
   "createdAt": "2026-07-22T01:03:35-04:00",
   "activatedAt": "2026-07-22T01:03:35-04:00",
-  "updatedAt": "2026-07-23T21:46:22-04:00",
+  "resolvedAt": "2026-08-29T03:12:00-04:00",
+  "updatedAt": "2026-08-29T03:12:00-04:00",
   "tags": ["storage", "nextcloud", "delegated-external", "source-import", "toonverse"],
   "related": ["2026-07-21-nextcloud-source-import-workflow"],
   "origin": {
@@ -64,6 +65,11 @@
       "at": "2026-07-23T21:46:22-04:00",
       "type": "TRANSFER_MODEL_RECONCILED",
       "note": "Shared storage refactor superseded delegated-external as a lifecycle: new callers request DELEGATED_SOURCE_URLS and use meshingress.storage.external.delegated-target. The destination-owned import status remains unchanged."
+    },
+    {
+      "at": "2026-08-29T03:12:00-04:00",
+      "type": "RESOLVED",
+      "note": "Resolved on development. Core Java tool storage SPI, Nextcloud reservation/sealing flow, Toonverse URL delegation, and viewer capability were delivered and verified. Remaining retry/status retention tasks were superseded by destination-owned database tables in 2026-07-23-nextcloud-delegated-worker and 2026-07-23-tool-owned-storage-transfer-model."
     }
   ]
 }

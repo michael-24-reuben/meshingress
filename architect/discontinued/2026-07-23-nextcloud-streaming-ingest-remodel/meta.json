@@ -1,12 +1,13 @@
 {
   "id": "2026-07-23-nextcloud-streaming-ingest-remodel",
   "title": "Nextcloud Streaming Ingest Remodel",
-  "status": "active",
+  "status": "discontinued",
   "createdAt": "2026-07-23T01:37:59-04:00",
   "activatedAt": "2026-07-23T02:10:00-04:00",
-  "updatedAt": "2026-07-23T21:46:22-04:00",
-  "tags": ["storage", "nextcloud", "design", "investigation", "needs-user-decision"],
-  "related": ["2026-07-22-delegated-external-source-import", "2026-07-21-nextcloud-source-import-workflow"],
+  "discontinuedAt": "2026-08-29T03:52:00-04:00",
+  "updatedAt": "2026-08-29T03:52:00-04:00",
+  "tags": ["storage", "nextcloud", "design", "investigation", "discontinued"],
+  "related": ["2026-07-22-delegated-external-source-import", "2026-07-21-nextcloud-source-import-workflow", "2026-07-23-nextcloud-delegated-worker"],
   "sourceReports": ["nextcloud-streaming-ingest-2026-07-23-013759"],
   "events": [
     {
@@ -28,6 +29,11 @@
       "at": "2026-07-23T21:46:22-04:00",
       "type": "TRANSFER_MODEL_RECONCILED",
       "note": "Streaming-ingest follow-up is now explicitly a delegated-source destination concern and cannot be paired with Meshingress queued publication."
+    },
+    {
+      "at": "2026-08-29T03:52:00-04:00",
+      "type": "DISCONTINUED",
+      "note": "Discontinued on development in favor of the dedicated Nextcloud delegated worker integration (2026-07-23-nextcloud-delegated-worker) which was verified and resolved."
     }
   ]
 }

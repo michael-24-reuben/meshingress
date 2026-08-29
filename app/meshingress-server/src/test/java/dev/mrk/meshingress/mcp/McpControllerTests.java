@@ -301,7 +301,7 @@ class McpControllerTests {
                                     "phase": "bundle",
                                     "toolId": "helloworld.greeting.greet",
                                     "bundle": {
-                                      "bundleId": "meshingress-tool-bundle"
+                                      "bundleId": "meshingress-tool-distribution"
                                     }
                                   }
                                 }

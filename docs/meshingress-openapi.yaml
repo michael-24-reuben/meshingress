@@ -2052,8 +2052,8 @@ components:
       properties:
         bundleId:
           type: string
-          description: Bundle identifier that contains the tool.
-          example: meshingress-tool-bundle
+          description: Distribution identifier that contains the tool.
+          example: meshingress-tool-distribution
         artifactId:
           type: string
           description: Artifact id inside the bundle.
@@ -2653,24 +2653,9 @@ components:
           type: boolean
         number:
           type: boolean
-        string:
+        missingNode:
           type: boolean
-        double:
-          type: boolean
-        binary:
-          type: boolean
-        boolean:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        short:
-          type: boolean
-        long:
-          type: boolean
-        int:
-          type: boolean
-        pojo:
+        container:
           type: boolean
         nodeType:
           type: string
@@ -2684,19 +2669,34 @@ components:
           - OBJECT
           - POJO
           - STRING
+        bigInteger:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
         integralNumber:
           type: boolean
         bigDecimal:
           type: boolean
         valueNode:
           type: boolean
-        bigInteger:
+        long:
           type: boolean
-        container:
+        boolean:
           type: boolean
-        floatingPointNumber:
+        double:
           type: boolean
-        missingNode:
+        int:
+          type: boolean
+        short:
+          type: boolean
+        pojo:
+          type: boolean
+        textual:
+          type: boolean
+          deprecated: true
+        binary:
+          type: boolean
+        string:
           type: boolean
         embeddedValue:
           type: boolean

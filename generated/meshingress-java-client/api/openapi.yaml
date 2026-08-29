@@ -1492,8 +1492,8 @@ components:
       description: Bundle-backed tool registration source.
       properties:
         bundleId:
-          description: Bundle identifier that contains the tool.
-          example: meshingress-tool-bundle
+          description: Distribution identifier that contains the tool.
+          example: meshingress-tool-distribution
           type: string
         artifactId:
           description: Artifact id inside the bundle.

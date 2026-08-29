@@ -186,7 +186,7 @@ class McpCacheManagerTests {
         return new McpCallContext(authorization, "admin", sessionId, "request-id");
     }
 
-    @McpTool("cache.counter")
+    @McpTool("cache-counter")
     static class CounterTool {
         int calls;
 
@@ -197,7 +197,7 @@ class McpCacheManagerTests {
         }
     }
 
-    @McpTool("cache.expiring")
+    @McpTool("cache-expiring")
     static class ExpiringTool {
         int calls;
 
@@ -208,7 +208,7 @@ class McpCacheManagerTests {
         }
     }
 
-    @McpTool("cache.exclude")
+    @McpTool("cache-exclude")
     static class ExcludeArgumentTool {
         int calls;
 
@@ -222,7 +222,7 @@ class McpCacheManagerTests {
         }
     }
 
-    @McpTool("cache.principal")
+    @McpTool("cache-principal")
     static class PrincipalTool {
         int calls;
 
@@ -233,7 +233,7 @@ class McpCacheManagerTests {
         }
     }
 
-    @McpTool("cache.error")
+    @McpTool("cache-error")
     static class ErrorTool {
         int calls;
 
@@ -245,7 +245,7 @@ class McpCacheManagerTests {
         }
     }
 
-    @McpTool("cache.empty")
+    @McpTool("cache-empty")
     static class EmptyTool {
         int calls;
 

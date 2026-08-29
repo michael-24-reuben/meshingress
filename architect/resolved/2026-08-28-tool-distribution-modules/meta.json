@@ -1,0 +1,44 @@
+{
+  "id": "2026-08-28-tool-distribution-modules",
+  "title": "Tool Distribution Modules",
+  "status": "resolved",
+  "createdAt": "2026-08-28T19:50:42-04:00",
+  "activatedAt": "2026-08-28T19:50:42-04:00",
+  "resolvedAt": "2026-08-28T20:24:53-04:00",
+  "archivedAt": null,
+  "updatedAt": "2026-08-28T20:24:53-04:00",
+  "tags": ["meshingress", "maven", "build", "tool-modules", "dependency-tracking", "distribution", "refactor"],
+  "related": ["2026-05-27-server-side-tool-registration-phases", "2026-07-14-tool-provisioning-module"],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "Create separate Maven BOM, tool starter, and distribution modules so shared tool dependencies and shipped-tool tracking remain one-way and non-circular."
+  },
+  "events": [
+    {
+      "at": "2026-08-28T19:50:42-04:00",
+      "type": "CREATED",
+      "note": "Created and activated before Maven implementation at user direction."
+    },
+    {
+      "at": "2026-08-28T19:59:47-04:00",
+      "type": "RESOLVED",
+      "note": "Added the directed BOM, starter, and JAR distribution structure; server-reactor packaging and executable archive inspection passed."
+    },
+    {
+      "at": "2026-08-28T20:01:44-04:00",
+      "type": "VERIFICATION_COMPLETED",
+      "note": "Focused packaging of the retained legacy bundle bridge and all of its transitive tools passed."
+    },
+    {
+      "at": "2026-08-28T20:18:18-04:00",
+      "type": "REOPENED",
+      "note": "Reopened after a complete usage inventory showed that runtime defaults, registration API examples, tests, and contributor documentation still named the compatibility bridge as canonical."
+    },
+    {
+      "at": "2026-08-28T20:24:53-04:00",
+      "type": "RESOLVED",
+      "note": "Migrated every non-bridge legacy-bundle reference to the distribution identifier or POM path; package and targeted evidence completed."
+    }
+  ]
+}
