@@ -9,6 +9,7 @@
     "launch": "node scripts/launcher.js",
     "clean": "node scripts/launcher.js --clean-only",
     "lint": "oxlint",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "vitest": "^4.0.18"
   }
 }

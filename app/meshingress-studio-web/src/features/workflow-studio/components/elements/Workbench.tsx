@@ -174,13 +174,7 @@ const TabPane = memo(function TabPane({
           id={activeTab ? `tabpanel-${activeTab.tabKey}` : undefined}
           role="tabpanel"
         >
-          {activeTab ? (
-            activeTab.content(attributes)
-          ) : (
-            <div className="canvas-empty">
-              <span>No workflow tab is open.</span>
-            </div>
-          )}
+          {activeTab.content(attributes)}
         </div>
       ) : (
         <div aria-label="No workflow tab is open" className="canvas-tabpanel" id="canvas-tabpanel-empty" role="tabpanel">

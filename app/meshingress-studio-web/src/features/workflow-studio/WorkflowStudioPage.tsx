@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { listMcpTools, type McpToolFunction } from '../../api/mcp'
-import { validateNativeLogin } from '../../api/auth'
-import { setStudioAccessToken } from '../../api/client'
-import { readGoogleIdentity } from '../../auth/google-identity'
-import { RuntimeConfiguration } from '../../runtime/RuntimeConfiguration'
-import { listToolModules, type ToolModuleSummary } from '../../api/tool-modules'
-import { runWorkflowHttp, runWorkflowLive, WorkflowLiveTransportError, type WorkflowNodeOutcome, type WorkflowNodeResult } from '../../api/workflow'
+import { listMcpTools, type McpToolFunction } from '@/api/mcp.js'
+import { validateNativeLogin } from '@/api/auth.js'
+import { setStudioAccessToken } from '@/api/client.js'
+import { readGoogleIdentity } from '@/auth/google-identity.js'
+import { RuntimeConfiguration } from '@/runtime/RuntimeConfiguration.js'
+import { listToolModules, type ToolModuleSummary } from '@/api/tool-modules.js'
+import { runWorkflowHttp, runWorkflowLive, WorkflowLiveTransportError, type WorkflowNodeOutcome, type WorkflowNodeResult } from '@/api/workflow.js'
 import { initialEdges, initialNodes, workflowName } from './compilation/sample-workflow'
 import { workflowDefinition } from './compilation/definition'
 import { createToolPresentationIndex } from './node-presentation'
@@ -23,7 +23,7 @@ import { Workbench } from './components/elements/Workbench'
 import { getPanelContentKind, getPanelForContentKind, getSurfaceContentKinds, type PanelSurface, type PanelViewContentKind, type PanelViewSetContentParams, type StudioPanel } from './components/panel-catalog'
 import type { DrawerPanelViewContentKind, DrawerPanelViewContentParams, LeftPanelViewContentKind, LeftPanelViewContentParams, LogEntry, NodeRunState, RegisteredTool, RightPanelViewContentKind, RightPanelViewContentParams, RuntimeTrace, WorkflowNode, WorkflowRunResult } from './types'
 import { createLogEntry, DEFAULT_STUDIO_PROPERTIES } from './types'
-import { generateUuid } from '../../utils/uuid'
+import { generateUuid } from '@/utils/uuid.js'
 import { chooseLocalDirectory, chooseLocalWorkspaceParent, chooseStoredDirectory, createLocalWorkspaceProject, hasStoredDirectoryHandle, indexWorkspaceBackground, readRecentWorkspaceEntries, readStoredDirectory, storeDirectoryHandle, upsertRecentEntry, writeRecentWorkspaceEntries, type DirectorySelection, type LocalWorkspace, type LocalWorkspaceNode, type RecentWorkspaceEntry } from './storage/local-workspace'
 import './workflow-studio.css'
 import { StudioDrawerPanel } from './components/StudioDrawerPanel'
@@ -438,6 +438,7 @@ export function WorkflowStudioPage() {
       y: position.y,
       arguments: {},
       annotations: { audit: false, timeoutMs: tool.annotations?.timeoutMs, scopes: tool.annotations?.scopes ?? [] },
+      capabilities: { acceptsInput: true, acceptsOutput: true },
     }
     setNodes((current) => [...current, node])
     setSelectedNodeId(nodeId)
@@ -899,7 +900,7 @@ export function WorkflowStudioPage() {
           />
         }
 
-        <main className={`center${isDrawerVisible ? '' : ' drawer-hidden'}`} style={{ '--drawer-height': `${drawerHeight}%` } as CSSProperties}>
+        <main className={`center${isDrawerVisible ? '' : ' drawer-hidden'}`} style={{ '--drawer-height': isDrawerVisible ? `${drawerHeight}%` : '0px' } as CSSProperties}>
           <div className="canvas-panel">
             <Workbench
               edges={edges}

@@ -1831,6 +1831,14 @@ components:
             for each tool.
           example:
             name: Meshingress
+        requirements:
+          type: object
+          additionalProperties: {}
+          description: Provider-specific client input keyed by a function requirement
+            key. Each requirement input schema is supplied by tools/list.
+          example:
+            example.storage:
+              workspace: exports
       required:
       - name
     McpToolsCallRequest:
@@ -2651,11 +2659,19 @@ components:
           type: boolean
         float:
           type: boolean
-        number:
+        string:
+          type: boolean
+        valueNode:
+          type: boolean
+        bigDecimal:
           type: boolean
         missingNode:
           type: boolean
-        container:
+        floatingPointNumber:
+          type: boolean
+        integralNumber:
+          type: boolean
+        bigInteger:
           type: boolean
         nodeType:
           type: string
@@ -2669,34 +2685,26 @@ components:
           - OBJECT
           - POJO
           - STRING
-        bigInteger:
+        container:
           type: boolean
-        floatingPointNumber:
-          type: boolean
-        integralNumber:
-          type: boolean
-        bigDecimal:
-          type: boolean
-        valueNode:
-          type: boolean
-        long:
-          type: boolean
-        boolean:
-          type: boolean
-        double:
-          type: boolean
-        int:
+        pojo:
           type: boolean
         short:
           type: boolean
-        pojo:
+        number:
+          type: boolean
+        binary:
+          type: boolean
+        double:
           type: boolean
         textual:
           type: boolean
           deprecated: true
-        binary:
+        long:
           type: boolean
-        string:
+        int:
+          type: boolean
+        boolean:
           type: boolean
         embeddedValue:
           type: boolean

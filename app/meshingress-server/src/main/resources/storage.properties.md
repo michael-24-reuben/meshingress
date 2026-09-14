@@ -1,3 +1,11 @@
+# Historical `storage.properties` reference
+
+> This file records superseded native-storage design work; it is not an active
+> application configuration reference. Nextcloud provider settings now belong
+> to `toolspace/nextcloud` under `meshingress.toolspace.nextcloud.storage.*`.
+> Local-provider settings remain temporarily native only until the planned
+> `toolspace/local-storage` extraction removes them as well.
+
 ### Previous `storage.properties` reference
 
 ```properties

@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-29-storage-provider-nodes-and-nextcloud-sdk-extraction",
+  "title": "Storage Provider Nodes and Nextcloud SDK Extraction",
+  "type": "architecture-design",
+  "status": "active",
+  "priority": "high",
+  "createdAt": "2026-08-29T17:15:47-04:00",
+  "activatedAt": "2026-08-29T18:02:26-04:00",
+  "updatedAt": "2026-08-31T12:23:19-04:00",
+  "tags": ["architecture", "mcp-service", "service-provider", "storage", "nextcloud", "local-storage", "toolspace", "sdk", "scopes"],
+  "related": [
+    "2026-05-23-runtime-tool-creation-and-registry",
+    "2026-05-27-meshingress-repository-artifact-implementation",
+    "2026-07-23-tool-owned-storage-transfer-model",
+    "2026-08-12-versioned-tool-workspace-delegation",
+    "2026-08-28-tool-distribution-modules"
+  ],
+  "origin": {
+    "kind": "design-discussion",
+    "reference": "temp/codex-session-01a04b49-ceb4-7211-b3b4-532489dd1c6c.md",
+    "rawReference": "codex-session-raw-01a04b49-ceb4-7211-b3b4-532489dd1c6c.md"
+  },
+  "events": [{
+    "at": "2026-08-29T17:15:47-04:00",
+    "kind": "created",
+    "summary": "Captured the storage-provider-node and Nextcloud SDK extraction design discussion. No implementation is authorized by this record."
+  }, {
+    "at": "2026-08-29T18:02:26-04:00",
+    "kind": "MOVED_TO_ACTIVE",
+    "summary": "User authorized implementation of the provider-node resolution on development."
+  }, {
+    "at": "2026-08-30T01:31:11-04:00",
+    "kind": "UPDATED",
+    "summary": "Retired the provisional McpNode grammar in favor of separate McpTool and McpService configuration; next slice is direct typed-service injection."
+  }, {
+    "at": "2026-08-30T01:40:22-04:00",
+    "kind": "UPDATED",
+    "summary": "Completed direct typed-service parameter injection and deterministic oneOf selection with focused scanner, registry, and invocation tests."
+  }, {
+    "at": "2026-08-30T01:46:57-04:00",
+    "kind": "UPDATED",
+    "summary": "Added separate services/list discovery metadata and verified dispatch registration without exposing provider instances."
+  }, {
+    "at": "2026-08-30T02:13:30-04:00",
+    "kind": "UPDATED",
+    "summary": "Verified the SDK adapter and provider-module migration boundary: Nextcloud uses the SDK client only inside toolspace, custom delegated OCS behavior remains a narrow provider-private adapter, and local storage has a separate module destination."
+  }, {
+    "at": "2026-08-30T02:44:08-04:00",
+    "kind": "UPDATED",
+    "summary": "Extracted and distributed the Nextcloud provider module, removed native Nextcloud routing/configuration, verified services/list discovery, and preserved publication-status through provider-aware fallback without restoring ToolStorageRouter."
+  }, {
+    "at": "2026-08-30T03:04:23-04:00",
+    "kind": "UPDATED",
+    "summary": "Extracted and distributed local workspace storage, removed native storage implementation and application property values, and made publication-status query registered providers. The remaining cleanup is migration of the legacy core storage binding DTO into the local module."
+  }, {
+    "at": "2026-08-30T12:59:03-04:00",
+    "kind": "UPDATED",
+    "summary": "Added the generated tools-and-services documentation snapshot from public registry descriptors without serializing provider instances or credentials."
+  }, {
+    "at": "2026-08-30T13:28:01-04:00",
+    "kind": "UPDATED",
+    "summary": "Separated provider declaration from tool-function injection: McpService is class-only and McpFunctionService now marks typed function parameters."
+  }, {
+    "at": "2026-08-30T13:45:11-04:00",
+    "kind": "UPDATED",
+    "summary": "Added named display metadata to McpFunctionService and published it in function requirement discovery metadata."
+  }, {
+    "at": "2026-08-30T13:50:31-04:00",
+    "kind": "UPDATED",
+    "summary": "Made McpFunctionService type optional by deriving its capability contract from the annotated function parameter when omitted."
+  }, {
+    "at": "2026-08-30T14:54:02-04:00",
+    "kind": "UPDATED",
+    "summary": "Added the common service lifecycle, typed function-service client input schemas, and init/stop invocation bridging."
+  }, {
+    "at": "2026-08-30T15:55:20-04:00",
+    "kind": "UPDATED",
+    "summary": "Corrected lifecycle input ownership: provider schemas now publish under requirement metadata and client values travel through tools/call params.requirements, separate from tool arguments."
+  }, {
+    "at": "2026-08-30T16:03:14-04:00",
+    "kind": "UPDATED",
+    "summary": "Changed public tool requirement metadata from an array to a key-addressed object, keyed by the declared requirement key."
+  }, {
+    "at": "2026-08-30T16:05:12-04:00",
+    "kind": "VERIFIED",
+    "summary": "Passed the focused requirement discovery and lifecycle suite after the key-addressed metadata change."
+  }, {
+    "at": "2026-08-31T09:59:01-04:00",
+    "kind": "UPDATED",
+    "summary": "Moved the residual core storage binding DTO into toolspace/local-storage as LocalStorageProperties, removed core provider configuration ownership, and verified focused module and server binding tests."
+  }, {
+    "at": "2026-08-31T12:23:19-04:00",
+    "kind": "UPDATED",
+    "summary": "Replaced the opaque service lifecycle input bridge with optional concrete typed init methods scanned and bound like normal tool methods; focused lifecycle and discovery tests passed."
+  }]
+}

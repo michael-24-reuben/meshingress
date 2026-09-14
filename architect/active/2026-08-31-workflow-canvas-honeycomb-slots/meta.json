@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-31-workflow-canvas-honeycomb-slots",
+  "title": "Workflow Canvas Honeycomb Slots",
+  "type": "architecture-design",
+  "status": "active",
+  "priority": "normal",
+  "createdAt": "2026-08-31T21:32:34-04:00",
+  "activatedAt": "2026-08-31T21:32:34-04:00",
+  "updatedAt": "2026-09-05T11:14:19-04:00",
+  "tags": ["frontend", "ui", "workflow", "canvas", "design", "future"],
+  "related": ["2026-08-04-workflow-canvas-pan-state-race", "2026-09-02-workflow-canvas-port-routing"],
+  "origin": {
+    "kind": "design-discussion",
+    "reference": "Current Codex conversation"
+  },
+  "events": [
+    {
+      "at": "2026-08-31T21:32:34-04:00",
+      "kind": "created",
+      "summary": "Captured the user-directed exploratory honeycomb-slot WorkflowCanvas design. No canvas implementation is authorized by this record."
+    },
+    {
+      "at": "2026-08-31T21:32:34-04:00",
+      "kind": "MOVED_TO_ACTIVE",
+      "summary": "Activated as the ongoing design ledger while the interaction model and inspiration prototype are developed."
+    },
+    {
+      "at": "2026-08-31T21:38:54-04:00",
+      "kind": "UPDATED",
+      "summary": "Confirmed Workbench as the sole future integration seam: a prop-compatible honeycomb canvas will replace the existing WorkflowCanvas element without duplicating workflow state or callbacks."
+    },
+    {
+      "at": "2026-08-31T22:05:25-04:00",
+      "kind": "UPDATED",
+      "summary": "Added an isolated, query-selectable honeycomb prototype backed by the real sample workflow shape; production Workbench and production canvas remain unchanged."
+    },
+    {
+      "at": "2026-08-31T22:07:01-04:00",
+      "kind": "VERIFIED",
+      "summary": "Confirmed the local honeycomb preview renders the slot lattice and three sample nodes; a slot selection applies its selected state and the browser reported no console errors."
+    },
+    {
+      "at": "2026-08-31T22:12:52-04:00",
+      "kind": "UPDATED",
+      "summary": "Changed the prototype node from a rounded rectangle to an inset hexagon and reduced its unframed image from 45px to 38px."
+    },
+    {
+      "at": "2026-08-31T22:16:27-04:00",
+      "kind": "UPDATED",
+      "summary": "Expanded the active todo into explicit objective-and-acceptance checkpoints for every documented slot, node, drag, path, and canvas state."
+    },
+    {
+      "at": "2026-08-31T22:19:45-04:00",
+      "kind": "UPDATED",
+      "summary": "Set both slot and node hex perimeters to 4px, preserving a separate 4px slot-to-node gap."
+    },
+    {
+      "at": "2026-09-01T06:24:06-04:00",
+      "kind": "UPDATED",
+      "summary": "Replaced the CSS-clipped slot boundary layers with one SVG polygon per slot, preserving the 4px perimeter and CSS hover/selection treatments."
+    },
+    {
+      "at": "2026-09-01T06:29:31-04:00",
+      "kind": "UPDATED",
+      "summary": "Added hexagonal clipping layers for slot and node content; the node now keeps its article semantics with an SVG outline as its first child."
+    },
+    {
+      "at": "2026-09-01T06:31:02-04:00",
+      "kind": "VERIFIED",
+      "summary": "Verified the local preview exposes 35 slot boundaries, three node boundaries, and matching hex clip containers without browser console errors."
+    },
+    {
+      "at": "2026-09-01T06:47:19-04:00",
+      "kind": "UPDATED",
+      "summary": "Corrected node centering to the 4px slot inset and layered the clipped fill beneath a single visible SVG perimeter."
+    },
+    {
+      "at": "2026-09-01T07:38:12-04:00",
+      "kind": "UPDATED",
+      "summary": "Reworked the live 18px node inset as centered regular-hex geometry, separated grid gap terminology, and made the prototype slot markup valid within its button."
+    },
+    {
+      "at": "2026-09-01T07:39:38-04:00",
+      "kind": "VERIFIED",
+      "summary": "Verified regular node geometry in the local preview and passed Studio build and lint; lint reports only pre-existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-01T08:01:39-04:00",
+      "kind": "UPDATED",
+      "summary": "Moved prototype geometry authority to CSS custom properties, deriving slot height from side length and having TypeScript read resolved values for axial layout and SVG geometry."
+    },
+    {
+      "at": "2026-09-01T08:04:04-04:00",
+      "kind": "UPDATED",
+      "summary": "Adjusted the CSS-to-TypeScript geometry bridge to use a hidden probe's resolved dimensions because direct custom-property reads retain calc tokens in the browser."
+    },
+    {
+      "at": "2026-09-01T08:05:02-04:00",
+      "kind": "VERIFIED",
+      "summary": "Verified the CSS-owned geometry chain resolves correctly in the local preview; all 35 slots render and the browser reports no console errors."
+    },
+    {
+      "at": "2026-09-01T13:46:46-04:00",
+      "kind": "UPDATED",
+      "summary": "Added each workflow node ID to the top-right end of the node flat edge as a secondary visual identifier."
+    },
+    {
+      "at": "2026-09-01T13:48:39-04:00",
+      "kind": "VERIFIED",
+      "summary": "Verified the node ID labels render at the intended top-right placement in the local preview with no browser console errors."
+    },
+    {
+      "at": "2026-09-01T14:14:33-04:00",
+      "kind": "UPDATED",
+      "summary": "Added a test-page-only r-005 placeholder in the upper axial slot between r-001 and r-002, leaving shared sample workflow data unchanged."
+    },
+    {
+      "at": "2026-09-01T14:15:43-04:00",
+      "kind": "VERIFIED",
+      "summary": "Verified r-005 renders in axial slot q:1,r:0 between r-001 and r-002 with no browser console errors."
+    },
+    {
+      "at": "2026-09-01T16:47:17-04:00",
+      "kind": "UPDATED",
+      "summary": "Recorded the next slot visual grammar: a non-interactive outer SVG hexagon supplies sharp, dashed, muted, transparent gridlines around the interactive slot button."
+    },
+    {
+      "at": "2026-09-01T16:50:57-04:00",
+      "kind": "VERIFIED",
+      "summary": "Implemented the passive outer gridline frame in the prototype and verified all 35 gridlines are transparent, dashed, mitered, pointer-inert SVG polygons while slot selection remains clickable."
+    },
+    {
+      "at": "2026-09-01T16:57:49-04:00",
+      "kind": "VERIFIED",
+      "summary": "Changed the layout to a gapless logical honeycomb: each frame is inset 4px with a 1px passive perimeter, while its node remains separately inset by a further 4px with a 4px perimeter."
+    },
+    {
+      "at": "2026-09-01T17:07:24-04:00",
+      "kind": "UPDATED",
+      "summary": "Reverted the outer slot-frame experiment at the user's direction. The prototype returns to its pre-frame interactive slot boundary as the clean baseline for a new approach."
+    },
+    {
+      "at": "2026-09-02T11:14:21-04:00",
+      "kind": "UPDATED",
+      "summary": "Reintroduced the frame with separated axial placement: the existing slot dimensions are the outer frame, grid gap is the regular inner-slot inset, and the node derives from that inner slot."
+    },
+    {
+      "at": "2026-09-02T11:23:28-04:00",
+      "kind": "UPDATED",
+      "summary": "Changed the passive outer slot-frame perimeter from dashed to solid at the user's direction."
+    },
+    {
+      "at": "2026-09-02T11:37:55-04:00",
+      "kind": "UPDATED",
+      "summary": "Made the frame the CSS geometry root. Its standard side, width, and height drive axial placement and the frame SVG; the slot side is now calculated from the frame side and slot inset."
+    },
+    {
+      "at": "2026-09-02T14:15:24-04:00",
+      "kind": "UPDATED",
+      "summary": "Added a session-resume handoff with the live frame hierarchy, verification boundary, worktree safety constraints, and immediate visual-QA step."
+    },
+    {
+      "at": "2026-09-02T14:27:29-04:00",
+      "kind": "UPDATED",
+      "summary": "Recorded connection ports as the proposed semantic and visual edge-attachment model; their geometric anchor coordinates will support shortest compatible path routing."
+    },
+    {
+      "at": "2026-09-02T14:58:31-04:00",
+      "kind": "UPDATED",
+      "summary": "Refined the edge-attachment model: fixed lattice anchors, one at every logical cell edge midpoint and corner, remain independent of shrinkable visual frames; node ports bind semantic capabilities to those anchors."
+    },
+    {
+      "at": "2026-09-02T15:16:33-04:00",
+      "kind": "UPDATED",
+      "summary": "Corrected the port model: each slot owns six dedicated side ports at fixed nominal-frame coordinates. Neighboring ports intentionally stack at shared positions; close-up presentation may fan and curve their paths without changing logical endpoints."
+    },
+    {
+      "at": "2026-09-02T15:27:36-04:00",
+      "kind": "UPDATED",
+      "summary": "Started the stacked-port prototype slice: removed sample edge rendering, generated six passive slot-port markers per logical frame, and separated nominal port geometry from grid-gap-driven visual frame shrinkage. Studio build passed; visual marker QA remains pending after the desktop preview connection timed out."
+    },
+    {
+      "at": "2026-09-02T15:29:01-04:00",
+      "kind": "VERIFIED",
+      "summary": "A fresh local honeycomb preview confirmed six passive side ports per slot, visually stable co-located neighboring ports, and no rendered workflow paths. Port-marker refinement remains active."
+    },
+    {
+      "at": "2026-09-02T15:37:07-04:00",
+      "kind": "UPDATED",
+      "summary": "Moved each of the six slot-owned port markers from side midpoints to nominal frame vertices, where three honeycomb frames meet. Studio build and fresh visual preview verification passed."
+    },
+    {
+      "at": "2026-09-02T16:50:00-04:00",
+      "kind": "LINKED",
+      "summary": "Created child design record 2026-09-02-workflow-canvas-port-routing to settle stable stacked-port identities and path-routing policy before restoring paths."
+    },
+    {
+      "at": "2026-09-02T17:22:04-04:00",
+      "kind": "UPDATED",
+      "summary": "Implemented readable slot, junction, and slot-port identifiers in the isolated prototype. Paths remain absent; Studio build passed."
+    },
+    {
+      "at": "2026-09-02T17:23:21-04:00",
+      "kind": "VERIFIED",
+      "summary": "Verified 210 generated port IDs are unique across the 35-slot prototype and that a canonical junction groups three distinct slot owners. Studio lint passed with only three pre-existing fast-refresh warnings."
+    },
+    {
+      "at": "2026-09-02T17:42:04-04:00",
+      "kind": "UPDATED",
+      "summary": "Restored visible sample workflow paths in the isolated prototype as bright direct vertex-port routes with directional arrow markers."
+    },
+    {
+      "at": "2026-09-02T17:42:04-04:00",
+      "kind": "VERIFIED",
+      "summary": "Fresh local preview visibly showed Manual Trigger to Set System Volume to Search Solo Leveling routes. Studio build and lint passed; lint retained only three pre-existing warnings."
+    },
+    {
+      "at": "2026-09-02T17:44:01-04:00",
+      "kind": "UPDATED",
+      "summary": "Superseded the dashed-arrow route styling at the user's direction. Direct routes now use plain solid high-contrast cyan lines, without glow or directional decoration."
+    },
+    {
+      "at": "2026-09-02T17:44:01-04:00",
+      "kind": "VERIFIED",
+      "summary": "Fresh local preview confirmed plain solid routes remain visibly distinct from frame perimeters. Studio build and lint passed; lint retained only three pre-existing warnings."
+    },
+    {
+      "at": "2026-09-02T17:49:36-04:00",
+      "kind": "UPDATED",
+      "summary": "Moved prototype r-004 from slot/q4-r-1 to the user-directed slot/q4-r2. Its direct r-002 to r-004 route recomputes from the placement bridge."
+    },
+    {
+      "at": "2026-09-02T17:49:36-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio build passed and a fresh isolated preview exposed Search Solo Leveling only at slot/q4-r2, with its direct route exiting toward that lower placement."
+    },
+    {
+      "at": "2026-09-02T17:57:22-04:00",
+      "kind": "UPDATED",
+      "summary": "Replaced the prototype's direct route shortcut with complete traversals over its slot-owned ports, shared junction transfers, and adjacent frame edges."
+    },
+    {
+      "at": "2026-09-02T17:57:22-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio build and lint passed. The isolated preview shows routes following port-to-port frame geometry; lint retained only three existing warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-05T11:14:19-04:00",
+      "kind": "UPDATED",
+      "summary": "Reviewed the Honeycomb canvas, slot, and node snapshot renderers. Marked the renderer-consumed baseline transports for canvas idle, node execution idle, node connection isolated, and path flow idle complete; state-specific visual and interaction objectives remain active."
+    }
+  ]
+}

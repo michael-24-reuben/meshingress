@@ -3,6 +3,7 @@ package dev.mrk.meshingress.mcp.tools.annotation;
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
+import dev.mrk.meshingress.api.services.McpServiceLifecycle;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.McpToolHandler;
 import dev.mrk.meshingress.api.tools.annotation.*;
@@ -17,6 +18,7 @@ import dev.mrk.meshingress.mcp.jsonrpc.JsonRpcException;
 import dev.mrk.meshingress.mcp.tools.cache.McpCacheManager;
 import dev.mrk.meshingress.route.api.McpDispatchException;
 import dev.mrk.meshingress.route.framework.dispatch.resolver.TypedJsonArgumentBinder;
+import dev.mrk.meshingress.tools.framework.scanning.McpToolAnnotationScanner;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,8 +158,9 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     }
 
     private DispatchExecutionResult invoke(ObjectNode arguments, McpCallContext context) {
+        InvocationArguments invocation = invocationArguments(function.method(), function.parameters(), arguments, context);
         try {
-            Object result = function.method().invoke(bean, invocationArguments(arguments, context));
+            Object result = function.method().invoke(bean, invocation.values());
             return adaptResult(result);
         } catch (InvocationTargetException exception) {
             Throwable cause = exception.getCause();
@@ -170,11 +173,37 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
             throw new IllegalStateException("Annotated MCP tool failed: " + cause.getMessage(), cause);
         } catch (ReflectiveOperationException exception) {
             throw new IllegalStateException("Unable to invoke annotated MCP tool: " + function.method(), exception);
+        } finally {
+            stopServices(invocation.services());
         }
     }
 
-    private Object[] invocationArguments(ObjectNode arguments, McpCallContext context) {
-        Parameter[] parameters = function.method().getParameters();
+    private InvocationArguments invocationArguments(
+            Method method,
+            List<AnnotatedMcpFunctionParam> bindableParameters,
+            ObjectNode arguments,
+            McpCallContext context
+    ) {
+        List<InitializedService> initializedServices = new ArrayList<>();
+        try {
+            Object[] values = bindInvocationArguments(method, bindableParameters, arguments, context,
+                    initializedServices, Collections.newSetFromMap(new IdentityHashMap<>()));
+            return new InvocationArguments(values, List.copyOf(initializedServices));
+        } catch (RuntimeException exception) {
+            stopServices(initializedServices);
+            throw exception;
+        }
+    }
+
+    private Object[] bindInvocationArguments(
+            Method method,
+            List<AnnotatedMcpFunctionParam> bindableParameters,
+            ObjectNode arguments,
+            McpCallContext context,
+            List<InitializedService> initializedServices,
+            Set<Object> initializingServices
+    ) {
+        Parameter[] parameters = method.getParameters();
         Object[] values = new Object[parameters.length];
         int bindableIndex = 0;
         for (int index = 0; index < parameters.length; index++) {
@@ -187,18 +216,102 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
                 values[index] = context.progressReporter();
                 continue;
             }
+            McpFunctionService service = parameter.getAnnotation(McpFunctionService.class);
+            if (service != null) {
+                Object resolved;
+                try {
+                    resolved = context.services().require(serviceType(parameter, service), service.oneOf());
+                } catch (IllegalStateException exception) {
+                    throw newJsonRpcException(JsonRpcErrorCodes.TOOL_UNAVAILABLE, exception.getMessage());
+                }
+                initializeService(resolved, service, context, initializedServices, initializingServices);
+                values[index] = resolved;
+                continue;
+            }
 
-            if (bindableIndex >= function.parameters().size()) {
+            if (bindableIndex >= bindableParameters.size()) {
                 throw newJsonRpcException(
                         JsonRpcErrorCodes.INVALID_PARAMS,
-                        "Annotated MCP tool parameter is not bindable: " + parameter.getName()
+                        "Annotated MCP invocation parameter is not bindable: " + parameter.getName()
                 );
             }
-            AnnotatedMcpFunctionParam param = function.parameters().get(bindableIndex);
+            AnnotatedMcpFunctionParam param = bindableParameters.get(bindableIndex);
             bindableIndex++;
             values[index] = bindArgument(arguments, param);
         }
         return values;
+    }
+
+    private void initializeService(
+            Object resolved,
+            McpFunctionService service,
+            McpCallContext context,
+            List<InitializedService> initializedServices,
+            Set<Object> initializingServices
+    ) {
+        if (!(resolved instanceof McpServiceLifecycle lifecycle)) {
+            throw newJsonRpcException(JsonRpcErrorCodes.TOOL_UNAVAILABLE,
+                    "Resolved MCP service does not implement " + McpServiceLifecycle.class.getName());
+        }
+        if (!initializingServices.add(resolved)) {
+            throw newJsonRpcException(JsonRpcErrorCodes.TOOL_UNAVAILABLE,
+                    "Circular MCP service initialization: " + resolved.getClass().getName());
+        }
+        initializedServices.add(new InitializedService(lifecycle));
+        try {
+            McpToolAnnotationScanner scanner = new McpToolAnnotationScanner(objectMapper, "service");
+            Optional<Method> initializer = scanner.serviceInitializationFor(org.springframework.util.ClassUtils.getUserClass(resolved));
+            if (initializer.isEmpty()) {
+                lifecycle.init();
+                return;
+            }
+            if (service.value().isBlank()) {
+                throw newJsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS,
+                        "An MCP service with a typed init overload requires a non-blank @McpFunctionService value.");
+            }
+            Object raw = context.serviceRequirements().get(service.value());
+            if (raw == null) {
+                throw newJsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS,
+                        "Missing required MCP service requirement: " + service.value());
+            }
+            JsonNode value = objectMapper.valueToTree(raw);
+            if (!(value instanceof ObjectNode requirementArguments)) {
+                throw newJsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS,
+                        "MCP service requirement '" + service.value() + "' must be an object.");
+            }
+            Method method = initializer.orElseThrow();
+            Object[] values = bindInvocationArguments(method, scanner.parametersForServiceInitialization(method),
+                    requirementArguments, context, initializedServices, initializingServices);
+            method.invoke(resolved, values);
+        } catch (InvocationTargetException exception) {
+            Throwable cause = exception.getCause();
+            if (cause instanceof JsonRpcException jsonRpcException) {
+                throw jsonRpcException;
+            }
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw new IllegalStateException("MCP service init failed: " + cause.getMessage(), cause);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Unable to invoke MCP service init: " + resolved.getClass().getName(), exception);
+        } finally {
+            initializingServices.remove(resolved);
+        }
+    }
+
+    private void stopServices(List<InitializedService> services) {
+        for (int index = services.size() - 1; index >= 0; index--) {
+            InitializedService service = services.get(index);
+            try {
+                service.lifecycle().stop();
+            } catch (RuntimeException exception) {
+                log.warn("MCP service lifecycle stop failed: {}", exception.getMessage(), exception);
+            }
+        }
+    }
+
+    private static Class<?> serviceType(Parameter parameter, McpFunctionService service) {
+        return service.type().equals(Void.class) ? parameter.getType() : service.type();
     }
 
     private Object bindArgument(ObjectNode arguments, AnnotatedMcpFunctionParam param) {
@@ -239,5 +352,11 @@ public class AnnotatedMcpToolHandler implements McpToolHandler {
     }
 
     public record AvailabilityDecisions(boolean allowed, List<String> reasons, Map<String, Object> metadata) {
+    }
+
+    private record InvocationArguments(Object[] values, List<InitializedService> services) {
+    }
+
+    private record InitializedService(McpServiceLifecycle lifecycle) {
     }
 }

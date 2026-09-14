@@ -3,6 +3,7 @@ package dev.mrk.meshingress.tools.framework.scanning;
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
+import dev.mrk.meshingress.api.services.McpServiceLifecycle;
 import dev.mrk.meshingress.api.tools.McpToolDescriptor;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.annotation.*;
@@ -71,6 +72,7 @@ public class McpToolAnnotationScanner {
         }
 
         ObjectNode annotations = scopesJson(toolClass.getAnnotation(McpToolScopes.class));
+        addServiceRequirements(annotations, tool.requires());
 
         List<AnnotatedMcpFunction> functions = scanFunctions(toolClass, tool);
 
@@ -419,6 +421,10 @@ public class McpToolAnnotationScanner {
             throw new IllegalStateException("MCP tool function must not return void: " + method);
         }
 
+        for (Parameter parameter : method.getParameters()) {
+            validateServiceParameter(method, parameter);
+        }
+
         List<Parameter> functionParameters = bindableParameters(method);
         boolean canInferArgsParam = functionParameters.size() == 1 && !functionParameters.getFirst().isAnnotationPresent(McpFunctionParam.class);
 
@@ -427,7 +433,7 @@ public class McpToolAnnotationScanner {
                 continue;
             }
             if (!canInferArgsParam && !parameter.isAnnotationPresent(McpFunctionParam.class)) {
-                throw new IllegalStateException("MCP tool function parameter requires @McpFunctionParam, McpCallContext, or McpProgressReporter type: "
+                throw new IllegalStateException("MCP tool function parameter requires @McpFunctionParam, @McpFunctionService, McpCallContext, or McpProgressReporter type: "
                         + method.toGenericString());
             }
         }
@@ -488,7 +494,93 @@ public class McpToolAnnotationScanner {
 
     private static boolean isInfrastructureParameter(Parameter parameter) {
         return McpCallContext.class.isAssignableFrom(parameter.getType())
-                || McpProgressReporter.class.equals(parameter.getType());
+                || McpProgressReporter.class.equals(parameter.getType())
+                || parameter.isAnnotationPresent(McpFunctionService.class);
+    }
+
+    private static void validateServiceParameter(Method method, Parameter parameter) {
+        McpFunctionService service = parameter.getAnnotation(McpFunctionService.class);
+        if (service == null) {
+            return;
+        }
+        if (parameter.isAnnotationPresent(McpFunctionParam.class)) {
+            throw new IllegalStateException("An MCP service parameter cannot also be an MCP function argument: "
+                    + method.toGenericString());
+        }
+        Class<?> serviceType = serviceType(parameter, service);
+        if (!parameter.getType().equals(serviceType)) {
+            throw new IllegalStateException("MCP service parameter type %s must equal declared capability %s on %s"
+                    .formatted(parameter.getType().getName(), serviceType.getName(), method.toGenericString()));
+        }
+        if (!McpServiceLifecycle.class.isAssignableFrom(serviceType)) {
+            throw new IllegalStateException("MCP service capability %s must implement %s on %s"
+                    .formatted(serviceType.getName(), McpServiceLifecycle.class.getName(), method.toGenericString()));
+        }
+        for (Class<?> candidate : service.oneOf()) {
+            if (!serviceType.isAssignableFrom(candidate)) {
+                throw new IllegalStateException("MCP service selection %s does not implement %s on %s"
+                        .formatted(candidate.getName(), serviceType.getName(), method.toGenericString()));
+            }
+        }
+    }
+
+    /**
+     * Finds the optional typed service lifecycle initializer. A no-argument
+     * {@code init()} is the lifecycle convention inherited from
+     * {@link McpServiceLifecycle}; only a concrete overload with parameters is
+     * client-input-bearing and therefore published in requirement metadata.
+     */
+    public Optional<Method> serviceInitializationFor(Class<?> serviceType) {
+        List<Method> initializers = Arrays.stream(serviceType.getDeclaredMethods())
+                .filter(method -> method.getName().equals("init"))
+                .filter(method -> method.getParameterCount() > 0)
+                .toList();
+        if (initializers.size() > 1) {
+            throw new IllegalStateException("MCP service may declare only one typed init overload: " + serviceType.getName());
+        }
+        if (initializers.isEmpty()) {
+            return Optional.empty();
+        }
+        Method initializer = initializers.getFirst();
+        validateServiceInitialization(initializer);
+        initializer.setAccessible(true);
+        return Optional.of(initializer);
+    }
+
+    /** Compiles a typed service initializer with the same rules used for tool arguments. */
+    public ObjectNode inputSchemaForServiceInitialization(Method initializer) {
+        validateServiceInitialization(initializer);
+        return inputSchemaFor(initializer, "");
+    }
+
+    /** Returns the bindable client parameters for a typed service initializer. */
+    public List<AnnotatedMcpFunctionParam> parametersForServiceInitialization(Method initializer) {
+        validateServiceInitialization(initializer);
+        return parametersFor(initializer);
+    }
+
+    private void validateServiceInitialization(Method method) {
+        if (method.isBridge() || method.isSynthetic() || Modifier.isStatic(method.getModifiers())) {
+            throw new IllegalStateException("MCP service init must be a concrete instance method: " + method);
+        }
+        if (!method.getReturnType().equals(Void.TYPE)) {
+            throw new IllegalStateException("MCP service init must return void: " + method);
+        }
+        for (Parameter parameter : method.getParameters()) {
+            validateServiceParameter(method, parameter);
+        }
+        List<Parameter> initParameters = bindableParameters(method);
+        boolean canInferArgsParam = initParameters.size() == 1 && !initParameters.getFirst().isAnnotationPresent(McpFunctionParam.class);
+        for (Parameter parameter : initParameters) {
+            if (!canInferArgsParam && !parameter.isAnnotationPresent(McpFunctionParam.class)) {
+                throw new IllegalStateException("MCP service init parameter requires @McpFunctionParam, @McpFunctionService, McpCallContext, or McpProgressReporter type: "
+                        + method.toGenericString());
+            }
+        }
+    }
+
+    private static Class<?> serviceType(Parameter parameter, McpFunctionService service) {
+        return service.type().equals(Void.class) ? parameter.getType() : service.type();
     }
 
     private ObjectNode inputSchemaFor(Method method, String fallbackDescription) {
@@ -820,10 +912,11 @@ public class McpToolAnnotationScanner {
 
     private ObjectNode functionAnnotations(Class<?> toolClass, Method method, McpConfigureMapping configuration) {
         ObjectNode annotations = functionScopes(toolClass, method);
+        addServiceRequirements(annotations, method.getParameters());
         if (configuration.timeoutMs() > 0) {
             annotations.put("timeoutMs", configuration.timeoutMs());
         }
-        if (Arrays.stream(method.getParameterTypes()).anyMatch(McpProgressReporter.class::equals)) {
+        if (Arrays.asList(method.getParameterTypes()).contains(McpProgressReporter.class)) {
             annotations.put("progressReporter", true);
         }
         ObjectNode availability = availabilityJson(method, configuration);
@@ -891,6 +984,50 @@ public class McpToolAnnotationScanner {
         }
         node.set("scopes", values);
         return node;
+    }
+
+    private void addServiceRequirements(ObjectNode annotations, McpServiceRequirement[] requirements) {
+        ArrayNode values = objectMapper.createArrayNode();
+        for (McpServiceRequirement requirement : requirements) {
+            values.add(serviceRequirementJson(requirement.type(), requirement.oneOf()));
+        }
+        annotations.set("requires", values);
+    }
+
+    private void addServiceRequirements(ObjectNode annotations, Parameter[] parameters) {
+        ArrayNode values = objectMapper.createArrayNode();
+        for (Parameter parameter : parameters) {
+            McpFunctionService service = parameter.getAnnotation(McpFunctionService.class);
+            if (service != null) {
+                values.add(serviceRequirementJson(parameter, service));
+            }
+        }
+        annotations.set("requires", values);
+    }
+
+    private ObjectNode serviceRequirementJson(Class<?> type, Class<?>[] oneOf) {
+        ObjectNode requirement = objectMapper.createObjectNode();
+        requirement.put("type", type.getName());
+        ArrayNode selectedProviders = objectMapper.createArrayNode();
+        for (Class<?> provider : oneOf) {
+            selectedProviders.add(provider.getName());
+        }
+        requirement.set("oneOf", selectedProviders);
+        return requirement;
+    }
+
+    private ObjectNode serviceRequirementJson(Parameter parameter, McpFunctionService service) {
+        ObjectNode requirement = serviceRequirementJson(serviceType(parameter, service), service.oneOf());
+        if (!service.value().isBlank()) {
+            requirement.put("value", service.value());
+        }
+        if (!service.title().isBlank()) {
+            requirement.put("title", service.title());
+        }
+        if (!service.description().isBlank()) {
+            requirement.put("description", service.description());
+        }
+        return requirement;
     }
 
     private ObjectNode emptyObjectSchema(String description) {

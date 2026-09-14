@@ -6,20 +6,33 @@ import dev.mrk.meshingress.api.McpClientMetadata;
 import dev.mrk.meshingress.api.McpExecutionControl;
 import dev.mrk.meshingress.api.McpPrincipal;
 import dev.mrk.meshingress.api.McpRequestIds;
+import dev.mrk.meshingress.api.services.McpServiceResolver;
 import dev.mrk.meshingress.mcp.McpInvocation;
 import dev.mrk.meshingress.mcp.McpInvocationFactory;
+import dev.mrk.meshingress.mcp.services.McpServiceRegistry;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.JsonNode;
 
 import java.util.UUID;
+import java.util.Map;
 
 /** The only server entry point that turns transport evidence into tool-facing context. */
 @Component
 public class McpTransportContextFactory {
     private final McpPrincipalResolver principalResolver;
+    private final McpServiceResolver services;
 
+    @Autowired
+    public McpTransportContextFactory(McpPrincipalResolver principalResolver, McpServiceRegistry services) {
+        this.principalResolver = principalResolver;
+        this.services = services;
+    }
+
+    /** Compatibility constructor for isolated web/controller tests. */
     public McpTransportContextFactory(McpPrincipalResolver principalResolver) {
         this.principalResolver = principalResolver;
+        this.services = McpServiceResolver.none();
     }
 
     public McpInvocationFactory http(McpTransportEvidence evidence) {
@@ -46,7 +59,7 @@ public class McpTransportContextFactory {
         String callId = request == null || !request.has("id") ? "" : request.path("id").asString("");
         return new McpCallContext(
                 new McpRequestIds(evidence.sessionId(), evidence.correlationId(), UUID.randomUUID().toString(), callId),
-                principal, McpClientMetadata.unknown(), McpCallLineage.root(), McpExecutionControl.none()
+                principal, McpClientMetadata.unknown(), McpCallLineage.root(), McpExecutionControl.none(), services, Map.of()
         );
     }
 }

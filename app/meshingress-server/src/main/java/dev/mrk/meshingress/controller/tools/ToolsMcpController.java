@@ -10,6 +10,7 @@ import dev.mrk.meshingress.mcp.tools.ToolExecutor;
 import dev.mrk.meshingress.mcp.tools.ToolAccessService;
 import dev.mrk.meshingress.security.ProfileLimitService;
 import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
+import dev.mrk.meshingress.mcp.services.McpServiceRegistry;
 import dev.mrk.meshingress.route.annotations.McpDispatchMapping;
 import dev.mrk.meshingress.route.annotations.McpDispatchMethod;
 import dev.mrk.meshingress.route.annotations.McpDispatchParam;
@@ -22,6 +23,9 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Component
 @McpDispatchMapping("tools")
 public class ToolsMcpController {
@@ -29,14 +33,16 @@ public class ToolsMcpController {
 
     private final ObjectMapper objectMapper;
     private final ToolRegistry toolRegistry;
+    private final McpServiceRegistry serviceRegistry;
     private final ToolExecutor toolExecutor;
     private final MeshingressProperties properties;
     private final ToolAccessService toolAccessService;
     private final ProfileLimitService profileLimits;
 
-    public ToolsMcpController(ObjectMapper objectMapper, ToolRegistry toolRegistry, ToolExecutor toolExecutor, MeshingressProperties properties, ToolAccessService toolAccessService, ProfileLimitService profileLimits) {
+    public ToolsMcpController(ObjectMapper objectMapper, ToolRegistry toolRegistry, McpServiceRegistry serviceRegistry, ToolExecutor toolExecutor, MeshingressProperties properties, ToolAccessService toolAccessService, ProfileLimitService profileLimits) {
         this.objectMapper = objectMapper;
         this.toolRegistry = toolRegistry;
+        this.serviceRegistry = serviceRegistry;
         this.toolExecutor = toolExecutor;
         this.properties = properties;
         this.toolAccessService = toolAccessService;
@@ -53,6 +59,7 @@ public class ToolsMcpController {
             for (McpFunctionDescriptor function : toolRegistry.listPublicEnabledFunctions()) {
                 if (!toolAccessService.evaluate(function, context).visible()) continue;
                 ObjectNode functionJson = function.toMcpJson(objectMapper);
+                serviceRegistry.addRequirements(functionJson, objectMapper);
                 toolRegistry.findOwningModuleToolId(function.name()).ifPresent(moduleToolId -> functionJson.put("moduleToolId", moduleToolId));
                 tools.add(functionJson);
             }
@@ -78,9 +85,21 @@ public class ToolsMcpController {
         if (!arguments.isObject()) {
             throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params.arguments must be an object");
         }
+        JsonNode requirements = params.path("requirements");
+        if (requirements.isMissingNode() || requirements.isNull()) {
+            requirements = objectMapper.createObjectNode();
+        }
+        if (!requirements.isObject()) {
+            throw new JsonRpcException(JsonRpcErrorCodes.INVALID_PARAMS, "tools/call params.requirements must be an object");
+        }
+        Map<String, Object> requirementValues = new LinkedHashMap<>();
+        requirements.properties().forEach(field -> requirementValues.put(
+                field.getKey(),
+                objectMapper.convertValue(field.getValue(), Object.class)
+        ));
 
         try (ProfileLimitService.Reservation ignored = profileLimits.reserveRequest(context)) {
-        DispatchExecutionResult result = toolExecutor.execute(name, (ObjectNode) arguments, context);
+        DispatchExecutionResult result = toolExecutor.execute(name, (ObjectNode) arguments, context.withServiceRequirements(requirementValues));
         ObjectNode response = result.toJson(objectMapper);
         if (!properties.dispatch().includeGeneratedAt() && response.has("_meta")) {
             ObjectNode meta = (ObjectNode) response.get("_meta");

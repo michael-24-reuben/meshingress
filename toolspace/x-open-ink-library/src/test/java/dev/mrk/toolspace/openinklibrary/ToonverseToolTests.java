@@ -214,11 +214,12 @@ class ToonverseToolTests {
         });
         server.start();
         RecordingStorage storage = new RecordingStorage();
-        ToonverseTool tool = new ToonverseTool(client(), objectMapper, storage);
+        ToonverseTool tool = new ToonverseTool(client(), objectMapper);
         List<ProgressUpdate> events = new ArrayList<>();
 
         var result = tool.downloadBook(
                 new ToonverseDownloadBookArgs("Solo Leveling", 191, 191, 120, 10),
+                storage,
                 new McpCallContext(null, null, "session-1", "caller-request"),
                 McpProgressReporter.webSocket(events::add)
         );
@@ -260,9 +261,9 @@ class ToonverseToolTests {
         });
         server.start();
         DelegatingStorage storage = new DelegatingStorage();
-        ToonverseTool tool = new ToonverseTool(client(), objectMapper, storage);
+        ToonverseTool tool = new ToonverseTool(client(), objectMapper);
 
-        var result = tool.downloadBook(new ToonverseDownloadBookArgs("Solo Leveling", 191, 191, 120, 10),
+        var result = tool.downloadBook(new ToonverseDownloadBookArgs("Solo Leveling", 191, 191, 120, 10), storage,
                 new McpCallContext(null, null, "session-1", "caller-request"), McpProgressReporter.NOOP);
 
         assertEquals(false, result.isError());
@@ -293,11 +294,12 @@ class ToonverseToolTests {
         });
         server.start();
         RecordingStorage storage = new RecordingStorage();
-        ToonverseTool tool = new ToonverseTool(client(), objectMapper, storage);
+        ToonverseTool tool = new ToonverseTool(client(), objectMapper);
         List<ProgressUpdate> events = new ArrayList<>();
 
         var result = tool.downloadBook(
                 new ToonverseDownloadBookArgs("Solo Leveling", 1, 3, 120, 10),
+                storage,
                 new McpCallContext(null, null, "session-1", "caller-request"),
                 McpProgressReporter.webSocket(events::add)
         );

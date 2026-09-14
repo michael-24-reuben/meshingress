@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-09-04-workflow-canvas-component-lifecycle",
+  "title": "Workflow Canvas Component Lifecycle",
+  "type": "architecture-design",
+  "status": "active",
+  "priority": "normal",
+  "createdAt": "2026-09-04T15:14:25-04:00",
+  "activatedAt": "2026-09-04T15:14:25-04:00",
+  "updatedAt": "2026-09-04T15:14:25-04:00",
+  "tags": ["frontend", "workflow", "canvas", "honeycomb", "lifecycle", "design"],
+  "related": [
+    "2026-08-31-workflow-canvas-honeycomb-slots",
+    "2026-09-02-workflow-canvas-port-routing",
+    "2026-09-04-workflow-canvas-scene-builder"
+  ],
+  "origin": {
+    "kind": "design-discussion",
+    "reference": "Current Codex conversation"
+  },
+  "events": [
+    {
+      "at": "2026-09-04T15:14:25-04:00",
+      "kind": "CREATED",
+      "summary": "Captured the proposed abstract component lifecycle and the unresolved start-phase orchestration boundary for canvas, slot, node, and path components."
+    }
+  ]
+}

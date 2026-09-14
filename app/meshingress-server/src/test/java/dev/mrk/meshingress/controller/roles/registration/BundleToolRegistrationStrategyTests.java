@@ -221,7 +221,7 @@ class BundleToolRegistrationStrategyTests {
                 defaults.audit(),
                 defaults.secrets(),
                 defaults.repository(),
-                defaults.storage()
+                null
         );
     }
 }

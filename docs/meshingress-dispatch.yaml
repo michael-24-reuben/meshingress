@@ -209,11 +209,11 @@ x-dispatch-map:
     javaMethod: whoami
     paramsType: tools.jackson.databind.JsonNode
     returnType: tools.jackson.databind.node.ObjectNode
-  - method: storage/publication-status
-    className: dev.mrk.meshingress.storage.mcp.StoragePublicationMcpController
-    javaMethod: publicationStatus
-    paramsType: dev.mrk.meshingress.storage.mcp.StoragePublicationStatusParams
-    returnType: dev.mrk.meshingress.api.storage.ToolStoragePublicationStatus
+  - method: services/list
+    className: dev.mrk.meshingress.controller.services.ServicesMcpController
+    javaMethod: servicesList
+    paramsType: tools.jackson.databind.JsonNode
+    returnType: tools.jackson.databind.node.ObjectNode
   - method: tools/call
     className: dev.mrk.meshingress.controller.tools.ToolsMcpController
     javaMethod: toolsCall
@@ -307,7 +307,7 @@ paths:
               - $ref: '#/components/schemas/McpRolesToolsReloadRequest'
               - $ref: '#/components/schemas/McpRolesToolsUpdateRequest'
               - $ref: '#/components/schemas/McpSecurityWhoamiRequest'
-              - $ref: '#/components/schemas/McpStoragePublicationStatusRequest'
+              - $ref: '#/components/schemas/McpServicesListRequest'
               - $ref: '#/components/schemas/McpToolsCallRequest'
               - $ref: '#/components/schemas/McpToolsListRequest'
       responses:
@@ -1310,9 +1310,9 @@ components:
       - method
       x-dispatch-class: dev.mrk.meshingress.controller.security.SecurityMcpController
       x-dispatch-java-method: whoami
-    McpStoragePublicationStatusRequest:
+    McpServicesListRequest:
       type: object
-      description: MCP request for storage/publication-status.
+      description: MCP request for services/list.
       properties:
         jsonrpc:
           type: string
@@ -1325,17 +1325,17 @@ components:
         method:
           type: string
           enum:
-          - storage/publication-status
-          example: storage/publication-status
+          - services/list
+          example: services/list
         params:
-          $ref: '#/components/schemas/StoragePublicationStatusParams'
+          type: object
+          additionalProperties: true
       required:
       - jsonrpc
       - id
       - method
-      - params
-      x-dispatch-class: dev.mrk.meshingress.storage.mcp.StoragePublicationMcpController
-      x-dispatch-java-method: publicationStatus
+      x-dispatch-class: dev.mrk.meshingress.controller.services.ServicesMcpController
+      x-dispatch-java-method: servicesList
     McpToolsCallRequest:
       type: object
       description: MCP request for tools/call.
@@ -1388,11 +1388,3 @@ components:
       - method
       x-dispatch-class: dev.mrk.meshingress.controller.tools.ToolsMcpController
       x-dispatch-java-method: toolsList
-    StoragePublicationStatusParams:
-      type: object
-      description: Schema for dev.mrk.meshingress.storage.mcp.StoragePublicationStatusParams.
-      properties:
-        sessionId:
-          type: string
-        requestId:
-          type: string

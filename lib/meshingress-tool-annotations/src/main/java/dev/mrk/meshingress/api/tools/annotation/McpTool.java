@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.api.tools.annotation;
 
 import dev.mrk.meshingress.api.tools.ToolVisibility;
+import dev.mrk.meshingress.api.tools.annotation.availability.McpAvailabilityCondition;
 import org.intellij.lang.annotations.Pattern;
 
 import java.lang.annotation.ElementType;
@@ -43,4 +44,7 @@ public @interface McpTool {
     String handlerKey() default "";
 
     boolean dynamic() default false;
+
+    /** Services required by this tool node, including constructor-level dependencies. */
+    McpServiceRequirement[] requires() default {};
 }

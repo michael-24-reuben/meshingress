@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-09-02-workflow-canvas-port-routing",
+  "title": "Workflow Canvas Port Routing",
+  "type": "architecture-design",
+  "status": "active",
+  "priority": "normal",
+  "createdAt": "2026-09-02T16:50:00-04:00",
+  "activatedAt": "2026-09-02T16:50:00-04:00",
+  "updatedAt": "2026-09-03T13:05:19-04:00",
+  "tags": ["frontend", "ui", "workflow", "canvas", "routing", "ports", "design", "future"],
+  "related": ["2026-08-31-workflow-canvas-honeycomb-slots"],
+  "origin": {
+    "kind": "design-discussion",
+    "reference": "Current Codex conversation"
+  },
+  "events": [
+    {
+      "at": "2026-09-02T16:50:00-04:00",
+      "kind": "CREATED",
+      "summary": "Created as the child design record for stable stacked-port identities and route selection before path rendering returns."
+    },
+    {
+      "at": "2026-09-02T16:50:00-04:00",
+      "kind": "MOVED_TO_ACTIVE",
+      "summary": "Activated for the routing-model discussion; no production or prototype routing implementation is authorized by this record alone."
+    },
+    {
+      "at": "2026-09-02T16:58:24-04:00",
+      "kind": "UPDATED",
+      "summary": "Rejected the terse j:<u>:<v> and p-j:<u>:<v>:q:<q>,r:<r> identifier draft. Recorded a clearer, provisional path-segment grammar for user review."
+    },
+    {
+      "at": "2026-09-02T16:59:49-04:00",
+      "kind": "UPDATED",
+      "summary": "Refined the provisional grammar so junction and slot axes remain named inside the identifier, improving direct inspection without changing canonical coordinate math."
+    },
+    {
+      "at": "2026-09-02T17:22:04-04:00",
+      "kind": "UPDATED",
+      "summary": "Implemented the accepted identity grammar in the isolated prototype: generated slot, junction, and concrete slot-port IDs now back its DOM data attributes."
+    },
+    {
+      "at": "2026-09-02T17:22:04-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed after the identity implementation. No unit-test runner is configured in the Studio package; no path rendering was restored."
+    },
+    {
+      "at": "2026-09-02T17:23:21-04:00",
+      "kind": "VERIFIED",
+      "summary": "Generated-ID verification found 210 unique concrete port keys across the 35-slot prototype and a canonical junction with three distinct slot-owned ports. Studio lint passed with only three pre-existing fast-refresh warnings."
+    },
+    {
+      "at": "2026-09-02T17:42:04-04:00",
+      "kind": "UPDATED",
+      "summary": "Implemented the first visible routing slice: sample edges render as direct, nearest vertex-port SVG segments with directional arrow markers."
+    },
+    {
+      "at": "2026-09-02T17:42:04-04:00",
+      "kind": "VERIFIED",
+      "summary": "Fresh local preview visibly confirmed both sample routes. Studio npm run build and npm run lint passed; lint retained only three pre-existing fast-refresh warnings."
+    },
+    {
+      "at": "2026-09-02T17:44:01-04:00",
+      "kind": "UPDATED",
+      "summary": "Changed the direct-route visual grammar at the user's direction: routes are plain solid cyan lines with no arrow, dash, or glow decoration."
+    },
+    {
+      "at": "2026-09-02T17:44:01-04:00",
+      "kind": "VERIFIED",
+      "summary": "Fresh local preview confirmed solid routes remain distinct from slot frames. Studio npm run build and npm run lint passed; lint retained only three pre-existing fast-refresh warnings."
+    },
+    {
+      "at": "2026-09-02T17:49:36-04:00",
+      "kind": "UPDATED",
+      "summary": "Moved r-004 to slot/q4-r2 in the isolated placement bridge. The direct-route baseline recalculates its nearest vertex-port pair from the slot coordinates."
+    },
+    {
+      "at": "2026-09-02T17:49:36-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed; isolated preview accessibility state and screenshot both located r-004 in slot/q4-r2."
+    },
+    {
+      "at": "2026-09-02T17:57:22-04:00",
+      "kind": "UPDATED",
+      "summary": "Replaced direct endpoint segments with a complete prototype slot-port graph traversal: adjacent perimeter-port links plus zero-cost stacked-port transfers at shared junctions."
+    },
+    {
+      "at": "2026-09-02T17:57:22-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build and lint passed; the isolated preview showed routes stepping through frame vertices rather than cutting across open canvas. Lint retained only three existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-02T18:06:46-04:00",
+      "kind": "UPDATED",
+      "summary": "Recorded exclusive input/output traffic roles as a future directional-port slice. Availability remains independent: an open input accepts inbound traffic only, and an open output emits outbound traffic only."
+    },
+    {
+      "at": "2026-09-02T18:12:33-04:00",
+      "kind": "UPDATED",
+      "summary": "Implemented dynamic directional ports: routes claim open ports as exclusive input or output states, and later routes cannot reverse a claimed role. Markers now expose availability and role data attributes with distinct input/output styling."
+    },
+    {
+      "at": "2026-09-02T18:12:33-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio build and lint passed. A fresh isolated preview showed cyan output and purple input markers while retaining r-004 at slot/q4-r2; lint retained only three existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-02T18:57:51-04:00",
+      "kind": "UPDATED",
+      "summary": "Implemented inner-turn port allocation. Each non-collinear previous/current/next junction triple now selects the current port owned by the unique slot inside the turn, separately from input/output traffic role."
+    },
+    {
+      "at": "2026-09-02T18:57:51-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio build passed and fresh preview showed amber inner-turn allocation rings alongside directed port markers. The documented u9-v4 to u10-v5 to u9-v6 example resolves to slot/q2-r1."
+    },
+    {
+      "at": "2026-09-02T19:07:08-04:00",
+      "kind": "UPDATED",
+      "summary": "Clarified the allocation boundary: an inner-turn marker represents foreign pass-through geometry and therefore omits data-traffic-role while retaining availability and its amber allocation marker."
+    },
+    {
+      "at": "2026-09-02T19:08:05-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build and npm run lint passed after allocated markers stopped emitting data-traffic-role. Lint retained only three existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-02T21:55:07-04:00",
+      "kind": "UPDATED",
+      "summary": "Corrected the allocation traffic-role test: compare each allocated port's slotId to the allocating route's targetSlotId. Only foreign turn allocations omit data-traffic-role; destination-slot allocations retain it."
+    },
+    {
+      "at": "2026-09-02T21:55:38-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build and npm run lint passed after the destination-slot ownership correction. Lint retained only three existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-02T22:35:00-04:00",
+      "kind": "UPDATED",
+      "summary": "Replaced the incorrect destination-slot exception with the logical route-spine rule: source anchor, one inward 120-degree slot-owned anchor per middle junction, and target anchor. Only source output and target input emit traffic roles."
+    },
+    {
+      "at": "2026-09-02T22:40:29-04:00",
+      "kind": "UPDATED",
+      "summary": "Added data-port-connection-count for each concrete SlotPortId. Counts come from logical route-spine anchors and never aggregate a shared junction's stacked ports."
+    },
+    {
+      "at": "2026-09-02T22:40:29-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build and npm run lint passed after per-port connection counts were added. Lint retained only three existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-02T22:41:11-04:00",
+      "kind": "UPDATED",
+      "summary": "Defined connection count as distinct route-spine use per concrete SlotPortId, so a looping route cannot inflate one port's count through repeated visits."
+    },
+    {
+      "at": "2026-09-02T22:41:11-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build and npm run lint passed after distinct per-port count handling. Lint retained only three existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-02T22:47:21-04:00",
+      "kind": "UPDATED",
+      "summary": "Removed the gold turn-allocation ring while preserving allocation data attributes, availability, and endpoint traffic-role presentation."
+    },
+    {
+      "at": "2026-09-02T22:47:58-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build and npm run lint passed after removing the gold turn-allocation ring. Lint retained only three existing fast-refresh warnings outside the prototype."
+    },
+    {
+      "at": "2026-09-02T23:35:09-04:00",
+      "kind": "UPDATED",
+      "summary": "Preserved the supplying output port across each junction transfer in transient graph state, then added a collinearity cost that prefers a straight-ahead perimeter continuation over its sideward sibling."
+    },
+    {
+      "at": "2026-09-02T23:38:18-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build and npm run lint passed. Direct route evaluation confirmed r-002 begins port/junction/u7-v4/slot/q2-r0 then port/junction/u6-v3/slot/q1-r1, rather than the u6-v5 alternative."
+    },
+    {
+      "at": "2026-09-03T09:40:47-04:00",
+      "kind": "UPDATED",
+      "summary": "Diagnosed current r-002 routing: all source outputs start at zero cost, local unsigned collinearity does not choose the closest source connection, and the rendered turn-allocation spine can differ from the raw traversal."
+    },
+    {
+      "at": "2026-09-03T11:27:19-04:00",
+      "kind": "UPDATED",
+      "summary": "Extracted the existing graph route policy behind HoneycombRouteVariant. Its ordered concrete port hooks are now the canvas-rendering contract, with first origin/output and final destination/input."
+    },
+    {
+      "at": "2026-09-03T11:27:19-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed after route-variant extraction."
+    },
+    {
+      "at": "2026-09-03T11:49:37-04:00",
+      "kind": "UPDATED",
+      "summary": "Added visual-only canvas-end slots around the workflow lattice. Their outward concrete ports are closed, and they are excluded from node placement and route traversal."
+    },
+    {
+      "at": "2026-09-03T11:49:37-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed after adding canvas-end slots."
+    },
+    {
+      "at": "2026-09-03T13:05:19-04:00",
+      "kind": "UPDATED",
+      "summary": "Direct adjacent workflow edges now suppress their shared frame-side strokes and render one midpoint side-control hexagon with CSS-controlled geometry and styling."
+    },
+    {
+      "at": "2026-09-03T13:05:19-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed after adding adjacency seam detection and the visual side-control."
+    }
+  ]
+}

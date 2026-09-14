@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -43,6 +44,7 @@ class McpAnnotationDispatchMvcTests {
     @Test
     void discoversTheSharedStoragePublicationStatusDispatchMethod() {
         assertTrue(dispatchRegistry.find("storage/publication-status").isPresent());
+        assertTrue(dispatchRegistry.find("services/list").isPresent());
     }
 
     @Test
@@ -77,6 +79,19 @@ class McpAnnotationDispatchMvcTests {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.tools[0].name", is("architect.entries.list")));
+
+        mockMvc.perform(post("/mcp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "jsonrpc": "2.0",
+                                  "id": 32,
+                                  "method": "services/list",
+                                  "params": {}
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.services[*].name", hasItem("nextcloud.storage.delegated-workspaces")));
     }
 
     @Test

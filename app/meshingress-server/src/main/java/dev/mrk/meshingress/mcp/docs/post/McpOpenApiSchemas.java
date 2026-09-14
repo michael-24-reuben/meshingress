@@ -254,7 +254,9 @@ public final class McpOpenApiSchemas {
             @Schema(description = "Name of the MCP tool function to invoke.", example = "helloworld.greeting.greet", requiredMode = Schema.RequiredMode.REQUIRED)
             String name,
             @Schema(description = "Tool-specific arguments object. Its schema is supplied by tools/list for each tool.", implementation = Map.class, example = "{\"name\":\"Meshingress\"}")
-            Map<String, Object> arguments
+            Map<String, Object> arguments,
+            @Schema(description = "Provider-specific client input keyed by a function requirement key. Each requirement input schema is supplied by tools/list.", implementation = Map.class, example = "{\"example.storage\":{\"workspace\":\"exports\"}}")
+            Map<String, Object> requirements
     ) {
     }
 }

@@ -30,6 +30,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>dev.mrk.toolspace.localstorage</groupId>
+            <artifactId>local-storage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.mrk.toolspace.nextcloud</groupId>
+            <artifactId>nextcloud</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>dev.mrk.toolspace</groupId>
             <artifactId>helloworld</artifactId>
             <version>${project.version}</version>

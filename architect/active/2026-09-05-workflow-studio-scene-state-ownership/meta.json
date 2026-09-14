@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-09-05-workflow-studio-scene-state-ownership",
+  "title": "Workflow Studio Scene State Ownership",
+  "type": "architecture-refactor",
+  "status": "active",
+  "priority": "normal",
+  "createdAt": "2026-09-05T15:28:55-04:00",
+  "activatedAt": "2026-09-05T15:28:55-04:00",
+  "updatedAt": "2026-09-14T10:08:48-04:00",
+  "tags": [
+    "frontend",
+    "workflow",
+    "canvas",
+    "states",
+    "refactor",
+    "design"
+  ],
+  "related": [
+    "2026-08-31-workflow-canvas-honeycomb-slots",
+    "2026-09-02-workflow-canvas-port-routing",
+    "2026-09-04-workflow-canvas-scene-builder",
+    "2026-09-04-workflow-canvas-component-lifecycle"
+  ],
+  "sourceReports": [
+    "workspace-inspection-2026-09-07-113523"
+  ],
+  "origin": {
+    "kind": "user-request",
+    "reference": "Current Codex conversation"
+  },
+  "events": [
+    {
+      "at": "2026-09-05T15:28:55-04:00",
+      "kind": "CREATED",
+      "summary": "Started a staged ownership refactor: preserve the scene tracker until WorkflowStudioState independently proves equivalent normalized state handling and the tracker can be reduced to an optional helper or supplier."
+    },
+    {
+      "at": "2026-09-05T15:28:55-04:00",
+      "kind": "UPDATED",
+      "summary": "Added parse-only normalization to WorkflowStudioState as parseWorkflowStudioScene; no scene-tracker caller, creation logic, dispatching, or rendering ownership was migrated."
+    },
+    {
+      "at": "2026-09-05T15:28:55-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed after the parse-only addition; Vite reported only its existing chunk-size advisory."
+    },
+    {
+      "at": "2026-09-05T15:40:53-04:00",
+      "kind": "UPDATED",
+      "summary": "Added required WorkflowNode capabilities with independent acceptsInput and acceptsOutput booleans, validation, and values for current fixture and tool-created nodes."
+    },
+    {
+      "at": "2026-09-05T15:40:53-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed after the WorkflowNode capability contract addition; Vite reported only its existing chunk-size advisory."
+    },
+    {
+      "at": "2026-09-07T11:35:23-04:00",
+      "kind": "UPDATED",
+      "summary": "Tracker retirement is complete: the Scene Builder now owns a WorkflowModelSnapshot directly, and the tracker/adapter references are gone. This entry continues with model consolidation, contract coverage, parser-parity review, and eventual legacy-scene compatibility migration."
+    },
+    {
+      "at": "2026-09-07T11:35:23-04:00",
+      "kind": "REPORT_LINKED",
+      "summary": "Linked workspace-inspection-2026-09-07-113523. It identifies three behavior-preserving consolidations and records that the prior parseWorkflowStudioScene claim is not present in the live source."
+    },
+    {
+      "at": "2026-09-07T11:38:45-04:00",
+      "kind": "UPDATED",
+      "summary": "Completed the report-backed consolidation of attribute-name derivation, prototype placements, and factory slot initialization without deleting any WorkflowStudioState method or changing legacy parser/creator behavior."
+    },
+    {
+      "at": "2026-09-07T11:38:45-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed (2 tests) and npm run build passed. Vite emitted only its existing chunk-size advisory."
+    },
+    {
+      "at": "2026-09-07T12:09:41-04:00",
+      "kind": "UPDATED",
+      "summary": "Expanded the model contract test to cover all nine phase mutation categories, their target payload identities, projected renderer attributes, and node capability attributes without changing state behavior."
+    },
+    {
+      "at": "2026-09-07T12:09:41-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed with 3 tests after the contract-coverage update."
+    },
+    {
+      "at": "2026-09-07T12:10:58-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm run build passed after the contract-coverage update. Vite emitted only its existing chunk-size advisory."
+    },
+    {
+      "at": "2026-09-07T22:21:18-04:00",
+      "kind": "UPDATED",
+      "summary": "Added parseWorkflowStudioScene as a parse-only preferred-state normalizer with target/category/enum validation and renderer-attribute normalization. Existing legacy parser callers remain unchanged."
+    },
+    {
+      "at": "2026-09-07T22:21:18-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed with 5 tests, including parser parity and invalid-target coverage; npm run build passed with only Vite's existing chunk-size advisory."
+    },
+    {
+      "at": "2026-09-07T22:24:28-04:00",
+      "kind": "UPDATED",
+      "summary": "Completed the Honeycomb identity/lifecycle review. The root model is stable in the Scene Builder, but renderer-local snapshot subclasses are reconstructed per render and receive interaction mutations outside the root model. A render-only adapter requires explicit approval before implementation."
+    },
+    {
+      "at": "2026-09-07T23:03:55-04:00",
+      "kind": "UPDATED",
+      "summary": "Added HoneycombWorkflowModelAdapter and routed integrated node overlay interactions through the stable root model. Model-less standalone rendering keeps its existing local fallback; renderer-local snapshot construction remains pending replacement."
+    },
+    {
+      "at": "2026-09-07T23:03:55-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed with 6 tests, including Honeycomb root-model interaction coverage; npm run build passed with only Vite's existing chunk-size advisory."
+    },
+    {
+      "at": "2026-09-14T10:08:48-04:00",
+      "kind": "UPDATED",
+      "summary": "Reconciled root assignment and handoff with this active objective at user request, preserved the prior storage-provider ledger, and labeled superseded context as historical. Documentation only; implementation status and compatibility decision gates remain unchanged."
+    }
+  ]
+}

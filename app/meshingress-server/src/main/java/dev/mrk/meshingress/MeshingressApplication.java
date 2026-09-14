@@ -3,6 +3,8 @@ package dev.mrk.meshingress;
 import dev.mrk.meshingress.config.MeshingressProperties;
 import dev.mrk.meshingress.documentation.MeshingressDocumentationProperties;
 import dev.mrk.meshingress.documentation.dispatch.DispatchDocumentationService;
+import dev.mrk.meshingress.mcp.services.McpServiceRegistry;
+import dev.mrk.meshingress.mcp.tools.registry.ToolRegistry;
 import dev.mrk.meshingress.repository.config.MeshingressRepositoryProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -68,6 +73,9 @@ public class MeshingressApplication {
             ServerProperties serverProperties,
             MeshingressDocumentationProperties documentationProperties,
             DispatchDocumentationService dispatchDocumentationService,
+            ObjectMapper objectMapper,
+            ToolRegistry toolRegistry,
+            McpServiceRegistry serviceRegistry,
             ObjectProvider<ServletWebServerApplicationContext> webServerContextProvider
     ) {
         return args -> {
@@ -77,7 +85,11 @@ public class MeshingressApplication {
 
             Path dispatchOutput = resolveOutputPath(documentationProperties.refresh().dispatchOutput());
             Path openApiOutput = resolveOutputPath(documentationProperties.refresh().openapiOutput());
+            Path toolsAndServicesOutput = resolveOutputPath(documentationProperties.refresh().toolsAndServicesOutput());
             writeFile(dispatchOutput, dispatchDocumentationService.yamlDocument());
+            writeFile(toolsAndServicesOutput, objectMapper.writeValueAsString(
+                    toolsAndServicesSnapshot(objectMapper, toolRegistry, serviceRegistry)
+            ));
 
             ServletWebServerApplicationContext webServerContext = webServerContextProvider.getIfAvailable();
             if (webServerContext == null || webServerContext.getWebServer() == null) {
@@ -99,11 +111,34 @@ public class MeshingressApplication {
             }
             writeFile(openApiOutput, openApiYaml);
             LOGGER.info(
-                    "Documentation refreshed: dispatch={} openapi={}",
+                    "Documentation refreshed: dispatch={} openapi={} toolsAndServices={}",
                     dispatchOutput.toAbsolutePath(),
-                    openApiOutput.toAbsolutePath()
+                    openApiOutput.toAbsolutePath(),
+                    toolsAndServicesOutput.toAbsolutePath()
             );
         };
+    }
+
+    static ObjectNode toolsAndServicesSnapshot(
+            ObjectMapper objectMapper,
+            ToolRegistry toolRegistry,
+            McpServiceRegistry serviceRegistry
+    ) {
+        ObjectNode snapshot = objectMapper.createObjectNode();
+        ArrayNode tools = objectMapper.createArrayNode();
+        toolRegistry.listPublicEnabledFunctions().forEach(function -> {
+            ObjectNode tool = function.toMcpJson(objectMapper);
+            serviceRegistry.addRequirements(tool, objectMapper);
+            toolRegistry.findOwningModuleToolId(function.name())
+                    .ifPresent(moduleToolId -> tool.put("moduleToolId", moduleToolId));
+            tools.add(tool);
+        });
+        ArrayNode services = objectMapper.createArrayNode();
+        serviceRegistry.listPublicEnabledServices()
+                .forEach(service -> services.add(service.toMcpJson(objectMapper)));
+        snapshot.set("tools", tools);
+        snapshot.set("services", services);
+        return snapshot;
     }
 
     private static Path resolveOutputPath(String configuredPath) {

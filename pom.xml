@@ -52,8 +52,9 @@
         <module>toolspace/x-transform</module>
         <module>toolspace/yt-dlp</module>
         <module>toolspace/youtube</module>
-        <module>toolspace/x-open-ink-library</module>
+      <module>toolspace/x-open-ink-library</module>
       <module>toolspace/nextcloud</module>
+      <module>toolspace/local-storage</module>
     </modules>
 
     <properties>

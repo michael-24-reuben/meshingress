@@ -1,6 +1,7 @@
 package dev.mrk.meshingress.api.storage;
 
 import dev.mrk.meshingress.api.McpCallContext;
+import dev.mrk.meshingress.api.services.McpServiceLifecycle;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -14,7 +15,7 @@ import java.net.URI;
  * Tool-facing API for a short-lived, session-scoped output workspace.
  * Implemented by the Meshingress server; tools never receive a filesystem path.
  */
-public interface ToolStorageService {
+public interface ToolStorageService extends McpServiceLifecycle {
 
     ToolStorageWorkspace openWorkspace(String toolId, McpCallContext context, ToolStorageWorkspaceRequest request);
 

@@ -12,6 +12,7 @@ import dev.mrk.meshingress.api.storage.ToolStorageTransferMode;
 import dev.mrk.meshingress.api.result.DispatchExecutionResult;
 import dev.mrk.meshingress.api.tools.annotation.McpConfigureMapping;
 import dev.mrk.meshingress.api.tools.annotation.McpFunction;
+import dev.mrk.meshingress.api.tools.annotation.McpFunctionService;
 import dev.mrk.meshingress.api.tools.annotation.McpTool;
 import dev.mrk.meshingress.api.tools.annotation.McpToolScopes;
 import dev.mrk.meshingress.scopes.McpToolScope;
@@ -40,16 +41,9 @@ public final class ToonverseTool {
 
     private final ToonverseClient client;
     private final ObjectMapper objectMapper;
-    private final ToolStorageService storage;
-
     public ToonverseTool(ToonverseClient client, ObjectMapper objectMapper) {
-        this(client, objectMapper, null);
-    }
-
-    public ToonverseTool(ToonverseClient client, ObjectMapper objectMapper, ToolStorageService storage) {
         this.client = Objects.requireNonNull(client, "client must not be null");
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper must not be null");
-        this.storage = storage;
     }
 
     @McpConfigureMapping(timeoutMs = 30_000, audit = true)
@@ -137,7 +131,16 @@ public final class ToonverseTool {
 
     @McpConfigureMapping(timeoutMs = 900_000, audit = true)
     @McpFunction(value = "download-book", title = "Download Toonverse book", description = "Download an inclusive Toonverse chapter range into a temporary Meshingress book workspace with local page files and descriptors.")
-    public DispatchExecutionResult downloadBook(ToonverseDownloadBookArgs arguments, McpCallContext context, McpProgressReporter progress) {
+    public DispatchExecutionResult downloadBook(
+            ToonverseDownloadBookArgs arguments,
+            @McpFunctionService(
+                    value = "toonverse.book-storage",
+                    title = "Toonverse book storage",
+                    description = "Stores the temporary Toonverse book workspace."
+            ) ToolStorageService storage,
+            McpCallContext context,
+            McpProgressReporter progress
+    ) {
         try {
             if (arguments == null) throw new SourceException("SOURCE_RESPONSE_INVALID", "Tool arguments are required.");
             validateChapterRange(arguments.minChapterNumber(), arguments.maxChapterNumber());
@@ -149,7 +152,6 @@ public final class ToonverseTool {
                     "Preparing to download " + requestedChapterCount + " Toonverse chapter(s)."
             );
             progress.update("preparing", 0, requestedChapterCount, "Resolving the Toonverse series and validating the requested chapter range.");
-            ToolStorageService storage = requireStorage();
             String slug = resolveSlug(arguments.name());
             JsonNode firstPayload = client.fetchReadingChapter(slug, arguments.minChapterNumber());
             validateDownloadRange(firstPayload, arguments.minChapterNumber(), arguments.maxChapterNumber());
@@ -293,11 +295,6 @@ public final class ToonverseTool {
             if (exception instanceof ToolStorageException storageException) throw storageException;
             throw new SourceException("SOURCE_RESPONSE_INVALID", "The Toonverse book descriptor could not be written.", exception);
         }
-    }
-
-    private ToolStorageService requireStorage() {
-        if (storage == null) throw new ToolStorageException("Tool storage is not available in this server.");
-        return storage;
     }
 
     private static Duration storageTtl(Integer ttlSeconds) {

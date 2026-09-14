@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-07T11:38:45-04:00",
+  "reports": [
+    {
+      "id": "workspace-inspection-2026-09-07-113523",
+      "kind": "workspace-inspection",
+      "title": "Workflow Canvas State-Model Redundancy Inspection",
+      "path": "architect/reports/workspace-inspection-2026-09-07-113523.md",
+      "status": "linked_existing",
+      "createdAt": "2026-09-07T11:35:23-04:00",
+      "updatedAt": "2026-09-07T11:38:45-04:00",
+      "summary": {
+        "totalFindings": 4,
+        "safeRemovals": 0,
+        "safeInlineCandidates": 0,
+        "consolidationCandidates": 3,
+        "lookupCacheCandidates": 0,
+        "refactorCandidates": 0,
+        "architectDecisionRequired": 1,
+        "unknownUsageFindings": 0
+      },
+      "relatedArchitectEntries": [
+        "2026-09-05-workflow-studio-scene-state-ownership"
+      ],
+      "supersedes": [],
+      "supersededBy": null,
+      "events": [
+        {
+          "at": "2026-09-07T11:35:23-04:00",
+          "type": "REPORT_CREATED",
+          "note": "Focused workflow state-model redundancy inspection created."
+        },
+        {
+          "at": "2026-09-07T11:35:23-04:00",
+          "type": "REPORT_LINKED_TO_EXISTING_ARCHITECT",
+          "note": "Linked to the existing workflow studio scene state ownership entry to avoid a duplicate architect record."
+        },
+        {
+          "at": "2026-09-07T11:38:45-04:00",
+          "type": "REPORT_UPDATED",
+          "note": "Completed the three behavior-preserving consolidation findings; focused tests and production build passed."
+        }
+      ]
+    }
+  ]
+}

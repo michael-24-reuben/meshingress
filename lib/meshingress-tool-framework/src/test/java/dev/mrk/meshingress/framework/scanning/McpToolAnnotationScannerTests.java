@@ -2,6 +2,7 @@ package dev.mrk.meshingress.framework.scanning;
 
 import dev.mrk.meshingress.api.McpCallContext;
 import dev.mrk.meshingress.api.result.progress.McpProgressReporter;
+import dev.mrk.meshingress.api.services.McpServiceLifecycle;
 import dev.mrk.meshingress.api.tools.ToolVisibility;
 import dev.mrk.meshingress.api.tools.annotation.*;
 import dev.mrk.meshingress.api.tools.annotation.model.AnnotatedMcpTool;
@@ -94,6 +95,21 @@ class McpToolAnnotationScannerTests {
         assertEquals(1, tool.functions().getFirst().inputSchema().path("properties").size());
         assertEquals(true, tool.functions().getFirst().descriptor().annotations().path("progressReporter").asBoolean());
         assertEquals("string", tool.functions().getFirst().inputSchema().path("properties").path("name").path("type").asString());
+    }
+
+    @Test
+    void excludesServiceParametersAndKeepsProviderInputOutsideTheFunctionSchema() {
+        AnnotatedMcpTool tool = scanner.scan(ServiceAwareAnnotatedTool.class);
+
+        assertEquals(1, tool.functions().getFirst().parameters().size());
+        assertEquals("name", tool.functions().getFirst().parameters().getFirst().name());
+        assertEquals(1, tool.functions().getFirst().inputSchema().path("properties").size());
+        assertEquals(false, tool.functions().getFirst().inputSchema().path("properties").has("service"));
+        JsonNode serviceRequirement = tool.functions().getFirst().annotations().path("requires").get(0);
+        assertEquals(ExampleService.class.getName(), serviceRequirement.path("type").asString());
+        assertEquals("example-service", serviceRequirement.path("value").asString());
+        assertEquals("Example service", serviceRequirement.path("title").asString());
+        assertEquals("Provides the example function capability.", serviceRequirement.path("description").asString());
     }
 
     @Test
@@ -249,6 +265,26 @@ class McpToolAnnotationScannerTests {
             return null;
         }
     }
+
+    @McpTool(value = "service-aware")
+    static class ServiceAwareAnnotatedTool {
+
+        @McpFunction("call")
+        ObjectNode call(
+                @McpFunctionParam("name") String name,
+                @McpFunctionService(
+                        value = "example-service",
+                        title = "Example service",
+                        description = "Provides the example function capability."
+                ) ExampleService service
+        ) {
+            return null;
+        }
+    }
+
+    interface ExampleService extends McpServiceLifecycle {
+    }
+
 
     @McpTool(value = "schema")
     static class MethodSchemaDescriptionAnnotatedTool {

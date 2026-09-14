@@ -108,6 +108,11 @@ export type NodeRunState = 'idle' | 'running' | 'success' | 'error'
 export type WorkflowArgumentValue = string | string[]
 export type WorkflowNodeIconKind = 'workflow-manual-trigger' | 'meshingress-api' | 'tool'
 
+export interface WorkflowNodeCapabilities {
+  acceptsInput: boolean
+  acceptsOutput: boolean
+}
+
 export interface WorkflowNode {
   id: string
   title: string
@@ -123,8 +128,136 @@ export interface WorkflowNode {
   y: number
   arguments: Record<string, WorkflowArgumentValue>
   annotations: { audit: boolean; timeoutMs?: number; scopes: string[] }
+  /** Connection affordances supplied by the node/tool contract, not renderer-local state. */
+  capabilities: WorkflowNodeCapabilities
   isFavorite?: boolean
 }
+
+export interface WorkflowNodeValidationResult {
+  valid: boolean
+  errors: string[]
+}
+
+/**
+ * Validates an input candidate against the WorkflowNode data policy.
+ * Checks structural integrity, required fields, variable identifier formatting for `output`,
+ * coordinate finiteness, argument shape, and annotation constraints.
+ */
+export function validateWorkflowNodeDataPolicy(node: unknown): WorkflowNodeValidationResult {
+  const errors: string[] = []
+
+  if (!node || typeof node !== 'object' || Array.isArray(node)) {
+    return { valid: false, errors: ['WorkflowNode must be a non-null object.'] }
+  }
+
+  const candidate = node as Partial<WorkflowNode>
+
+  if (typeof candidate.id !== 'string' || candidate.id.trim().length === 0) {
+    errors.push('id must be a non-empty string.')
+  }
+
+  if (typeof candidate.title !== 'string' || candidate.title.trim().length === 0) {
+    errors.push('title must be a non-empty string.')
+  }
+
+  if (candidate.kind !== 'trigger' && candidate.kind !== 'tool') {
+    errors.push(`kind must be either 'trigger' or 'tool' (received: ${String(candidate.kind)}).`)
+  }
+
+  if (candidate.iconKind !== undefined && candidate.iconKind !== 'workflow-manual-trigger' && candidate.iconKind !== 'meshingress-api' && candidate.iconKind !== 'tool') {
+    errors.push("iconKind must be 'workflow-manual-trigger', 'meshingress-api', 'tool', or undefined.")
+  }
+
+  if (typeof candidate.toolId !== 'string') {
+    errors.push('toolId must be a string.')
+  }
+
+  if (candidate.moduleToolId !== undefined && typeof candidate.moduleToolId !== 'string') {
+    errors.push('moduleToolId must be a string if provided.')
+  }
+
+  if (typeof candidate.functionName !== 'string') {
+    errors.push('functionName must be a string.')
+  }
+
+  if (typeof candidate.output !== 'string' || !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(candidate.output)) {
+    errors.push(`output must be a valid variable identifier matching /^[A-Za-z_$][A-Za-z0-9_$]*$/ (received: "${String(candidate.output)}").`)
+  }
+
+  if (typeof candidate.x !== 'number' || !Number.isFinite(candidate.x)) {
+    errors.push('x coordinate must be a finite number.')
+  }
+
+  if (typeof candidate.y !== 'number' || !Number.isFinite(candidate.y)) {
+    errors.push('y coordinate must be a finite number.')
+  }
+
+  if (!candidate.arguments || typeof candidate.arguments !== 'object' || Array.isArray(candidate.arguments)) {
+    errors.push('arguments must be a Record<string, string | string[]>.')
+  } else {
+    for (const [argKey, argValue] of Object.entries(candidate.arguments)) {
+      if (typeof argValue === 'string') {
+        continue
+      }
+      if (Array.isArray(argValue) && argValue.every((item) => typeof item === 'string')) {
+        continue
+      }
+      errors.push(`arguments["${argKey}"] must be a string or array of strings.`)
+    }
+  }
+
+  if (!candidate.annotations || typeof candidate.annotations !== 'object' || Array.isArray(candidate.annotations)) {
+    errors.push('annotations must be an object.')
+  } else {
+    if (typeof candidate.annotations.audit !== 'boolean') {
+      errors.push('annotations.audit must be a boolean.')
+    }
+    if (candidate.annotations.timeoutMs !== undefined && (typeof candidate.annotations.timeoutMs !== 'number' || !Number.isFinite(candidate.annotations.timeoutMs) || candidate.annotations.timeoutMs < 0)) {
+      errors.push('annotations.timeoutMs must be a positive finite number if provided.')
+    }
+    if (!Array.isArray(candidate.annotations.scopes) || !candidate.annotations.scopes.every((scope) => typeof scope === 'string')) {
+      errors.push('annotations.scopes must be an array of string scopes.')
+    }
+  }
+
+  if (!candidate.capabilities || typeof candidate.capabilities !== 'object' || Array.isArray(candidate.capabilities)) {
+    errors.push('capabilities must be an object.')
+  } else {
+    if (typeof candidate.capabilities.acceptsInput !== 'boolean') {
+      errors.push('capabilities.acceptsInput must be a boolean.')
+    }
+    if (typeof candidate.capabilities.acceptsOutput !== 'boolean') {
+      errors.push('capabilities.acceptsOutput must be a boolean.')
+    }
+  }
+
+  if (candidate.isFavorite !== undefined && typeof candidate.isFavorite !== 'boolean') {
+    errors.push('isFavorite must be a boolean if provided.')
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  }
+}
+
+/**
+ * Type guard to check if an unknown candidate satisfies the WorkflowNode data policy.
+ */
+export function isWorkflowNode(node: unknown): node is WorkflowNode {
+  return validateWorkflowNodeDataPolicy(node).valid
+}
+
+/**
+ * Asserts that an unknown value satisfies the WorkflowNode data policy, throwing an error if invalid.
+ */
+export function assertWorkflowNodeDataPolicy(node: unknown): asserts node is WorkflowNode {
+  const result = validateWorkflowNodeDataPolicy(node)
+  if (!result.valid) {
+    throw new Error(`WorkflowNode data policy violation: ${result.errors.join('; ')}`)
+  }
+}
+
 
 export interface WorkflowEdge {
   /** One route; multiple edges may share a target input. */

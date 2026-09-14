@@ -67,15 +67,22 @@ public record MeshingressDocumentationProperties(
     public record Refresh(
             boolean enabled,
             String dispatchOutput,
-            String openapiOutput
+            String openapiOutput,
+            String toolsAndServicesOutput
     ) {
         public Refresh {
             dispatchOutput = defaultString(dispatchOutput, "docs/meshingress-dispatch.yaml");
             openapiOutput = defaultString(openapiOutput, "docs/meshingress-openapi.yaml");
+            toolsAndServicesOutput = defaultString(toolsAndServicesOutput, "docs/meshingress-tools-and-services.json");
         }
 
         static Refresh defaults() {
-            return new Refresh(true, "docs/meshingress-dispatch.yaml", "docs/meshingress-openapi.yaml");
+            return new Refresh(
+                    true,
+                    "docs/meshingress-dispatch.yaml",
+                    "docs/meshingress-openapi.yaml",
+                    "docs/meshingress-tools-and-services.json"
+            );
         }
     }
 

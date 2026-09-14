@@ -120,7 +120,7 @@ class FileToolRegistrationStoreTests {
                 defaults.audit(),
                 defaults.secrets(),
                 repository,
-                defaults.storage()
+                null
         );
     }
 

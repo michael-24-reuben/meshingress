@@ -1,0 +1,79 @@
+{
+    "canvasInteraction": [
+        "idle",
+        "panning",
+        "zooming",
+        "selecting",
+        "dragging-node",
+        "drawing-path",
+        "reconnecting-path",
+        "layout-revealing"
+    ],
+    "workflowState": [
+        "valid",
+        "incomplete",
+        "disconnected",
+        "unreachable",
+        "cyclic",
+        "blocked",
+        "executing",
+        "completed",
+        "failed"
+    ],
+    "slotOccupancy": [
+        "empty",
+        "occupied",
+        "reserved",
+        "blocked",
+        "out-of-bounds"
+    ],
+    "slotDropState": [
+        "none",
+        "valid-drop-target",
+        "invalid-drop-target"
+    ],
+    "nodeExecutionState": [
+        "idle",
+        "running",
+        "success",
+        "warning",
+        "error",
+        "disabled",
+        "unavailable"
+    ],
+    "nodeConnectionState": [
+        "isolated",
+        "connected",
+        "missing-required-input",
+        "blocked-by-upstream-error",
+        "stale-output"
+    ],
+    "nodeOverlay": [
+        "selected",
+        "hovered",
+        "focused",
+        "bookmarked",
+        "dragging",
+        "lifted-from-origin",
+        "has-unsaved-changes",
+        "unreachable",
+        "valid",
+        "invalid"
+    ],
+    "pathLifecycleState": [
+        "unconnected",
+        "drafting",
+        "connected",
+        "pending-validation",
+        "invalid",
+        "blocked"
+    ],
+    "pathFlowState": [
+        "idle",
+        "active",
+        "success",
+        "warning",
+        "error",
+        "muted"
+    ]
+}

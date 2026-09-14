@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-09-04-workflow-canvas-scene-builder",
+  "title": "Workflow Canvas Scene Builder",
+  "type": "feature-implementation",
+  "status": "active",
+  "priority": "normal",
+  "createdAt": "2026-09-04T12:00:00-04:00",
+  "activatedAt": "2026-09-04T12:00:00-04:00",
+  "updatedAt": "2026-09-04T14:28:13-04:00",
+  "tags": ["frontend", "workflow", "canvas", "states", "ui"],
+  "related": ["2026-08-31-workflow-canvas-honeycomb-slots", "2026-09-02-workflow-canvas-port-routing"],
+  "origin": { "kind": "user-request", "reference": "Current Codex conversation" },
+  "events": [
+    { "at": "2026-09-04T12:00:00-04:00", "kind": "CREATED", "summary": "Started an official scene-builder and event-tracker boundary for workflow canvas state behavior." },
+    { "at": "2026-09-04T14:28:13-04:00", "kind": "UPDATED", "summary": "Implemented the JSON-backed scene contract, typed event tracker, official dashboard route, and honeycomb scene-consumer bridge." },
+    { "at": "2026-09-04T14:28:13-04:00", "kind": "VERIFIED", "summary": "Studio npm run build passed. The local scene-builder preview mounted all nine state groups and its honeycomb canvas consumer." }
+  ]
+}

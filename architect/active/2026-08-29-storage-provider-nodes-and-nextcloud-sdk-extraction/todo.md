@@ -1,0 +1,22 @@
+# Todo
+
+- [x] Preserve the filtered design discussion as the record origin.
+- [x] Review the current empty Nextcloud module, sibling SDK layout, and native storage locations without changing them.
+- [x] Record the agreed storage-provider boundaries and the explicit cache-storage exception.
+- [x] Retire the provisional `@McpNode` grammar; keep `@McpTool` for callable nodes and introduce direct `@McpService` provider configuration.
+- [x] Approve provider discovery/listing and compatibility behavior: tools remain under `tools/list`; services use a separate service listing.
+- [x] Approve consumer provider-selection metadata and resolver/lifetime semantics: resolve typed providers internally, never through `DispatchExecutionResult`.
+- [ ] Approve provider/consumer scope and blacklist enforcement semantics.
+- [x] Approve the Nextcloud SDK adapter/dependency/documentation strategy: module-private `nextcloud-sdk-client:1.0`; do not import the SDK tool runtime/API/catalog; preserve a narrow delegated-workspace adapter until the SDK exposes that custom OCS protocol.
+- [x] Activate this record for implementation after user authorization.
+- [x] Add `@McpService`, `McpServiceRequirement`, typed resolver API, and server-side provider registry.
+- [x] Extend annotation scanning and invocation so `@McpService` parameters are typed internal injections, not JSON arguments.
+- [x] Support multiple providers per contract and explicit `oneOf` selection with deterministic missing/ambiguous errors.
+- [x] Add separate `services/list` discovery for public enabled providers without exposing provider instances.
+- [ ] Define and enforce provider/consumer scope and blacklist semantics (explicitly deferred by the user).
+- [x] Extract Nextcloud into `toolspace/nextcloud`, including delegated viewer state/API and module-owned configuration; attach it to the distribution after focused verification.
+- [x] Create and extract a separate `toolspace/local-storage` provider module, including local retrieval/cleanup/file API behavior.
+- [x] Remove `ToolStorageRouter`, native provider wiring, and provider-specific `meshingress.storage.*` application properties after both modules attach.
+- [x] Move the residual `MeshingressProperties.Storage` DTO from the core configuration library into the local-storage module, so provider property structure as well as values is module-owned.
+- [x] Replace the native single-provider `storage/publication-status` dispatch without recreating a global lifecycle/provider selector.
+- [x] Add the common service lifecycle and typed client input bridge: provider inputs are published under key-addressed requirement metadata, bound from `tools/call.params.requirements`, and cleaned up through `stop`.
