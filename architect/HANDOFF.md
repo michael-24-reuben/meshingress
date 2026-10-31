@@ -2,7 +2,7 @@
 
 ## Assignment Status
 - assignmentStatus: active
-- lastUpdatedAt: 2026-09-14T10:08:48-04:00
+- lastUpdatedAt: 2026-10-02T11:04:45-04:00
 - updatedBy: Codex
 - currentBranch: development (checked during reconciliation)
 - expectedBranch: development
@@ -24,6 +24,11 @@
 - Contract coverage includes all nine phase mutation categories, target payloads, and renderer attributes.
 - parseWorkflowStudioScene validates and normalizes input with legacy-parser parity coverage; existing legacy callers remain.
 - HoneycombWorkflowModelAdapter routes integrated click, hover, focus, and blur overlay changes through the root model. Standalone local fallback remains.
+- `?view=workbench-tmp` now renders an opt-in read-only Honeycomb center surface while reusing the Studio runtime, run/validate actions, selected-node inspector, and live execution states. The production Workbench remains unchanged.
+- The shared Honeycomb renderer visually covers every existing model state attribute. Temporary Workbench derives workflow lifecycle, connected/isolated node topology, and the available path validity/execution states from live inputs.
+- The Canvas Scene Builder now wraps its existing Honeycomb surface in a pointer-captured pan-only viewport. Dragging blank canvas space translates the view, wheel/native scrolling is suppressed, node controls remain interactive, and StateCategory.ofPanning is restored to the prior canvas interaction after release.
+- The Scene Builder itself is now a bounded full-height layout: its local header/catalog were removed, the central canvas grows through the available shell, controls are on a resizable right sidebar, and a footer keeps the group/state totals right-aligned.
+- Temporary Workbench now projects path endpoint/capability/cycle validity and execution flow through root mutations. Waiting descendants of upstream errors become blocked; unrelated branches and already-executed sources are preserved. New-run idle states reset earlier path results. SVG paths and adjacent seam markers share identity, attributes, and styling.
 
 ## Remaining Work and Decisions
 - Replace renderer-local canvas/slot/node snapshot construction with the approved render-only adapter.
@@ -31,24 +36,31 @@
 - Migrate remaining legacy scene consumers and verify parser/creator and renderer fallback compatibility before retiring workflow-canvas-scene.ts.
 - Preserve every WorkflowStudioState method and use public root APIs.
 - The old tracker-based component-lifecycle sketch is historical and cannot be implemented unchanged.
+- Path drafting/pending-validation need Honeycomb editing/validation events; warning/muted need runtime signals. Missing-endpoint paths have root state but no current drawable geometry. Consult the primary context's complete path coverage table.
 
 ## Verification Details
-- Historical implementation result: September 7 notes record npm test with 6 passing tests and npm run build passing with the existing Vite chunk-size advisory.
-- Current run: Documentation reconciliation only; no fresh implementation or browser verification.
-- Verification gap: Full render-only lifecycle and final legacy-file retirement remain unfinished.
+- Current implementation result: October 2 path projection records npm test with 16 passing tests, npm run build passing after sandbox helper-process elevation with the existing chunk-size advisory, and lint with existing warnings only.
+- Manual browser checks: a blank-space drag translated the Scene Builder Honeycomb canvas; a wheel action over it left it stationary; the canvas was contained above the footer; pointer resize changed the right controls from 320px to 402px; and ArrowRight resized them from 402px to 386px.
+- Verification correction: no dedicated raw-stylesheet selector test is retained because the app TypeScript configuration excludes Node types and Vitest stubs the stylesheet import. State presentation remains source-defined; model and temporary-Workbench tests cover its behavior.
+- Manual path checks: sample temporary-Workbench paths initialized connected/idle; Scene Builder success and blocked states reached both SVG paths and adjacent markers with matching computed strokes. No real workflow was launched.
+- Verification gap: Four path triggers remain deferred, the full render-only lifecycle and final legacy-file retirement remain unfinished. Flow projections are endpoint-derived, not port-level telemetry.
 
 ## Last Run Summary
-- outcome: Reconciled stale root pointers with the latest active entry at the user's request.
-- filesChanged: ASSIGNMENT.md, HANDOFF.md, and primary entry context.md/meta.json.
-- implementationChanged: none
+- outcome: Implemented the available path-state triggers in Studio Workbench Tmp.
+- filesChanged: Temporary-Workbench state projection and effect, Honeycomb route/seam identity/attributes and presentation, transition tests, and Architect records.
+- implementationChanged: yes; production Workbench, topology/placement data, Scene Builder pan behavior, and legacy scene fallback were retained.
 - commitCreated: no
 - sourceOfTruth: Primary entry metadata, checklist, context, and implementation notes.
 
 ## Existing Dirty Work Preserved
-Git status shows extensive pre-existing staged, unstaged, and untracked work across server/storage, tool modules, Studio, documentation, and Architect records. The Studio state, renderer, and test directories include untracked work. Root handoff files already had local modifications; prior storage handoff content is retained below. Do not reset, clean, stage, or commit these areas as part of this documentation update. Preserve the earlier generated-artifact boundaries recorded in the historical handoff.
+Git status shows extensive pre-existing staged, unstaged, and untracked work across server/storage, tool modules, Studio, documentation, and Architect records. The Studio state, renderer, and test directories include untracked work, including the current pan and control-resize helpers with focused tests. Root handoff files already had local modifications; prior storage handoff content is retained below. Do not reset, clean, stage, or commit these areas as part of this documentation update. Preserve the earlier generated-artifact boundaries recorded in the historical handoff.
 
 ## Next Action
-Obtain the owner's decision on the exported standalone scene fallback, then scope the render-only replacement and verify the approved slice with npm test and npm run build from app/meshingress-studio-web. The current request authorizes record updates only.
+Choose the next state group or path-editing slice with the owner. The current
+projection covers eight path values for available inputs; drafting,
+pending-validation, warning, and muted need their own editing/runtime signals.
+Retain the Scene Builder pan viewport, production Workbench, and exported
+standalone scene fallback unless the owner authorizes a compatibility change.
 
 ## Historical Storage-Provider Handoff
 The following is the preserved August 31 ledger, not the current assignment. Its timestamps, next actions, verification, and checklist are historical. Storage scope/blacklist policy remains deferred; consult that active entry before resuming it. Some earlier design notes describe superseded lifecycle approaches; the later typed-init implementation section records the replacement.

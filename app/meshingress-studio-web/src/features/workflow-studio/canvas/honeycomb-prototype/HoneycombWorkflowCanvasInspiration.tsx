@@ -15,6 +15,7 @@ import { graphRouteVariant } from './route-variants/graph-route-variant'
 import type { PortTrafficRole } from './route-variants/honeycomb-route-variant'
 import type { WorkflowCanvasScene } from '../../states/workflow-canvas-scene'
 import './honeycomb-workflow-canvas.css'
+import './honeycomb-state-presentation.css'
 import type { CanvasModelSnapshot, WorkflowModelSnapshot } from '../../states/WorkflowStudioState'
 import {
   HoneycombNodeSnapshot,
@@ -61,6 +62,8 @@ export {
 export interface HoneycombWorkflowCanvasInspirationProps {
   edges: WorkflowEdge[]
   nodes: WorkflowNode[]
+  /** Notifies an embedding Studio surface when an occupied node slot is selected. */
+  onNodeSelect?: (nodeId: string) => void
   /** Parsed scene state from the scene builder; absent for the standalone prototype. */
   scene?: WorkflowCanvasScene
   /** Stable state projection used by an integrated renderer. */
@@ -161,7 +164,7 @@ function stageMetrics(slots: HoneycombSlot[], geometry: HoneycombGeometry) {
   }
 }
 
-export function HoneycombWorkflowCanvasInspiration({ edges, nodes, placements = defaultHoneycombPrototypePlacements, scene, model }: HoneycombWorkflowCanvasInspirationProps): CanvasModelSnapshot {
+function useHoneycombWorkflowCanvasInspiration({ edges, nodes, onNodeSelect, placements = defaultHoneycombPrototypePlacements, scene, model }: HoneycombWorkflowCanvasInspirationProps): CanvasModelSnapshot {
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [hoveredNodeSlot, setHoveredNodeSlot] = useState<HoveredNodeSlot | null>(null)
   const [geometryProbe, setGeometryProbe] = useState<HTMLElement | null>(null)
@@ -200,6 +203,7 @@ export function HoneycombWorkflowCanvasInspiration({ edges, nodes, placements = 
       const sourcePosition = flatTopHexPosition(sourceSlot, geometry)
       const targetPosition = flatTopHexPosition(targetSlot, geometry)
       const control: ImmediateRouteSeam = {
+        pathId: `${edge.source}->${edge.target}`,
         destinationAngle: Math.atan2(targetPosition.y - sourcePosition.y, targetPosition.x - sourcePosition.x) * 180 / Math.PI,
         id: `route-side-control/${edge.source}->${edge.target}`,
         point: midpoint,
@@ -256,6 +260,7 @@ export function HoneycombWorkflowCanvasInspiration({ edges, nodes, placements = 
     interactionAdapter,
     metrics,
     nodesById,
+    onNodeSelect,
     placementBySlotId,
     positionedSlots,
     routeModel,
@@ -267,4 +272,18 @@ export function HoneycombWorkflowCanvasInspiration({ edges, nodes, placements = 
     setSelectedSlotId,
     workflowJunctionIds,
   })
+}
+
+/**
+ * Snapshot-producing compatibility entry point retained for the Scene Builder
+ * and standalone consumers. The optional legacy scene fallback remains part of
+ * this public contract.
+ */
+export function HoneycombWorkflowCanvasInspiration(props: HoneycombWorkflowCanvasInspirationProps): CanvasModelSnapshot {
+  return useHoneycombWorkflowCanvasInspiration(props)
+}
+
+/** A React surface for hosts that render Honeycomb directly. */
+export function HoneycombWorkflowCanvas(props: HoneycombWorkflowCanvasInspirationProps) {
+  return useHoneycombWorkflowCanvasInspiration(props).getCanvas()
 }

@@ -6,8 +6,10 @@ import {
   CanvasModelSnapshot,
   NodeModelSnapshot,
   PathModelSnapshot,
+  StateCategory,
   SlotModelSnapshot,
   WorkflowModelSnapshot,
+  WorkflowStudioCategoryValues,
   WorkflowStateSnapshot,
   parseWorkflowStudioScene,
   type NodeConnectionStateSnapshot,
@@ -60,6 +62,12 @@ class TestCanvasModelSnapshot extends CanvasModelSnapshot {
 }
 
 describe('WorkflowModelSnapshot', () => {
+  it('exposes every declared state literal through StateCategory', () => {
+    expect(new Set(Object.values(StateCategory))).toEqual(
+      new Set(Object.values(WorkflowStudioCategoryValues).flat()),
+    )
+  })
+
   it('normalizes the same valid scene shape as the legacy parser without changing its input', () => {
     const nodeA = { ...initialNodes[0], capabilities: { ...initialNodes[0].capabilities } }
     const nodeB = { ...initialNodes[1], capabilities: { ...initialNodes[1].capabilities } }

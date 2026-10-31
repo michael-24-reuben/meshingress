@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.0.8</version>
         <relativePath/>
     </parent>
 
@@ -60,6 +60,10 @@
     <properties>
         <java.version>25</java.version>
         <mockito.version>5.23.0</mockito.version>
+
+        <jackson-bom.version>3.1.6</jackson-bom.version>
+        <jackson-2-bom.version>2.21.6</jackson-2-bom.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>

@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { WorkflowStudioPage } from './features/workflow-studio/WorkflowStudioPage'
+import { StudioWorkbenchTmpPage } from './features/workflow-studio/StudioWorkbenchTmpPage'
 import { SampleWorkflowTestPage } from './features/workflow-studio/SampleWorkflowTestPage'
 import { WorkflowCanvasSceneBuilderPage } from './features/workflow-studio/WorkflowCanvasSceneBuilderPage'
 
 export default function App() {
-  const [view, setView] = useState<'studio' | 'test' | 'scene-builder'>(() => {
+  const [view, setView] = useState<'studio' | 'test' | 'scene-builder' | 'workbench-tmp'>(() => {
     if (typeof window === 'undefined') return 'studio'
     const params = new URLSearchParams(window.location.search)
     if (params.get('view') === 'scene-builder') return 'scene-builder'
+    if (params.get('view') === 'workbench-tmp') return 'workbench-tmp'
     return params.get('page') === 'test' || params.get('view') === 'test' ? 'test' : 'test' // default to test for quick testing
   })
 
@@ -17,6 +19,8 @@ export default function App() {
       const requestedView = params.get('view')
       if (requestedView === 'scene-builder') {
         setView('scene-builder')
+      } else if (requestedView === 'workbench-tmp') {
+        setView('workbench-tmp')
       } else {
         const isTest = params.get('page') === 'test' || requestedView === 'test'
         setView(isTest ? 'test' : 'studio')
@@ -26,10 +30,10 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  const switchView = (nextView: 'studio' | 'test' | 'scene-builder') => {
+  const switchView = (nextView: 'studio' | 'test' | 'scene-builder' | 'workbench-tmp') => {
     setView(nextView)
     const url = new URL(window.location.href)
-    if (nextView === 'test' || nextView === 'scene-builder') {
+    if (nextView === 'test' || nextView === 'scene-builder' || nextView === 'workbench-tmp') {
       url.searchParams.set('view', nextView)
     } else {
       url.searchParams.delete('view')
@@ -59,7 +63,7 @@ export default function App() {
           <span style={{ fontWeight: 600, color: '#38bdf8' }}>Meshingress Studio</span>
           <span style={{ color: '#71717a' }}>/</span>
           <span style={{ color: '#d4d4d8' }}>
-            {view === 'test' ? 'Sample Workflow Live Test Page' : view === 'scene-builder' ? 'Workflow Canvas Scene Builder' : 'Workflow Studio'}
+            {view === 'test' ? 'Sample Workflow Live Test Page' : view === 'scene-builder' ? 'Workflow Canvas Scene Builder' : view === 'workbench-tmp' ? 'Studio Workbench Tmp' : 'Workflow Studio'}
           </span>
         </div>
 
@@ -95,6 +99,17 @@ export default function App() {
             Studio Workbench
           </button>
           <button
+            onClick={() => switchView('workbench-tmp')}
+            style={{
+              padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: 'pointer',
+              border: view === 'workbench-tmp' ? '1px solid #3b82f6' : '1px solid #3f3f46',
+              backgroundColor: view === 'workbench-tmp' ? '#1e3a8a' : '#27272a', color: view === 'workbench-tmp' ? '#ffffff' : '#a1a1aa',
+            }}
+            type="button"
+          >
+            Studio Workbench Tmp
+          </button>
+          <button
             onClick={() => switchView('scene-builder')}
             style={{
               padding: '3px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 500, cursor: 'pointer',
@@ -114,6 +129,8 @@ export default function App() {
           <SampleWorkflowTestPage onBackToStudio={() => switchView('studio')} />
         ) : view === 'scene-builder' ? (
           <WorkflowCanvasSceneBuilderPage />
+        ) : view === 'workbench-tmp' ? (
+          <StudioWorkbenchTmpPage />
         ) : (
           <WorkflowStudioPage />
         )}

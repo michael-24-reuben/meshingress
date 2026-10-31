@@ -41,6 +41,73 @@ export type StateCategory =
     | PathLifecycleState
     | PathFlowState
 
+/**
+ * Variable-backed catalog of every distinct Studio state literal.
+ *
+ * The existing string contracts remain unchanged. Use this object when a
+ * state is referenced in code (for example, `StateCategory.ofIdle`) so state
+ * usage is searchable without introducing a second state model.
+ */
+export const StateCategory = {
+    // Canvas Interaction
+    ofIdle: 'idle',
+    ofPanning: 'panning',
+    ofZooming: 'zooming',
+    ofSelecting: 'selecting',
+    ofDraggingNode: 'dragging-node',
+    ofDrawingPath: 'drawing-path',
+    ofReconnectingPath: 'reconnecting-path',
+    ofLayoutRevealing: 'layout-revealing',
+    // Workflow State
+    ofValid: 'valid',
+    ofIncomplete: 'incomplete',
+    ofDisconnected: 'disconnected',
+    ofUnreachable: 'unreachable',
+    ofCyclic: 'cyclic',
+    ofBlocked: 'blocked',
+    ofExecuting: 'executing',
+    ofCompleted: 'completed',
+    ofFailed: 'failed',
+    // Slot Occupancy
+    ofEmpty: 'empty',
+    ofOccupied: 'occupied',
+    ofReserved: 'reserved',
+    ofOutOfBounds: 'out-of-bounds',
+    // Slot Drop State
+    ofNone: 'none',
+    ofValidDropTarget: 'valid-drop-target',
+    ofInvalidDropTarget: 'invalid-drop-target',
+    // Node Execution State
+    ofRunning: 'running',
+    ofSuccess: 'success',
+    ofWarning: 'warning',
+    ofError: 'error',
+    ofDisabled: 'disabled',
+    ofUnavailable: 'unavailable',
+    // Node Connection State
+    ofIsolated: 'isolated',
+    ofConnected: 'connected',
+    ofMissingRequiredInput: 'missing-required-input',
+    ofBlockedByUpstreamError: 'blocked-by-upstream-error',
+    ofStaleOutput: 'stale-output',
+    // Node Overlay
+    ofSelected: 'selected',
+    ofHovered: 'hovered',
+    ofFocused: 'focused',
+    ofBookmarked: 'bookmarked',
+    ofDragging: 'dragging',
+    ofLiftedFromOrigin: 'lifted-from-origin',
+    ofHasUnsavedChanges: 'has-unsaved-changes',
+    ofInvalid: 'invalid',
+    // Path Lifecycle State
+    ofUnconnected: 'unconnected',
+    ofDrafting: 'drafting',
+    ofPendingValidation: 'pending-validation',
+    // Path Flow State
+    ofActive: 'active',
+    ofMuted: 'muted',
+} as const satisfies Record<string, StateCategory>
+
 export type PhaseMultiplicity = 'single' | 'multiple'
 
 

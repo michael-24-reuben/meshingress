@@ -31,6 +31,21 @@
   the renderer-local snapshot conflict.
 - [x] Route integrated Honeycomb node-overlay interactions through a stable
   root-model adapter while preserving the model-less standalone fallback.
+- [x] Add an opt-in `Studio Workbench Tmp` route that reuses Studio runtime
+  execution, validation, and selection while rendering an isolated,
+  read-only Honeycomb workbench.
+- [x] Add attribute-only Honeycomb presentation coverage for every declared
+  state, without fabricating new runtime diagnostics or interaction behavior.
+- [x] Wrap the Scene Builder Honeycomb canvas in a pointer-captured,
+  pan-only viewport that suppresses native wheel scrolling while preserving
+  node-control input.
+- [x] Replace the Scene Builder header/catalog layout with a bounded,
+  full-height canvas, right-side resizable controls, and a count footer.
+- [x] Project temporary-Workbench path endpoint/capability/cycle validity and
+  live execution flow through root mutations, including upstream blocking,
+  branch isolation, and rerun resets; present attributes on adjacent seams.
+- [ ] Add path drafting/pending-validation triggers when Honeycomb topology
+  editing exists, and warning/muted triggers when the runtime exposes them.
 - [ ] Replace the renderer-local Honeycomb snapshot hierarchy with a fully
   render-only adapter after its public standalone contract is decided.
 

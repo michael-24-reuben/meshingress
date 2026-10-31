@@ -16,7 +16,7 @@ import type {
   PortTrafficRole,
 } from './route-variants/honeycomb-route-variant'
 import type { WorkflowCanvasScene } from '../../states/workflow-canvas-scene'
-import {SlotModelSnapshot, type NodeModelSnapshot, type NodeOverlay, SlotOccupancySnapshot, SlotDropStateSnapshot, type WorkflowModelSnapshot} from '../../states/WorkflowStudioState'
+import {SlotModelSnapshot, type NodeModelSnapshot, type NodeOverlay, SlotOccupancySnapshot, SlotDropStateSnapshot, type WorkflowModelSnapshot, StateCategory} from '../../states/WorkflowStudioState'
 import { HoneycombNodeSnapshot } from './HoneycombNodeSnapshot'
 import type { HoneycombWorkflowModelAdapter } from './adapters/HoneycombWorkflowModelAdapter'
 import { readableSlotLabel, type HoneycombNodePlacement, type HoneycombSlot, type HoveredNodeSlot, type ImmediateRouteSeam } from './honeycomb-types'
@@ -64,6 +64,7 @@ export interface HoneycombSlotFrameSnapshotProps {
   scene?: WorkflowCanvasScene
   model?: WorkflowModelSnapshot
   interactionAdapter?: HoneycombWorkflowModelAdapter
+  onNodeSelect?: (nodeId: string) => void
   setSelectedSlotId: (value: (((prevState: (string | null)) => (string | null)) | string | null)) => void
   setHoveredNodeSlot: (value: (((prevState: (HoveredNodeSlot | null)) => (HoveredNodeSlot | null)) | HoveredNodeSlot | null)) => void
 
@@ -139,7 +140,7 @@ export class HoneycombSlotFrameSnapshot extends SlotModelSnapshot {
   public getSlotKindWorkflow(): JSX.Element | null {
     const p = this.props ?? currentSlotFrameParams
     if (!p) return null
-    const { boundaryPoints, geometry, interactionAdapter, scene, model, setHoveredNodeSlot, setSelectedSlotId, slot } = p
+    const { boundaryPoints, geometry, interactionAdapter, onNodeSelect, scene, model, setHoveredNodeSlot, setSelectedSlotId, slot } = p
     const selected = this.selected ?? p.selected
     const slotLabel = this.slotLabel ?? p.slotLabel
     const nodeKind = this.nodeKind ?? p.nodeKind
@@ -160,28 +161,29 @@ export class HoneycombSlotFrameSnapshot extends SlotModelSnapshot {
         onClick={() => {
           setSelectedSlotId(slot.id)
           if (node) {
-            setNodeOverlay('selected')
+            setNodeOverlay(StateCategory.ofSelected)
+            onNodeSelect?.(node.id)
           }
         }}
         onPointerEnter={(event) => {
           if (!node) return
-          setNodeOverlay('hovered')
+          setNodeOverlay(StateCategory.ofHovered)
           setHoveredNodeSlot({ clientX: event.clientX, clientY: event.clientY, label: slotLabel, slotId: slot.id })
         }}
         onPointerLeave={() => {
           setHoveredNodeSlot((current) => current?.slotId === slot.id ? null : current)
           if (node) {
-            setNodeOverlay('hovered', false)
+            setNodeOverlay(StateCategory.ofHovered, false)
           }
         }}
         onFocus={() => {
           if (node) {
-            setNodeOverlay('focused')
+            setNodeOverlay(StateCategory.ofFocused)
           }
         }}
         onBlur={() => {
           if (node) {
-            setNodeOverlay('focused', false)
+            setNodeOverlay(StateCategory.ofFocused, false)
           }
         }}
         onPointerMove={(event) => {
@@ -211,7 +213,7 @@ export class HoneycombSlotFrameSnapshot extends SlotModelSnapshot {
   protected override snapshot(_nodeModel: NodeModelSnapshot | null, _occupancy: SlotOccupancySnapshot, _dropState: SlotDropStateSnapshot): JSX.Element | null {
     const p = this.props ?? currentSlotFrameParams
     if (!p) return null
-    const { geometry, immediateRouteSeams, metrics, routeModel, slot, workflowJunctionIds, } = p
+    const { geometry, immediateRouteSeams, metrics, model, routeModel, scene, slot, workflowJunctionIds, } = p
 
     const isHoveredNodeSlot = this.isHoveredNodeSlot ?? p.isHoveredNodeSlot
     const ownedRouteSideControls = this.ownedRouteSideControls ?? p.ownedRouteSideControls
@@ -269,6 +271,8 @@ export class HoneycombSlotFrameSnapshot extends SlotModelSnapshot {
           <span
             aria-hidden="true"
             className="hwp-route-side-control-anchor"
+            data-path-id={control.pathId}
+            {...(control.pathId ? model?.getPathModel(control.pathId)?.getDataAttributes() ?? scene?.paths[control.pathId]?.attributes : undefined)}
             data-owner-node-id={control.sourceNodeId}
             data-owner-slot-id={control.sourceSlotId}
             data-destination-angle={control.destinationAngle}

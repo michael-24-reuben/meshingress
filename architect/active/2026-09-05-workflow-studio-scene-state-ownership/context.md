@@ -87,3 +87,103 @@ legacy `scene` for standalone callers. Removing that fallback would alter the
 standalone contract and requires an explicit decision.
 
 On September 14, the user requested reconciliation of the root assignment and handoff. They now point to this active objective; the previous storage-provider handoff is preserved as historical context. This documentation update does not authorize the remaining public fallback removal or change implementation status.
+
+## 2026-09-26 temporary Studio Workbench
+
+`?view=workbench-tmp` is an intentionally isolated experiment. Its dedicated
+page reuses `WorkflowStudioPage` for the live nodes, edges, run transport,
+validation, panels, and selected node, but replaces only the center
+`Workbench` surface with `StudioWorkbenchTmp`. The original `Studio Workbench`
+route continues to render the rectangular editor unchanged.
+
+The temporary surface creates a stable `WorkflowModelSnapshot` for the current
+topology, applies each live `NodeRunState` as a Honeycomb node-execution phase,
+and subscribes to model changes for renderer refresh. Node selection also flows
+back to the Studio inspector. Topology edits, tool insertion, edge manipulation,
+and layout changes deliberately remain in the production Workbench.
+
+The Honeycomb optional `scene` prop is still exported and supported. This slice
+adds a React wrapper while retaining the snapshot-producing compatibility entry
+point; it does not remove or reinterpret the legacy standalone fallback.
+
+## 2026-09-26 Honeycomb state presentation
+
+The generic Honeycomb renderer now carries a presentation-only stylesheet with
+selectors for every declared canvas-interaction, workflow, slot, node, and path
+state. It consumes the existing `data-*` attributes from the root model or the
+legacy scene fallback and does not mutate state, change input affordances, or
+claim that an unimplemented state can now occur.
+
+The temporary Workbench additionally derives only three workflow lifecycle
+possibilities from existing inputs (`executing`, terminal `completed`, and
+terminal `failed`, otherwise `incomplete`) and node `connected`/`isolated`
+from its live edges. Path flow and diagnostic connection states are not
+inferred, because the current runtime does not provide an unambiguous source.
+
+## 2026-10-02 Scene Builder pan viewport
+
+The Canvas Scene Builder now owns a Scene-Builder-specific pan viewport around
+the Honeycomb canvas. Pointer capture begins only from non-control canvas
+space, activates after a four-pixel movement threshold, and translates the
+rendered content locally. The viewport suppresses wheel/native scrolling;
+node buttons and form controls remain outside the pan gesture so their existing
+model interactions continue unchanged.
+
+The root canvas model reports `StateCategory.ofPanning` only while a drag is
+active and restores the prior canvas-interaction phase afterward. The offset is
+ephemeral React UI geometry, not a scene, topology, placement, or fallback
+contract change. This does not authorize the later path-state work or any
+standalone `scene` fallback removal.
+
+## 2026-10-02 Scene Builder bounded layout
+
+The Scene Builder's redundant local header and multi-card state catalog were
+removed. The app-level navigation remains unchanged. A footer now keeps the
+state-group and declared-state totals at the right edge without competing with
+the canvas.
+
+The canvas is the first grid column and fills all remaining width and height of
+the app shell. Controls are in a right-side panel with a focusable vertical
+separator: pointer dragging and Left/Right keyboard keys resize it within a
+248px-to-560px range. The page, grid, canvas, and pan viewport all use
+min-height: 0 and hidden overflow, while the controls themselves scroll when
+needed. This prevents the Honeycomb canvas from forcing a fixed 610px minimum
+outside its available bounds.
+
+## 2026-10-02 path projection in Studio Workbench Tmp
+
+`honeycombPathStatesForRun` derives path state from the temporary Workbench's
+existing nodes, edges, capabilities, runStates, and running flag.
+`syncHoneycombPathStates` applies both path categories through the root model
+after each runtime update. Studio edges compile to default-output routes;
+the runtime's node-start/completion evidence supports the conservative flow
+projection below. This is not port-level telemetry or a validation transport.
+
+| Category | State | Current automatic trigger / remaining work |
+|---|---|---|
+| Lifecycle | unconnected | An edge references a missing source or target node. |
+| Lifecycle | connected | Both endpoints exist, permit the direction, and the edge is acyclic and unblocked. |
+| Lifecycle | invalid | Output/input capability disallows the edge, or it is a self-link/cycle member. |
+| Lifecycle | blocked | Source failed, or an ancestor failed while this source has not executed. |
+| Lifecycle | drafting | Deferred: the temporary canvas has no path-creation gesture. |
+| Lifecycle | pending-validation | Deferred: there is no asynchronous path-validation event. |
+| Flow | idle | No demonstrated delivery; includes rerun reset, source running, and structurally invalid/dangling paths. |
+| Flow | active | Workflow running, source succeeded, and target running. |
+| Flow | success | Both source and target succeeded. |
+| Flow | error | Source or target reports error on a structurally valid edge. |
+| Flow | warning | Deferred: NodeRunState has no warning outcome. |
+| Flow | muted | Deferred: no edge-mute or skipped-route signal exists. |
+
+Structural validity takes precedence over execution. Ancestor errors affect
+only waiting sources and do not overwrite a running/successful source reached
+through another branch. A blocked descendant retains idle flow unless one of
+its own endpoints has an error. New-run idle states clear previous blocked,
+success, active, and error projections.
+
+Route SVG paths and immediate-route seam markers share path IDs, attributes,
+and presentation. Missing endpoints have no drawable geometry in the current
+Honeycomb renderer: their unconnected state exists in the root model, but no
+free-ended preview is fabricated. Geometry routing failure is also not treated
+as a runtime path failure. Scene Builder still permits manual state inspection;
+it does not automatically overwrite user-chosen path states. The production
+Workbench and exported standalone scene fallback remain unchanged.

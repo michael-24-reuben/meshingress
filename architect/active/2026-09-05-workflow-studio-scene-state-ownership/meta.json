@@ -7,7 +7,7 @@
   "priority": "normal",
   "createdAt": "2026-09-05T15:28:55-04:00",
   "activatedAt": "2026-09-05T15:28:55-04:00",
-  "updatedAt": "2026-09-14T10:08:48-04:00",
+  "updatedAt": "2026-10-02T11:04:45-04:00",
   "tags": [
     "frontend",
     "workflow",
@@ -119,6 +119,61 @@
       "at": "2026-09-14T10:08:48-04:00",
       "kind": "UPDATED",
       "summary": "Reconciled root assignment and handoff with this active objective at user request, preserved the prior storage-provider ledger, and labeled superseded context as historical. Documentation only; implementation status and compatibility decision gates remain unchanged."
+    },
+    {
+      "at": "2026-09-26T18:23:43-04:00",
+      "kind": "UPDATED",
+      "summary": "Added an opt-in Studio Workbench Tmp route that reuses WorkflowStudioPage runtime while replacing only the central rectangular Workbench with a read-only Honeycomb execution surface. The original Workbench and optional scene fallback remain intact."
+    },
+    {
+      "at": "2026-09-26T18:23:43-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed with 9 tests and npm run build passed; Vite retained only its existing chunk-size advisory."
+    },
+    {
+      "at": "2026-09-26T18:34:07-04:00",
+      "kind": "UPDATED",
+      "summary": "Added attribute-only Honeycomb presentation for every declared state and projected only unambiguous workflow lifecycle and topology connection states from the temporary Workbench runtime."
+    },
+    {
+      "at": "2026-09-26T18:34:07-04:00",
+      "kind": "VERIFIED",
+      "summary": "A presentation-coverage test verifies every stateEnums literal has a Honeycomb selector; Studio npm test passed with 11 tests."
+    },
+    {
+      "at": "2026-10-02T10:34:32-04:00",
+      "kind": "UPDATED",
+      "summary": "Corrected the September 26 selector-test record: no raw-stylesheet selector test is retained because the app TypeScript configuration excludes Node types and Vitest stubs the stylesheet import. The stylesheet source remains presentation-only and the behavioral state-projection tests remain in place."
+    },
+    {
+      "at": "2026-10-02T10:34:32-04:00",
+      "kind": "UPDATED",
+      "summary": "Wrapped the Canvas Scene Builder Honeycomb canvas in a pointer-captured pan-only viewport. It suppresses wheel/native scrolling, preserves node-control input, exposes canvas panning only during an active drag, and keeps the translated offset local to the view."
+    },
+    {
+      "at": "2026-10-02T10:34:32-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed with 11 tests; npm run build passed with only the existing Vite chunk-size advisory; npm run lint completed with existing warnings only. A local browser drag panned the canvas, while a wheel action over it did not scroll it."
+    },
+    {
+      "at": "2026-10-02T10:48:57-04:00",
+      "kind": "UPDATED",
+      "summary": "Removed the Scene Builder's local header and state catalog, moved controls into a bounded resizable right sidebar, placed state totals in a right-aligned footer, and made the Honeycomb canvas consume the remaining full-height center area."
+    },
+    {
+      "at": "2026-10-02T10:48:57-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed with 12 tests; npm run build passed after sandbox elevation was needed for Vite's Windows helper process; npm run lint completed with existing warnings only. Browser verification showed the canvas contained above the footer, pointer resize from 320px to 402px, and keyboard resize from 402px to 386px."
+    },
+    {
+      "at": "2026-10-02T11:04:45-04:00",
+      "kind": "UPDATED",
+      "summary": "Projected temporary-Workbench path lifecycle and flow through root mutations, covering endpoint/capability/cycle validity, upstream failure blocking, conservative delivery, and rerun reset. Adjacent seam controls now share path attributes and styling. Four values remain deferred for absent editing/runtime triggers."
+    },
+    {
+      "at": "2026-10-02T11:04:45-04:00",
+      "kind": "VERIFIED",
+      "summary": "Studio npm test passed with 16 tests, production build passed after sandbox helper-process elevation, and lint completed with existing warnings. Browser checks confirmed connected/idle initialization and matching success/blocked colors on route paths and adjacent seam markers; no real workflow was executed."
     }
   ]
 }

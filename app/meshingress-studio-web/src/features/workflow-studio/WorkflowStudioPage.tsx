@@ -1,3 +1,4 @@
+import { StateCategory } from "@/features/workflow-studio/states/WorkflowStudioState.js";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { listMcpTools, type McpToolFunction } from '@/api/mcp.js'
 import { validateNativeLogin } from '@/api/auth.js'
@@ -20,6 +21,7 @@ import { TopBar } from './components/TopBar'
 import type { StudioProfile } from './components/ProfileMenu'
 import { WorkspaceDialog } from './components/WorkspaceDialog'
 import { Workbench } from './components/elements/Workbench'
+import { StudioWorkbenchTmp } from './components/elements/StudioWorkbenchTmp'
 import { getPanelContentKind, getPanelForContentKind, getSurfaceContentKinds, type PanelSurface, type PanelViewContentKind, type PanelViewSetContentParams, type StudioPanel } from './components/panel-catalog'
 import type { DrawerPanelViewContentKind, DrawerPanelViewContentParams, LeftPanelViewContentKind, LeftPanelViewContentParams, LogEntry, NodeRunState, RegisteredTool, RightPanelViewContentKind, RightPanelViewContentParams, RuntimeTrace, WorkflowNode, WorkflowRunResult } from './types'
 import { createLogEntry, DEFAULT_STUDIO_PROPERTIES } from './types'
@@ -101,7 +103,12 @@ function nativeValidationTransport() {
 }
 
 
-export function WorkflowStudioPage() {
+export interface WorkflowStudioPageProps {
+  /** Keeps the production Workbench as default while allowing an opt-in temporary renderer. */
+  workbench?: 'legacy' | 'honeycomb-tmp'
+}
+
+export function WorkflowStudioPage({ workbench = 'legacy' }: WorkflowStudioPageProps) {
   const [googleClientId, setGoogleClientId] = useState(() => RuntimeConfiguration.current.googleClientId)
   const [nodes, setNodes] = useState(initialNodes)
   const [edges, setEdges] = useState(initialEdges)
@@ -693,7 +700,7 @@ export function WorkflowStudioPage() {
     setLastRun(null)
     requestStudioPanel('workflow-runtime', true)
     setRuntimeTrace(newRuntimeTrace(nodes))
-    setRunStates(Object.fromEntries(nodes.map((node) => [node.id, 'idle'])))
+    setRunStates(Object.fromEntries(nodes.map((node) => [node.id, StateCategory.ofIdle])))
     try {
       addLog('Runtime', 'Opening the live workflow channel to Meshingress.')
       try {
@@ -707,7 +714,7 @@ export function WorkflowStudioPage() {
             setRuntimeTrace((current) => {
               if (!current) return current
               const entries: RuntimeTrace['entries'] = current.entries.map((entry) => entry.requestId === requestId
-                ? { ...entry, status: 'running' as const, startedAt }
+                ? { ...entry, status: StateCategory.ofRunning, startedAt }
                 : entry)
               return {
                 ...current,
@@ -716,7 +723,7 @@ export function WorkflowStudioPage() {
                 entries,
               }
             })
-            setRunStates((current) => ({ ...current, [requestId]: 'running' }))
+            setRunStates((current) => ({ ...current, [requestId]: StateCategory.ofRunning }))
             addLog(node?.title ?? requestId, 'Running.')
           },
           onNodeCompleted: (nodeResult) => {
@@ -725,7 +732,7 @@ export function WorkflowStudioPage() {
             setRuntimeTrace((current) => {
               if (!current) return current
               const entries: RuntimeTrace['entries'] = current.entries.map((entry) => entry.requestId === outcome.requestId
-                ? { ...entry, status: (outcome.failed ? 'error' : 'success') as NodeRunState, startedAt: nodeResult.startedAt, completedAt: nodeResult.completedAt, attempts: outcome.attempts, port: outcome.port, message: outcome.message }
+                ? { ...entry, status: (outcome.failed ? StateCategory.ofError : StateCategory.ofSuccess), startedAt: nodeResult.startedAt, completedAt: nodeResult.completedAt, attempts: outcome.attempts, port: outcome.port, message: outcome.message }
                 : entry)
               return {
                 ...current,
@@ -734,7 +741,7 @@ export function WorkflowStudioPage() {
                 entries,
               }
             })
-            setRunStates((current) => ({ ...current, [outcome.requestId]: outcome.failed ? 'error' : 'success' }))
+            setRunStates((current) => ({ ...current, [outcome.requestId]: outcome.failed ? StateCategory.ofError : StateCategory.ofSuccess }))
             addLog(node?.title ?? outcome.requestId, describeOutcome(outcome), outcome.failed ? 'error' : undefined)
             void storeToolNodeResult(nodeResult).then((stored) => {
               if (stored) {
@@ -757,7 +764,10 @@ export function WorkflowStudioPage() {
         await finishRun(await runWorkflowHttp(definition), true)
       }
     } catch (error) {
-      setRunStates((current) => Object.fromEntries(nodes.map((node) => [node.id, current[node.id] === 'success' ? 'success' : 'error'])))
+      setRunStates((current) =>
+          Object.fromEntries(nodes.map((node) =>
+              [node.id, current[node.id] === StateCategory.ofSuccess ? StateCategory.ofSuccess : StateCategory.ofError]
+          )))
       const message = error instanceof Error ? error.message : 'Unknown runtime error'
       addLog('Runtime', message, 'error')
       setRuntimeTrace((current) => {
@@ -902,32 +912,46 @@ export function WorkflowStudioPage() {
 
         <main className={`center${isDrawerVisible ? '' : ' drawer-hidden'}`} style={{ '--drawer-height': isDrawerVisible ? `${drawerHeight}%` : '0px' } as CSSProperties}>
           <div className="canvas-panel">
-            <Workbench
-              edges={edges}
-              nodes={nodes}
-              onEdgeCreate={(sourceId, targetId) => setEdges((current) => [...current.filter((edge) => edge.source !== sourceId), { source: sourceId, target: targetId }])}
-              onEdgeDelete={(edgeToDelete) => setEdges((current) => current.filter((edge) => !(edge.source === edgeToDelete.source && edge.target === edgeToDelete.target)))}
-              onEdgeReconnect={(edge, targetId) => setEdges((current) => { const index = current.findIndex((candidate) => candidate.source === edge.source && candidate.target === edge.target); if (index < 0) return current; return current.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, target: targetId } : candidate) })}
-              onNodesChange={setNodes}
-              onToolFavorite={toggleSavedTool}
-              onPendingToolNodeHandled={(requestId) => setPendingToolNode((current) => current?.requestId === requestId ? null : current)}
-              onRun={run}
-              onSelectLayoutNodeChange={setLayoutNodeSelection}
-              onSelectNode={setSelectedNodeId}
-              onStatus={setMessage}
-              onToggleReattachOnEmptyRelease={toggleReattachOnEmptyRelease}
-              onToolInsert={addToolNode}
-              onValidate={validate}
-              pendingToolNode={pendingToolNode}
-              presentations={presentations}
-              reattachOnEmptyRelease={studioProperties.canvas.reattachOnEmptyRelease}
-              runStates={runStates}
-              running={running}
-              selectedNodeId={selectedNodeId}
-              toolFunctions={toolFunctions}
-              workflowFileName={workflowFileName}
-              overlayHost={gridOverlay}
-            />
+            {workbench === 'honeycomb-tmp' ? (
+              <StudioWorkbenchTmp
+                edges={edges}
+                nodes={nodes}
+                onRun={() => void run()}
+                onSelectNode={setSelectedNodeId}
+                onValidate={validate}
+                runStates={runStates}
+                running={running}
+                selectedNodeId={selectedNodeId}
+                workflowFileName={workflowFileName}
+              />
+            ) : (
+              <Workbench
+                edges={edges}
+                nodes={nodes}
+                onEdgeCreate={(sourceId, targetId) => setEdges((current) => [...current.filter((edge) => edge.source !== sourceId), { source: sourceId, target: targetId }])}
+                onEdgeDelete={(edgeToDelete) => setEdges((current) => current.filter((edge) => !(edge.source === edgeToDelete.source && edge.target === edgeToDelete.target)))}
+                onEdgeReconnect={(edge, targetId) => setEdges((current) => { const index = current.findIndex((candidate) => candidate.source === edge.source && candidate.target === edge.target); if (index < 0) return current; return current.map((candidate, candidateIndex) => candidateIndex === index ? { ...candidate, target: targetId } : candidate) })}
+                onNodesChange={setNodes}
+                onToolFavorite={toggleSavedTool}
+                onPendingToolNodeHandled={(requestId) => setPendingToolNode((current) => current?.requestId === requestId ? null : current)}
+                onRun={run}
+                onSelectLayoutNodeChange={setLayoutNodeSelection}
+                onSelectNode={setSelectedNodeId}
+                onStatus={setMessage}
+                onToggleReattachOnEmptyRelease={toggleReattachOnEmptyRelease}
+                onToolInsert={addToolNode}
+                onValidate={validate}
+                pendingToolNode={pendingToolNode}
+                presentations={presentations}
+                reattachOnEmptyRelease={studioProperties.canvas.reattachOnEmptyRelease}
+                runStates={runStates}
+                running={running}
+                selectedNodeId={selectedNodeId}
+                toolFunctions={toolFunctions}
+                workflowFileName={workflowFileName}
+                overlayHost={gridOverlay}
+              />
+            )}
           </div>
 
           <div className="grid-overlay" ref={setGridOverlay}>

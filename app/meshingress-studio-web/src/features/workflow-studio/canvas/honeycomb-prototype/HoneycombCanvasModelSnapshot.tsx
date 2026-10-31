@@ -12,6 +12,7 @@ export interface HoneycombCanvasModelSnapshotProps {
   scene?: WorkflowCanvasScene
   model?: WorkflowModelSnapshot
   interactionAdapter?: HoneycombWorkflowModelAdapter
+  onNodeSelect?: (nodeId: string) => void
   setGeometryProbe: (value: (((prevState: (HTMLElement | null)) => (HTMLElement | null)) | HTMLElement | null)) => void
   geometry: HoneycombGeometry | null
   metrics: null | { left: number; top: number; height: number; width: number; gutter: number }
@@ -51,6 +52,7 @@ export class HoneycombCanvasModelSnapshot extends CanvasModelSnapshot {
               interactionAdapter: props.interactionAdapter,
               metrics: props.metrics!,
               nodesById: props.nodesById,
+              onNodeSelect: props.onNodeSelect,
               placementBySlotId: props.placementBySlotId,
               routeModel: props.routeModel,
               scene: props.scene,
@@ -109,6 +111,7 @@ export class HoneycombCanvasModelSnapshot extends CanvasModelSnapshot {
                 {routeModel.routes.map((route) => (
                   <path
                     className="hwp-path"
+                    data-path-id={route.id}
                     d={route.points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')}
                     data-route-junction-ids={route.ports.map((port) => port.junctionId).join(' ')}
                     data-route-port-ids={route.ports.map((port) => port.id).join(' ')}

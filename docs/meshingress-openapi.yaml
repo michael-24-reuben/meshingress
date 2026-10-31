@@ -2659,17 +2659,34 @@ components:
           type: boolean
         float:
           type: boolean
+        short:
+          type: boolean
+        double:
+          type: boolean
         string:
           type: boolean
-        valueNode:
+        textual:
           type: boolean
-        bigDecimal:
+          deprecated: true
+        boolean:
           type: boolean
-        missingNode:
+        int:
+          type: boolean
+        number:
+          type: boolean
+        binary:
+          type: boolean
+        pojo:
+          type: boolean
+        long:
+          type: boolean
+        container:
+          type: boolean
+        integralNumber:
           type: boolean
         floatingPointNumber:
           type: boolean
-        integralNumber:
+        bigDecimal:
           type: boolean
         bigInteger:
           type: boolean
@@ -2685,26 +2702,9 @@ components:
           - OBJECT
           - POJO
           - STRING
-        container:
+        valueNode:
           type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
-        number:
-          type: boolean
-        binary:
-          type: boolean
-        double:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        long:
-          type: boolean
-        int:
-          type: boolean
-        boolean:
+        missingNode:
           type: boolean
         embeddedValue:
           type: boolean

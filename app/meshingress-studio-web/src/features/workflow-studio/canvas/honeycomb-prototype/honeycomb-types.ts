@@ -16,6 +16,7 @@ export interface HoveredNodeSlot {
 }
 
 export interface ImmediateRouteSeam {
+  pathId?: string
   destinationAngle: number
   id: string
   point: { x: number; y: number }
